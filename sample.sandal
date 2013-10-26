@@ -1,0 +1,60 @@
+data State {
+  StateA,
+  StateB,
+  StateC,
+}
+const A = 34 // untyped
+module Sample(chA channel { bit }, chBs []channel { bit }) {
+  proc D(ch channel { byte }) {
+    var a bit = 1
+    if a == 1 {
+      a += 1
+    } else {
+      go_here:
+      choice {
+        // No value
+        recv(chA, a)
+        peek(chA, a)
+        // Has value
+        if timeout_recv(chA, a) {
+        } else {
+        }
+        if timeout_peek(chA, a) {
+        } else {
+        }
+      }, {
+        send(chA, 1)
+      }, {
+        for {
+          a = 1
+          break
+        }
+        for ch in chBs {
+          a = 1
+          break
+        }
+        for i in range 0 to 5 {
+          a = 1
+          break
+        }
+      }
+      goto go_here
+    }
+  }
+
+  proc E(ch channel { byte }) {
+    send(ch, 1)
+  }
+
+  init {
+    var ch channel { byte }
+    D(ch)
+    E(ch)
+  }
+}
+
+init {
+  var chA unstable channel { bit }
+  var chB channel { bit }
+  Sample(chA, [chA, chB])
+}
