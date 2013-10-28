@@ -5,75 +5,8 @@ import (
 )
 
 const (
-	EOF        = -1
-	UNKNOWN    = 0
-	IDENTIFIER = 30000 + iota
-	NUMBER
-	COMMENT
-
-	ADD // +
-	SUB // -
-	MUL // *
-	QUO // /
-	REM // %
-
-	AND // &
-	OR  // |
-	XOR // ^
-	SHL // <<
-	SHR // >>
-
-	ADD_ASSIGN // +=
-	SUB_ASSIGN // -=
-	MUL_ASSIGN // *=
-	QUO_ASSIGN // /=
-	REM_ASSIGN // %=
-
-	AND_ASSIGN // &=
-	OR_ASSIGN  // |=
-	XOR_ASSIGN // ^=
-	SHL_ASSIGN // <<=
-	SHR_ASSIGN // >>=
-
-	LAND // &&
-	LOR  // ||
-
-	EQL    // ==
-	LSS    // <
-	GTR    // >
-	ASSIGN // =
-	NOT    // !
-
-	NEQ // !=
-	LEQ // <=
-	GEQ // >=
-
-	DATA
-	CONST
-	MODULE
-	CHANNEL
-	BIT
-	BOOL
-	BYTE
-	PROC
-	VAR
-	IF
-	ELSE
-	CHOICE
-	RECV
-	TIMEOUT_RECV
-	PEEK
-	TIMEOUT_PEEK
-	SEND
-	FOR
-	BREAK
-	IN
-	RANGE
-	TO
-	INIT
-	GOTO
-	UNSTABLE
-	SKIP
+	EOF     = -1
+	UNKNOWN = 0
 )
 
 var keywords = map[string]int{
@@ -81,9 +14,6 @@ var keywords = map[string]int{
 	"const":        CONST,
 	"module":       MODULE,
 	"channel":      CHANNEL,
-	"bit":          BIT,
-	"bool":         BOOL,
-	"byte":         BYTE,
 	"proc":         PROC,
 	"var":          VAR,
 	"if":           IF,
@@ -135,7 +65,7 @@ func (s *Scanner) Init(src []rune, mode Mode) {
 // Scan returns token and literal and its position. Return UNKNOWN if unknown
 // token received. Return EOF after all characters consumed.
 func (s *Scanner) Scan() (tok int, lit string, pos Position) {
-	if s.skipWhiteSpace() && (s.mode & dontInsertSemis) == 0 {
+	if s.skipWhiteSpace() && (s.mode&dontInsertSemis) == 0 {
 		switch s.lastToken {
 		case IDENTIFIER, NUMBER, BREAK, ')', ']', '}':
 			s.lastToken = int(';')

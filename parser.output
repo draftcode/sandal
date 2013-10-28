@@ -1,0 +1,3673 @@
+
+state 0
+	$accept: .spec $end 
+
+	DATA  shift 8
+	CONST  shift 10
+	MODULE  shift 9
+	PROC  shift 11
+	INIT  shift 12
+	.  error
+
+	spec  goto 1
+	toplevel_body  goto 2
+	data_def  goto 3
+	module_def  goto 4
+	const_def  goto 5
+	proc_def  goto 6
+	init_block  goto 7
+
+state 1
+	$accept:  spec.$end 
+
+	$end  accept
+	.  error
+
+
+state 2
+	spec:  toplevel_body.    (1)
+	spec:  toplevel_body.spec 
+
+	DATA  shift 8
+	CONST  shift 10
+	MODULE  shift 9
+	PROC  shift 11
+	INIT  shift 12
+	.  reduce 1 (src line 123)
+
+	spec  goto 13
+	toplevel_body  goto 2
+	data_def  goto 3
+	module_def  goto 4
+	const_def  goto 5
+	proc_def  goto 6
+	init_block  goto 7
+
+state 3
+	toplevel_body:  data_def.    (3)
+
+	.  reduce 3 (src line 138)
+
+
+state 4
+	toplevel_body:  module_def.    (4)
+
+	.  reduce 4 (src line 140)
+
+
+state 5
+	toplevel_body:  const_def.    (5)
+
+	.  reduce 5 (src line 141)
+
+
+state 6
+	toplevel_body:  proc_def.    (6)
+
+	.  reduce 6 (src line 142)
+
+
+state 7
+	toplevel_body:  init_block.    (7)
+
+	.  reduce 7 (src line 143)
+
+
+state 8
+	data_def:  DATA.IDENTIFIER { idents_one } ; 
+
+	IDENTIFIER  shift 14
+	.  error
+
+
+state 9
+	module_def:  MODULE.IDENTIFIER ( parameters_zero ) { module_body_zero } ; 
+
+	IDENTIFIER  shift 15
+	.  error
+
+
+state 10
+	const_def:  CONST.IDENTIFIER ASSIGN expr ; 
+
+	IDENTIFIER  shift 16
+	.  error
+
+
+state 11
+	proc_def:  PROC.IDENTIFIER ( parameters_zero ) { statements_zero } ; 
+
+	IDENTIFIER  shift 17
+	.  error
+
+
+state 12
+	init_block:  INIT.{ statements_zero } ; 
+
+	{  shift 18
+	.  error
+
+
+state 13
+	spec:  toplevel_body spec.    (2)
+
+	.  reduce 2 (src line 130)
+
+
+state 14
+	data_def:  DATA IDENTIFIER.{ idents_one } ; 
+
+	{  shift 19
+	.  error
+
+
+state 15
+	module_def:  MODULE IDENTIFIER.( parameters_zero ) { module_body_zero } ; 
+
+	(  shift 20
+	.  error
+
+
+state 16
+	const_def:  CONST IDENTIFIER.ASSIGN expr ; 
+
+	ASSIGN  shift 21
+	.  error
+
+
+state 17
+	proc_def:  PROC IDENTIFIER.( parameters_zero ) { statements_zero } ; 
+
+	(  shift 22
+	.  error
+
+
+state 18
+	init_block:  INIT {.statements_zero } ; 
+	statements_zero: .    (18)
+
+	IDENTIFIER  shift 25
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	CONST  shift 10
+	VAR  shift 27
+	IF  shift 28
+	CHOICE  shift 29
+	RECV  shift 30
+	TIMEOUT_RECV  shift 44
+	PEEK  shift 31
+	TIMEOUT_PEEK  shift 45
+	SEND  shift 32
+	FOR  shift 33
+	BREAK  shift 34
+	GOTO  shift 35
+	SKIP  shift 36
+	{  shift 26
+	;  shift 38
+	(  shift 43
+	[  shift 46
+	.  reduce 18 (src line 190)
+
+	const_def  goto 39
+	statements_zero  goto 23
+	statement  goto 24
+	expr  goto 37
+
+state 19
+	data_def:  DATA IDENTIFIER {.idents_one } ; 
+
+	IDENTIFIER  shift 48
+	.  error
+
+	idents_one  goto 47
+
+state 20
+	module_def:  MODULE IDENTIFIER (.parameters_zero ) { module_body_zero } ; 
+	parameters_zero: .    (80)
+
+	IDENTIFIER  shift 52
+	.  reduce 80 (src line 447)
+
+	parameters_zero  goto 49
+	parameters_one  goto 50
+	parameter  goto 51
+
+state 21
+	const_def:  CONST IDENTIFIER ASSIGN.expr ; 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 53
+
+state 22
+	proc_def:  PROC IDENTIFIER (.parameters_zero ) { statements_zero } ; 
+	parameters_zero: .    (80)
+
+	IDENTIFIER  shift 52
+	.  reduce 80 (src line 447)
+
+	parameters_zero  goto 55
+	parameters_one  goto 50
+	parameter  goto 51
+
+state 23
+	init_block:  INIT { statements_zero.} ; 
+
+	}  shift 56
+	.  error
+
+
+state 24
+	statements_zero:  statement.statements_zero 
+	statements_zero: .    (18)
+
+	IDENTIFIER  shift 25
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	CONST  shift 10
+	VAR  shift 27
+	IF  shift 28
+	CHOICE  shift 29
+	RECV  shift 30
+	TIMEOUT_RECV  shift 44
+	PEEK  shift 31
+	TIMEOUT_PEEK  shift 45
+	SEND  shift 32
+	FOR  shift 33
+	BREAK  shift 34
+	GOTO  shift 35
+	SKIP  shift 36
+	{  shift 26
+	;  shift 38
+	(  shift 43
+	[  shift 46
+	.  reduce 18 (src line 190)
+
+	const_def  goto 39
+	statements_zero  goto 57
+	statement  goto 24
+	expr  goto 37
+
+state 25
+	statement:  IDENTIFIER.: statement 
+	statement:  IDENTIFIER.ASSIGN expr ; 
+	statement:  IDENTIFIER.ADD_ASSIGN expr ; 
+	statement:  IDENTIFIER.SUB_ASSIGN expr ; 
+	statement:  IDENTIFIER.MUL_ASSIGN expr ; 
+	statement:  IDENTIFIER.QUO_ASSIGN expr ; 
+	statement:  IDENTIFIER.REM_ASSIGN expr ; 
+	statement:  IDENTIFIER.AND_ASSIGN expr ; 
+	statement:  IDENTIFIER.OR_ASSIGN expr ; 
+	statement:  IDENTIFIER.XOR_ASSIGN expr ; 
+	statement:  IDENTIFIER.SHL_ASSIGN expr ; 
+	statement:  IDENTIFIER.SHR_ASSIGN expr ; 
+	statement:  IDENTIFIER.( arguments_one ) ; 
+	expr:  IDENTIFIER.    (51)
+
+	ADD_ASSIGN  shift 60
+	SUB_ASSIGN  shift 61
+	MUL_ASSIGN  shift 62
+	QUO_ASSIGN  shift 63
+	REM_ASSIGN  shift 64
+	AND_ASSIGN  shift 65
+	OR_ASSIGN  shift 66
+	XOR_ASSIGN  shift 67
+	SHL_ASSIGN  shift 68
+	SHR_ASSIGN  shift 69
+	ASSIGN  shift 59
+	(  shift 70
+	:  shift 58
+	.  reduce 51 (src line 326)
+
+
+state 26
+	statement:  {.statements_zero } ; 
+	statements_zero: .    (18)
+
+	IDENTIFIER  shift 25
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	CONST  shift 10
+	VAR  shift 27
+	IF  shift 28
+	CHOICE  shift 29
+	RECV  shift 30
+	TIMEOUT_RECV  shift 44
+	PEEK  shift 31
+	TIMEOUT_PEEK  shift 45
+	SEND  shift 32
+	FOR  shift 33
+	BREAK  shift 34
+	GOTO  shift 35
+	SKIP  shift 36
+	{  shift 26
+	;  shift 38
+	(  shift 43
+	[  shift 46
+	.  reduce 18 (src line 190)
+
+	const_def  goto 39
+	statements_zero  goto 71
+	statement  goto 24
+	expr  goto 37
+
+state 27
+	statement:  VAR.IDENTIFIER type ; 
+	statement:  VAR.IDENTIFIER type ASSIGN expr ; 
+
+	IDENTIFIER  shift 72
+	.  error
+
+
+state 28
+	statement:  IF.expr { statements_zero } ; 
+	statement:  IF.expr { statements_zero } ELSE { statements_zero } ; 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 73
+
+state 29
+	statement:  CHOICE.blocks_one ; 
+
+	{  shift 75
+	.  error
+
+	blocks_one  goto 74
+
+state 30
+	statement:  RECV.( arguments_one ) ; 
+
+	(  shift 76
+	.  error
+
+
+state 31
+	statement:  PEEK.( arguments_one ) ; 
+
+	(  shift 77
+	.  error
+
+
+state 32
+	statement:  SEND.( arguments_one ) ; 
+
+	(  shift 78
+	.  error
+
+
+state 33
+	statement:  FOR.{ statements_zero } ; 
+	statement:  FOR.IDENTIFIER IN expr { statements_zero } ; 
+	statement:  FOR.IDENTIFIER IN RANGE expr TO expr { statements_zero } ; 
+
+	IDENTIFIER  shift 80
+	{  shift 79
+	.  error
+
+
+state 34
+	statement:  BREAK.; 
+
+	;  shift 81
+	.  error
+
+
+state 35
+	statement:  GOTO.IDENTIFIER ; 
+
+	IDENTIFIER  shift 82
+	.  error
+
+
+state 36
+	statement:  SKIP.; 
+
+	;  shift 83
+	.  error
+
+
+state 37
+	statement:  expr.; 
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	LAND  shift 95
+	LOR  shift 96
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	;  shift 84
+	.  error
+
+
+state 38
+	statement:  ;.    (49)
+
+	.  reduce 49 (src line 317)
+
+
+state 39
+	statement:  const_def.    (50)
+
+	.  reduce 50 (src line 321)
+
+
+state 40
+	expr:  NUMBER.    (52)
+
+	.  reduce 52 (src line 330)
+
+
+state 41
+	expr:  NOT.expr 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 103
+
+state 42
+	expr:  SUB.expr 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 104
+
+state 43
+	expr:  (.expr ) 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 105
+
+state 44
+	expr:  TIMEOUT_RECV.( arguments_one ) 
+
+	(  shift 106
+	.  error
+
+
+state 45
+	expr:  TIMEOUT_PEEK.( arguments_one ) 
+
+	(  shift 107
+	.  error
+
+
+state 46
+	expr:  [.arguments_zero ] 
+	arguments_zero: .    (86)
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  reduce 86 (src line 477)
+
+	expr  goto 110
+	arguments_zero  goto 108
+	arguments_one  goto 109
+
+state 47
+	data_def:  DATA IDENTIFIER { idents_one.} ; 
+
+	}  shift 111
+	.  error
+
+
+state 48
+	idents_one:  IDENTIFIER.    (77)
+	idents_one:  IDENTIFIER., 
+	idents_one:  IDENTIFIER., idents_one 
+
+	,  shift 112
+	.  reduce 77 (src line 433)
+
+
+state 49
+	module_def:  MODULE IDENTIFIER ( parameters_zero.) { module_body_zero } ; 
+
+	)  shift 113
+	.  error
+
+
+state 50
+	parameters_zero:  parameters_one.    (81)
+
+	.  reduce 81 (src line 452)
+
+
+state 51
+	parameters_one:  parameter.    (82)
+	parameters_one:  parameter., 
+	parameters_one:  parameter., parameters_one 
+
+	,  shift 114
+	.  reduce 82 (src line 457)
+
+
+state 52
+	parameter:  IDENTIFIER.type 
+
+	IDENTIFIER  shift 116
+	CHANNEL  shift 118
+	UNSTABLE  shift 119
+	[  shift 117
+	.  error
+
+	type  goto 115
+
+state 53
+	const_def:  CONST IDENTIFIER ASSIGN expr.; 
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	LAND  shift 95
+	LOR  shift 96
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	;  shift 120
+	.  error
+
+
+state 54
+	expr:  IDENTIFIER.    (51)
+
+	.  reduce 51 (src line 326)
+
+
+state 55
+	proc_def:  PROC IDENTIFIER ( parameters_zero.) { statements_zero } ; 
+
+	)  shift 121
+	.  error
+
+
+state 56
+	init_block:  INIT { statements_zero }.; 
+
+	;  shift 122
+	.  error
+
+
+state 57
+	statements_zero:  statement statements_zero.    (19)
+
+	.  reduce 19 (src line 195)
+
+
+state 58
+	statement:  IDENTIFIER :.statement 
+
+	IDENTIFIER  shift 25
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	CONST  shift 10
+	VAR  shift 27
+	IF  shift 28
+	CHOICE  shift 29
+	RECV  shift 30
+	TIMEOUT_RECV  shift 44
+	PEEK  shift 31
+	TIMEOUT_PEEK  shift 45
+	SEND  shift 32
+	FOR  shift 33
+	BREAK  shift 34
+	GOTO  shift 35
+	SKIP  shift 36
+	{  shift 26
+	;  shift 38
+	(  shift 43
+	[  shift 46
+	.  error
+
+	const_def  goto 39
+	statement  goto 123
+	expr  goto 37
+
+state 59
+	statement:  IDENTIFIER ASSIGN.expr ; 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 124
+
+state 60
+	statement:  IDENTIFIER ADD_ASSIGN.expr ; 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 125
+
+state 61
+	statement:  IDENTIFIER SUB_ASSIGN.expr ; 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 126
+
+state 62
+	statement:  IDENTIFIER MUL_ASSIGN.expr ; 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 127
+
+state 63
+	statement:  IDENTIFIER QUO_ASSIGN.expr ; 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 128
+
+state 64
+	statement:  IDENTIFIER REM_ASSIGN.expr ; 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 129
+
+state 65
+	statement:  IDENTIFIER AND_ASSIGN.expr ; 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 130
+
+state 66
+	statement:  IDENTIFIER OR_ASSIGN.expr ; 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 131
+
+state 67
+	statement:  IDENTIFIER XOR_ASSIGN.expr ; 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 132
+
+state 68
+	statement:  IDENTIFIER SHL_ASSIGN.expr ; 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 133
+
+state 69
+	statement:  IDENTIFIER SHR_ASSIGN.expr ; 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 134
+
+state 70
+	statement:  IDENTIFIER (.arguments_one ) ; 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 110
+	arguments_one  goto 135
+
+state 71
+	statement:  { statements_zero.} ; 
+
+	}  shift 136
+	.  error
+
+
+state 72
+	statement:  VAR IDENTIFIER.type ; 
+	statement:  VAR IDENTIFIER.type ASSIGN expr ; 
+
+	IDENTIFIER  shift 116
+	CHANNEL  shift 118
+	UNSTABLE  shift 119
+	[  shift 117
+	.  error
+
+	type  goto 137
+
+state 73
+	statement:  IF expr.{ statements_zero } ; 
+	statement:  IF expr.{ statements_zero } ELSE { statements_zero } ; 
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	LAND  shift 95
+	LOR  shift 96
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	{  shift 138
+	.  error
+
+
+state 74
+	statement:  CHOICE blocks_one.; 
+
+	;  shift 139
+	.  error
+
+
+state 75
+	blocks_one:  {.statements_zero } 
+	blocks_one:  {.statements_zero } , 
+	blocks_one:  {.statements_zero } , blocks_one 
+	statements_zero: .    (18)
+
+	IDENTIFIER  shift 25
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	CONST  shift 10
+	VAR  shift 27
+	IF  shift 28
+	CHOICE  shift 29
+	RECV  shift 30
+	TIMEOUT_RECV  shift 44
+	PEEK  shift 31
+	TIMEOUT_PEEK  shift 45
+	SEND  shift 32
+	FOR  shift 33
+	BREAK  shift 34
+	GOTO  shift 35
+	SKIP  shift 36
+	{  shift 26
+	;  shift 38
+	(  shift 43
+	[  shift 46
+	.  reduce 18 (src line 190)
+
+	const_def  goto 39
+	statements_zero  goto 140
+	statement  goto 24
+	expr  goto 37
+
+state 76
+	statement:  RECV (.arguments_one ) ; 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 110
+	arguments_one  goto 141
+
+state 77
+	statement:  PEEK (.arguments_one ) ; 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 110
+	arguments_one  goto 142
+
+state 78
+	statement:  SEND (.arguments_one ) ; 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 110
+	arguments_one  goto 143
+
+state 79
+	statement:  FOR {.statements_zero } ; 
+	statements_zero: .    (18)
+
+	IDENTIFIER  shift 25
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	CONST  shift 10
+	VAR  shift 27
+	IF  shift 28
+	CHOICE  shift 29
+	RECV  shift 30
+	TIMEOUT_RECV  shift 44
+	PEEK  shift 31
+	TIMEOUT_PEEK  shift 45
+	SEND  shift 32
+	FOR  shift 33
+	BREAK  shift 34
+	GOTO  shift 35
+	SKIP  shift 36
+	{  shift 26
+	;  shift 38
+	(  shift 43
+	[  shift 46
+	.  reduce 18 (src line 190)
+
+	const_def  goto 39
+	statements_zero  goto 144
+	statement  goto 24
+	expr  goto 37
+
+state 80
+	statement:  FOR IDENTIFIER.IN expr { statements_zero } ; 
+	statement:  FOR IDENTIFIER.IN RANGE expr TO expr { statements_zero } ; 
+
+	IN  shift 145
+	.  error
+
+
+state 81
+	statement:  BREAK ;.    (44)
+
+	.  reduce 44 (src line 297)
+
+
+state 82
+	statement:  GOTO IDENTIFIER.; 
+
+	;  shift 146
+	.  error
+
+
+state 83
+	statement:  SKIP ;.    (47)
+
+	.  reduce 47 (src line 309)
+
+
+state 84
+	statement:  expr ;.    (48)
+
+	.  reduce 48 (src line 313)
+
+
+state 85
+	expr:  expr ADD.expr 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 147
+
+state 86
+	expr:  expr SUB.expr 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 148
+
+state 87
+	expr:  expr MUL.expr 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 149
+
+state 88
+	expr:  expr QUO.expr 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 150
+
+state 89
+	expr:  expr REM.expr 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 151
+
+state 90
+	expr:  expr AND.expr 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 152
+
+state 91
+	expr:  expr OR.expr 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 153
+
+state 92
+	expr:  expr XOR.expr 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 154
+
+state 93
+	expr:  expr SHL.expr 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 155
+
+state 94
+	expr:  expr SHR.expr 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 156
+
+state 95
+	expr:  expr LAND.expr 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 157
+
+state 96
+	expr:  expr LOR.expr 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 158
+
+state 97
+	expr:  expr EQL.expr 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 159
+
+state 98
+	expr:  expr LSS.expr 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 160
+
+state 99
+	expr:  expr GTR.expr 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 161
+
+state 100
+	expr:  expr NEQ.expr 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 162
+
+state 101
+	expr:  expr LEQ.expr 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 163
+
+state 102
+	expr:  expr GEQ.expr 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 164
+
+state 103
+	expr:  NOT expr.    (53)
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	.  reduce 53 (src line 334)
+
+
+state 104
+	expr:  SUB expr.    (54)
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	.  reduce 54 (src line 338)
+
+
+state 105
+	expr:  ( expr.) 
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	LAND  shift 95
+	LOR  shift 96
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	)  shift 165
+	.  error
+
+
+state 106
+	expr:  TIMEOUT_RECV (.arguments_one ) 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 110
+	arguments_one  goto 166
+
+state 107
+	expr:  TIMEOUT_PEEK (.arguments_one ) 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 110
+	arguments_one  goto 167
+
+state 108
+	expr:  [ arguments_zero.] 
+
+	]  shift 168
+	.  error
+
+
+state 109
+	arguments_zero:  arguments_one.    (87)
+
+	.  reduce 87 (src line 482)
+
+
+state 110
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+	arguments_one:  expr.    (88)
+	arguments_one:  expr., 
+	arguments_one:  expr., arguments_one 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	LAND  shift 95
+	LOR  shift 96
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	,  shift 169
+	.  reduce 88 (src line 487)
+
+
+state 111
+	data_def:  DATA IDENTIFIER { idents_one }.; 
+
+	;  shift 170
+	.  error
+
+
+state 112
+	idents_one:  IDENTIFIER ,.    (78)
+	idents_one:  IDENTIFIER ,.idents_one 
+
+	IDENTIFIER  shift 48
+	.  reduce 78 (src line 438)
+
+	idents_one  goto 171
+
+state 113
+	module_def:  MODULE IDENTIFIER ( parameters_zero ).{ module_body_zero } ; 
+
+	{  shift 172
+	.  error
+
+
+state 114
+	parameters_one:  parameter ,.    (83)
+	parameters_one:  parameter ,.parameters_one 
+
+	IDENTIFIER  shift 52
+	.  reduce 83 (src line 462)
+
+	parameters_one  goto 173
+	parameter  goto 51
+
+state 115
+	parameter:  IDENTIFIER type.    (85)
+
+	.  reduce 85 (src line 471)
+
+
+state 116
+	type:  IDENTIFIER.    (94)
+
+	.  reduce 94 (src line 515)
+
+
+state 117
+	type:  [.] type 
+
+	]  shift 174
+	.  error
+
+
+state 118
+	type:  CHANNEL.{ types_one } 
+
+	{  shift 175
+	.  error
+
+
+state 119
+	type:  UNSTABLE.CHANNEL { types_one } 
+
+	CHANNEL  shift 176
+	.  error
+
+
+state 120
+	const_def:  CONST IDENTIFIER ASSIGN expr ;.    (15)
+
+	.  reduce 15 (src line 172)
+
+
+state 121
+	proc_def:  PROC IDENTIFIER ( parameters_zero ).{ statements_zero } ; 
+
+	{  shift 177
+	.  error
+
+
+state 122
+	init_block:  INIT { statements_zero } ;.    (17)
+
+	.  reduce 17 (src line 184)
+
+
+state 123
+	statement:  IDENTIFIER : statement.    (20)
+
+	.  reduce 20 (src line 200)
+
+
+state 124
+	statement:  IDENTIFIER ASSIGN expr.; 
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	LAND  shift 95
+	LOR  shift 96
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	;  shift 178
+	.  error
+
+
+state 125
+	statement:  IDENTIFIER ADD_ASSIGN expr.; 
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	LAND  shift 95
+	LOR  shift 96
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	;  shift 179
+	.  error
+
+
+state 126
+	statement:  IDENTIFIER SUB_ASSIGN expr.; 
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	LAND  shift 95
+	LOR  shift 96
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	;  shift 180
+	.  error
+
+
+state 127
+	statement:  IDENTIFIER MUL_ASSIGN expr.; 
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	LAND  shift 95
+	LOR  shift 96
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	;  shift 181
+	.  error
+
+
+state 128
+	statement:  IDENTIFIER QUO_ASSIGN expr.; 
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	LAND  shift 95
+	LOR  shift 96
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	;  shift 182
+	.  error
+
+
+state 129
+	statement:  IDENTIFIER REM_ASSIGN expr.; 
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	LAND  shift 95
+	LOR  shift 96
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	;  shift 183
+	.  error
+
+
+state 130
+	statement:  IDENTIFIER AND_ASSIGN expr.; 
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	LAND  shift 95
+	LOR  shift 96
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	;  shift 184
+	.  error
+
+
+state 131
+	statement:  IDENTIFIER OR_ASSIGN expr.; 
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	LAND  shift 95
+	LOR  shift 96
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	;  shift 185
+	.  error
+
+
+state 132
+	statement:  IDENTIFIER XOR_ASSIGN expr.; 
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	LAND  shift 95
+	LOR  shift 96
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	;  shift 186
+	.  error
+
+
+state 133
+	statement:  IDENTIFIER SHL_ASSIGN expr.; 
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	LAND  shift 95
+	LOR  shift 96
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	;  shift 187
+	.  error
+
+
+state 134
+	statement:  IDENTIFIER SHR_ASSIGN expr.; 
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	LAND  shift 95
+	LOR  shift 96
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	;  shift 188
+	.  error
+
+
+state 135
+	statement:  IDENTIFIER ( arguments_one.) ; 
+
+	)  shift 189
+	.  error
+
+
+state 136
+	statement:  { statements_zero }.; 
+
+	;  shift 190
+	.  error
+
+
+state 137
+	statement:  VAR IDENTIFIER type.; 
+	statement:  VAR IDENTIFIER type.ASSIGN expr ; 
+
+	ASSIGN  shift 192
+	;  shift 191
+	.  error
+
+
+state 138
+	statement:  IF expr {.statements_zero } ; 
+	statement:  IF expr {.statements_zero } ELSE { statements_zero } ; 
+	statements_zero: .    (18)
+
+	IDENTIFIER  shift 25
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	CONST  shift 10
+	VAR  shift 27
+	IF  shift 28
+	CHOICE  shift 29
+	RECV  shift 30
+	TIMEOUT_RECV  shift 44
+	PEEK  shift 31
+	TIMEOUT_PEEK  shift 45
+	SEND  shift 32
+	FOR  shift 33
+	BREAK  shift 34
+	GOTO  shift 35
+	SKIP  shift 36
+	{  shift 26
+	;  shift 38
+	(  shift 43
+	[  shift 46
+	.  reduce 18 (src line 190)
+
+	const_def  goto 39
+	statements_zero  goto 193
+	statement  goto 24
+	expr  goto 37
+
+state 139
+	statement:  CHOICE blocks_one ;.    (37)
+
+	.  reduce 37 (src line 269)
+
+
+state 140
+	blocks_one:  { statements_zero.} 
+	blocks_one:  { statements_zero.} , 
+	blocks_one:  { statements_zero.} , blocks_one 
+
+	}  shift 194
+	.  error
+
+
+state 141
+	statement:  RECV ( arguments_one.) ; 
+
+	)  shift 195
+	.  error
+
+
+state 142
+	statement:  PEEK ( arguments_one.) ; 
+
+	)  shift 196
+	.  error
+
+
+state 143
+	statement:  SEND ( arguments_one.) ; 
+
+	)  shift 197
+	.  error
+
+
+state 144
+	statement:  FOR { statements_zero.} ; 
+
+	}  shift 198
+	.  error
+
+
+state 145
+	statement:  FOR IDENTIFIER IN.expr { statements_zero } ; 
+	statement:  FOR IDENTIFIER IN.RANGE expr TO expr { statements_zero } ; 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	RANGE  shift 200
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 199
+
+state 146
+	statement:  GOTO IDENTIFIER ;.    (45)
+
+	.  reduce 45 (src line 301)
+
+
+state 147
+	expr:  expr.ADD expr 
+	expr:  expr ADD expr.    (56)
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	SHL  shift 93
+	SHR  shift 94
+	.  reduce 56 (src line 346)
+
+
+state 148
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr SUB expr.    (57)
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	SHL  shift 93
+	SHR  shift 94
+	.  reduce 57 (src line 350)
+
+
+state 149
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr MUL expr.    (58)
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	.  reduce 58 (src line 354)
+
+
+state 150
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr QUO expr.    (59)
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	.  reduce 59 (src line 358)
+
+
+state 151
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr REM expr.    (60)
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	.  reduce 60 (src line 362)
+
+
+state 152
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr AND expr.    (61)
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	.  reduce 61 (src line 366)
+
+
+state 153
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr OR expr.    (62)
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	SHL  shift 93
+	SHR  shift 94
+	.  reduce 62 (src line 370)
+
+
+state 154
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr XOR expr.    (63)
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	SHL  shift 93
+	SHR  shift 94
+	.  reduce 63 (src line 374)
+
+
+state 155
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr SHL expr.    (64)
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	.  reduce 64 (src line 378)
+
+
+state 156
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr SHR expr.    (65)
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	.  reduce 65 (src line 382)
+
+
+state 157
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr LAND expr.    (66)
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	.  reduce 66 (src line 386)
+
+
+state 158
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr LOR expr.    (67)
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	LAND  shift 95
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	.  reduce 67 (src line 390)
+
+
+state 159
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr EQL expr.    (68)
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	.  reduce 68 (src line 394)
+
+
+state 160
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr LSS expr.    (69)
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	.  reduce 69 (src line 398)
+
+
+state 161
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr GTR expr.    (70)
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	.  reduce 70 (src line 402)
+
+
+state 162
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr NEQ expr.    (71)
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	.  reduce 71 (src line 406)
+
+
+state 163
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr LEQ expr.    (72)
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	.  reduce 72 (src line 410)
+
+
+state 164
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+	expr:  expr GEQ expr.    (73)
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	.  reduce 73 (src line 414)
+
+
+state 165
+	expr:  ( expr ).    (55)
+
+	.  reduce 55 (src line 342)
+
+
+state 166
+	expr:  TIMEOUT_RECV ( arguments_one.) 
+
+	)  shift 201
+	.  error
+
+
+state 167
+	expr:  TIMEOUT_PEEK ( arguments_one.) 
+
+	)  shift 202
+	.  error
+
+
+state 168
+	expr:  [ arguments_zero ].    (76)
+
+	.  reduce 76 (src line 426)
+
+
+state 169
+	arguments_one:  expr ,.    (89)
+	arguments_one:  expr ,.arguments_one 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  reduce 89 (src line 492)
+
+	expr  goto 110
+	arguments_one  goto 203
+
+state 170
+	data_def:  DATA IDENTIFIER { idents_one } ;.    (8)
+
+	.  reduce 8 (src line 145)
+
+
+state 171
+	idents_one:  IDENTIFIER , idents_one.    (79)
+
+	.  reduce 79 (src line 442)
+
+
+state 172
+	module_def:  MODULE IDENTIFIER ( parameters_zero ) {.module_body_zero } ; 
+	module_body_zero: .    (10)
+
+	CONST  shift 10
+	PROC  shift 11
+	INIT  shift 12
+	.  reduce 10 (src line 157)
+
+	const_def  goto 206
+	proc_def  goto 207
+	init_block  goto 208
+	module_body_zero  goto 204
+	module_body  goto 205
+
+state 173
+	parameters_one:  parameter , parameters_one.    (84)
+
+	.  reduce 84 (src line 466)
+
+
+state 174
+	type:  [ ].type 
+
+	IDENTIFIER  shift 116
+	CHANNEL  shift 118
+	UNSTABLE  shift 119
+	[  shift 117
+	.  error
+
+	type  goto 209
+
+state 175
+	type:  CHANNEL {.types_one } 
+
+	IDENTIFIER  shift 116
+	CHANNEL  shift 118
+	UNSTABLE  shift 119
+	[  shift 117
+	.  error
+
+	types_one  goto 210
+	type  goto 211
+
+state 176
+	type:  UNSTABLE CHANNEL.{ types_one } 
+
+	{  shift 212
+	.  error
+
+
+state 177
+	proc_def:  PROC IDENTIFIER ( parameters_zero ) {.statements_zero } ; 
+	statements_zero: .    (18)
+
+	IDENTIFIER  shift 25
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	CONST  shift 10
+	VAR  shift 27
+	IF  shift 28
+	CHOICE  shift 29
+	RECV  shift 30
+	TIMEOUT_RECV  shift 44
+	PEEK  shift 31
+	TIMEOUT_PEEK  shift 45
+	SEND  shift 32
+	FOR  shift 33
+	BREAK  shift 34
+	GOTO  shift 35
+	SKIP  shift 36
+	{  shift 26
+	;  shift 38
+	(  shift 43
+	[  shift 46
+	.  reduce 18 (src line 190)
+
+	const_def  goto 39
+	statements_zero  goto 213
+	statement  goto 24
+	expr  goto 37
+
+state 178
+	statement:  IDENTIFIER ASSIGN expr ;.    (26)
+
+	.  reduce 26 (src line 225)
+
+
+state 179
+	statement:  IDENTIFIER ADD_ASSIGN expr ;.    (27)
+
+	.  reduce 27 (src line 229)
+
+
+state 180
+	statement:  IDENTIFIER SUB_ASSIGN expr ;.    (28)
+
+	.  reduce 28 (src line 233)
+
+
+state 181
+	statement:  IDENTIFIER MUL_ASSIGN expr ;.    (29)
+
+	.  reduce 29 (src line 237)
+
+
+state 182
+	statement:  IDENTIFIER QUO_ASSIGN expr ;.    (30)
+
+	.  reduce 30 (src line 241)
+
+
+state 183
+	statement:  IDENTIFIER REM_ASSIGN expr ;.    (31)
+
+	.  reduce 31 (src line 245)
+
+
+state 184
+	statement:  IDENTIFIER AND_ASSIGN expr ;.    (32)
+
+	.  reduce 32 (src line 249)
+
+
+state 185
+	statement:  IDENTIFIER OR_ASSIGN expr ;.    (33)
+
+	.  reduce 33 (src line 253)
+
+
+state 186
+	statement:  IDENTIFIER XOR_ASSIGN expr ;.    (34)
+
+	.  reduce 34 (src line 257)
+
+
+state 187
+	statement:  IDENTIFIER SHL_ASSIGN expr ;.    (35)
+
+	.  reduce 35 (src line 261)
+
+
+state 188
+	statement:  IDENTIFIER SHR_ASSIGN expr ;.    (36)
+
+	.  reduce 36 (src line 265)
+
+
+state 189
+	statement:  IDENTIFIER ( arguments_one ).; 
+
+	;  shift 214
+	.  error
+
+
+state 190
+	statement:  { statements_zero } ;.    (21)
+
+	.  reduce 21 (src line 205)
+
+
+state 191
+	statement:  VAR IDENTIFIER type ;.    (22)
+
+	.  reduce 22 (src line 209)
+
+
+state 192
+	statement:  VAR IDENTIFIER type ASSIGN.expr ; 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 215
+
+state 193
+	statement:  IF expr { statements_zero.} ; 
+	statement:  IF expr { statements_zero.} ELSE { statements_zero } ; 
+
+	}  shift 216
+	.  error
+
+
+state 194
+	blocks_one:  { statements_zero }.    (98)
+	blocks_one:  { statements_zero }., 
+	blocks_one:  { statements_zero }., blocks_one 
+
+	,  shift 217
+	.  reduce 98 (src line 532)
+
+
+state 195
+	statement:  RECV ( arguments_one ).; 
+
+	;  shift 218
+	.  error
+
+
+state 196
+	statement:  PEEK ( arguments_one ).; 
+
+	;  shift 219
+	.  error
+
+
+state 197
+	statement:  SEND ( arguments_one ).; 
+
+	;  shift 220
+	.  error
+
+
+state 198
+	statement:  FOR { statements_zero }.; 
+
+	;  shift 221
+	.  error
+
+
+state 199
+	statement:  FOR IDENTIFIER IN expr.{ statements_zero } ; 
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	LAND  shift 95
+	LOR  shift 96
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	{  shift 222
+	.  error
+
+
+state 200
+	statement:  FOR IDENTIFIER IN RANGE.expr TO expr { statements_zero } ; 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 223
+
+state 201
+	expr:  TIMEOUT_RECV ( arguments_one ).    (74)
+
+	.  reduce 74 (src line 418)
+
+
+state 202
+	expr:  TIMEOUT_PEEK ( arguments_one ).    (75)
+
+	.  reduce 75 (src line 422)
+
+
+state 203
+	arguments_one:  expr , arguments_one.    (90)
+
+	.  reduce 90 (src line 496)
+
+
+state 204
+	module_def:  MODULE IDENTIFIER ( parameters_zero ) { module_body_zero.} ; 
+
+	}  shift 224
+	.  error
+
+
+state 205
+	module_body_zero:  module_body.module_body_zero 
+	module_body_zero: .    (10)
+
+	CONST  shift 10
+	PROC  shift 11
+	INIT  shift 12
+	.  reduce 10 (src line 157)
+
+	const_def  goto 206
+	proc_def  goto 207
+	init_block  goto 208
+	module_body_zero  goto 225
+	module_body  goto 205
+
+state 206
+	module_body:  const_def.    (12)
+
+	.  reduce 12 (src line 167)
+
+
+state 207
+	module_body:  proc_def.    (13)
+
+	.  reduce 13 (src line 169)
+
+
+state 208
+	module_body:  init_block.    (14)
+
+	.  reduce 14 (src line 170)
+
+
+state 209
+	type:  [ ] type.    (95)
+
+	.  reduce 95 (src line 519)
+
+
+state 210
+	type:  CHANNEL { types_one.} 
+
+	}  shift 226
+	.  error
+
+
+state 211
+	types_one:  type.    (91)
+	types_one:  type., 
+	types_one:  type., types_one 
+
+	,  shift 227
+	.  reduce 91 (src line 501)
+
+
+state 212
+	type:  UNSTABLE CHANNEL {.types_one } 
+
+	IDENTIFIER  shift 116
+	CHANNEL  shift 118
+	UNSTABLE  shift 119
+	[  shift 117
+	.  error
+
+	types_one  goto 228
+	type  goto 211
+
+state 213
+	proc_def:  PROC IDENTIFIER ( parameters_zero ) { statements_zero.} ; 
+
+	}  shift 229
+	.  error
+
+
+state 214
+	statement:  IDENTIFIER ( arguments_one ) ;.    (46)
+
+	.  reduce 46 (src line 305)
+
+
+state 215
+	statement:  VAR IDENTIFIER type ASSIGN expr.; 
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	LAND  shift 95
+	LOR  shift 96
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	;  shift 230
+	.  error
+
+
+state 216
+	statement:  IF expr { statements_zero }.; 
+	statement:  IF expr { statements_zero }.ELSE { statements_zero } ; 
+
+	ELSE  shift 232
+	;  shift 231
+	.  error
+
+
+state 217
+	blocks_one:  { statements_zero } ,.    (99)
+	blocks_one:  { statements_zero } ,.blocks_one 
+
+	{  shift 75
+	.  reduce 99 (src line 537)
+
+	blocks_one  goto 233
+
+state 218
+	statement:  RECV ( arguments_one ) ;.    (38)
+
+	.  reduce 38 (src line 273)
+
+
+state 219
+	statement:  PEEK ( arguments_one ) ;.    (39)
+
+	.  reduce 39 (src line 277)
+
+
+state 220
+	statement:  SEND ( arguments_one ) ;.    (40)
+
+	.  reduce 40 (src line 281)
+
+
+state 221
+	statement:  FOR { statements_zero } ;.    (41)
+
+	.  reduce 41 (src line 285)
+
+
+state 222
+	statement:  FOR IDENTIFIER IN expr {.statements_zero } ; 
+	statements_zero: .    (18)
+
+	IDENTIFIER  shift 25
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	CONST  shift 10
+	VAR  shift 27
+	IF  shift 28
+	CHOICE  shift 29
+	RECV  shift 30
+	TIMEOUT_RECV  shift 44
+	PEEK  shift 31
+	TIMEOUT_PEEK  shift 45
+	SEND  shift 32
+	FOR  shift 33
+	BREAK  shift 34
+	GOTO  shift 35
+	SKIP  shift 36
+	{  shift 26
+	;  shift 38
+	(  shift 43
+	[  shift 46
+	.  reduce 18 (src line 190)
+
+	const_def  goto 39
+	statements_zero  goto 234
+	statement  goto 24
+	expr  goto 37
+
+state 223
+	statement:  FOR IDENTIFIER IN RANGE expr.TO expr { statements_zero } ; 
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	LAND  shift 95
+	LOR  shift 96
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	TO  shift 235
+	.  error
+
+
+state 224
+	module_def:  MODULE IDENTIFIER ( parameters_zero ) { module_body_zero }.; 
+
+	;  shift 236
+	.  error
+
+
+state 225
+	module_body_zero:  module_body module_body_zero.    (11)
+
+	.  reduce 11 (src line 162)
+
+
+state 226
+	type:  CHANNEL { types_one }.    (96)
+
+	.  reduce 96 (src line 523)
+
+
+state 227
+	types_one:  type ,.    (92)
+	types_one:  type ,.types_one 
+
+	IDENTIFIER  shift 116
+	CHANNEL  shift 118
+	UNSTABLE  shift 119
+	[  shift 117
+	.  reduce 92 (src line 506)
+
+	types_one  goto 237
+	type  goto 211
+
+state 228
+	type:  UNSTABLE CHANNEL { types_one.} 
+
+	}  shift 238
+	.  error
+
+
+state 229
+	proc_def:  PROC IDENTIFIER ( parameters_zero ) { statements_zero }.; 
+
+	;  shift 239
+	.  error
+
+
+state 230
+	statement:  VAR IDENTIFIER type ASSIGN expr ;.    (23)
+
+	.  reduce 23 (src line 213)
+
+
+state 231
+	statement:  IF expr { statements_zero } ;.    (24)
+
+	.  reduce 24 (src line 217)
+
+
+state 232
+	statement:  IF expr { statements_zero } ELSE.{ statements_zero } ; 
+
+	{  shift 240
+	.  error
+
+
+state 233
+	blocks_one:  { statements_zero } , blocks_one.    (100)
+
+	.  reduce 100 (src line 541)
+
+
+state 234
+	statement:  FOR IDENTIFIER IN expr { statements_zero.} ; 
+
+	}  shift 241
+	.  error
+
+
+state 235
+	statement:  FOR IDENTIFIER IN RANGE expr TO.expr { statements_zero } ; 
+
+	IDENTIFIER  shift 54
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	TIMEOUT_RECV  shift 44
+	TIMEOUT_PEEK  shift 45
+	(  shift 43
+	[  shift 46
+	.  error
+
+	expr  goto 242
+
+state 236
+	module_def:  MODULE IDENTIFIER ( parameters_zero ) { module_body_zero } ;.    (9)
+
+	.  reduce 9 (src line 151)
+
+
+state 237
+	types_one:  type , types_one.    (93)
+
+	.  reduce 93 (src line 510)
+
+
+state 238
+	type:  UNSTABLE CHANNEL { types_one }.    (97)
+
+	.  reduce 97 (src line 527)
+
+
+state 239
+	proc_def:  PROC IDENTIFIER ( parameters_zero ) { statements_zero } ;.    (16)
+
+	.  reduce 16 (src line 178)
+
+
+state 240
+	statement:  IF expr { statements_zero } ELSE {.statements_zero } ; 
+	statements_zero: .    (18)
+
+	IDENTIFIER  shift 25
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	CONST  shift 10
+	VAR  shift 27
+	IF  shift 28
+	CHOICE  shift 29
+	RECV  shift 30
+	TIMEOUT_RECV  shift 44
+	PEEK  shift 31
+	TIMEOUT_PEEK  shift 45
+	SEND  shift 32
+	FOR  shift 33
+	BREAK  shift 34
+	GOTO  shift 35
+	SKIP  shift 36
+	{  shift 26
+	;  shift 38
+	(  shift 43
+	[  shift 46
+	.  reduce 18 (src line 190)
+
+	const_def  goto 39
+	statements_zero  goto 243
+	statement  goto 24
+	expr  goto 37
+
+state 241
+	statement:  FOR IDENTIFIER IN expr { statements_zero }.; 
+
+	;  shift 244
+	.  error
+
+
+state 242
+	statement:  FOR IDENTIFIER IN RANGE expr TO expr.{ statements_zero } ; 
+	expr:  expr.ADD expr 
+	expr:  expr.SUB expr 
+	expr:  expr.MUL expr 
+	expr:  expr.QUO expr 
+	expr:  expr.REM expr 
+	expr:  expr.AND expr 
+	expr:  expr.OR expr 
+	expr:  expr.XOR expr 
+	expr:  expr.SHL expr 
+	expr:  expr.SHR expr 
+	expr:  expr.LAND expr 
+	expr:  expr.LOR expr 
+	expr:  expr.EQL expr 
+	expr:  expr.LSS expr 
+	expr:  expr.GTR expr 
+	expr:  expr.NEQ expr 
+	expr:  expr.LEQ expr 
+	expr:  expr.GEQ expr 
+
+	ADD  shift 85
+	SUB  shift 86
+	MUL  shift 87
+	QUO  shift 88
+	REM  shift 89
+	AND  shift 90
+	OR  shift 91
+	XOR  shift 92
+	SHL  shift 93
+	SHR  shift 94
+	LAND  shift 95
+	LOR  shift 96
+	EQL  shift 97
+	LSS  shift 98
+	GTR  shift 99
+	NEQ  shift 100
+	LEQ  shift 101
+	GEQ  shift 102
+	{  shift 245
+	.  error
+
+
+state 243
+	statement:  IF expr { statements_zero } ELSE { statements_zero.} ; 
+
+	}  shift 246
+	.  error
+
+
+state 244
+	statement:  FOR IDENTIFIER IN expr { statements_zero } ;.    (42)
+
+	.  reduce 42 (src line 289)
+
+
+state 245
+	statement:  FOR IDENTIFIER IN RANGE expr TO expr {.statements_zero } ; 
+	statements_zero: .    (18)
+
+	IDENTIFIER  shift 25
+	NUMBER  shift 40
+	SUB  shift 42
+	NOT  shift 41
+	CONST  shift 10
+	VAR  shift 27
+	IF  shift 28
+	CHOICE  shift 29
+	RECV  shift 30
+	TIMEOUT_RECV  shift 44
+	PEEK  shift 31
+	TIMEOUT_PEEK  shift 45
+	SEND  shift 32
+	FOR  shift 33
+	BREAK  shift 34
+	GOTO  shift 35
+	SKIP  shift 36
+	{  shift 26
+	;  shift 38
+	(  shift 43
+	[  shift 46
+	.  reduce 18 (src line 190)
+
+	const_def  goto 39
+	statements_zero  goto 247
+	statement  goto 24
+	expr  goto 37
+
+state 246
+	statement:  IF expr { statements_zero } ELSE { statements_zero }.; 
+
+	;  shift 248
+	.  error
+
+
+state 247
+	statement:  FOR IDENTIFIER IN RANGE expr TO expr { statements_zero.} ; 
+
+	}  shift 249
+	.  error
+
+
+state 248
+	statement:  IF expr { statements_zero } ELSE { statements_zero } ;.    (25)
+
+	.  reduce 25 (src line 221)
+
+
+state 249
+	statement:  FOR IDENTIFIER IN RANGE expr TO expr { statements_zero }.; 
+
+	;  shift 250
+	.  error
+
+
+state 250
+	statement:  FOR IDENTIFIER IN RANGE expr TO expr { statements_zero } ;.    (43)
+
+	.  reduce 43 (src line 293)
+
+
+69 terminals, 22 nonterminals
+101 grammar rules, 251/2000 states
+0 shift/reduce, 0 reduce/reduce conflicts reported
+71 working sets used
+memory: parser 143/30000
+88 extra closures
+1230 shift entries, 1 exceptions
+103 goto entries
+40 entries saved by goto default
+Optimizer space used: output 835/30000
+835 table entries, 164 zero
+maximum spread: 69, maximum offset: 245
