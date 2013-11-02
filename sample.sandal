@@ -22,6 +22,12 @@ module Sample(chA channel { bit }, chBs []channel { bit }) {
         if timeout_peek(chA, a) {
         } else {
         }
+        if nonblock_recv(chA, a) {
+        } else {
+        }
+        if nonblock_peek(chA, a) {
+        } else {
+        }
       }, {
         send(chA, 1)
       }, {

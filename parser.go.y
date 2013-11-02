@@ -98,8 +98,10 @@ type Token struct {
 %token<tok> CHOICE
 %token<tok> RECV
 %token<tok> TIMEOUT_RECV
+%token<tok> NONBLOCK_RECV
 %token<tok> PEEK
 %token<tok> TIMEOUT_PEEK
+%token<tok> NONBLOCK_PEEK
 %token<tok> SEND
 %token<tok> FOR
 %token<tok> BREAK
@@ -423,6 +425,14 @@ expr	: IDENTIFIER
 	{
 		$$ = &TimeoutPeekExpression{Channel: $3[0], Args: $3[1:]}
 	}
+	| NONBLOCK_RECV '(' arguments_one ')'
+	{
+		$$ = &NonblockRecvExpression{Channel: $3[0], Args: $3[1:]}
+	}
+	| NONBLOCK_PEEK '(' arguments_one ')'
+	{
+		$$ = &NonblockPeekExpression{Channel: $3[0], Args: $3[1:]}
+	}
 	| '[' arguments_zero ']'
 	{
 		$$ = &ArrayExpression{Elems: $2}
@@ -520,13 +530,21 @@ type	: IDENTIFIER
 	{
 		$$ = &SetType{SetType: $3}
 	}
-	| CHANNEL '{' types_one '}'
+	| CHANNEL '[' ']' '{' types_one '}'
 	{
-		$$ = &ChannelType{IsUnstable: false, Elems: $3}
+		$$ = &ChannelType{IsUnstable: false, BufferSize: nil, Elems: $5}
 	}
-	| UNSTABLE CHANNEL '{' types_one '}'
+	| CHANNEL '[' expr ']' '{' types_one '}'
 	{
-		$$ = &ChannelType{IsUnstable: true, Elems: $4}
+		$$ = &ChannelType{IsUnstable: false, BufferSize: $3, Elems: $6}
+	}
+	| UNSTABLE CHANNEL '[' ']' '{' types_one '}'
+	{
+		$$ = &ChannelType{IsUnstable: true, BufferSize: nil, Elems: $6}
+	}
+	| UNSTABLE CHANNEL '[' expr ']' '{' types_one '}'
+	{
+		$$ = &ChannelType{IsUnstable: true, BufferSize: $4, Elems: $7}
 	}
 
 blocks_one

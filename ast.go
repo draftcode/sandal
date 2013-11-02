@@ -208,20 +208,32 @@ type (
 		Args    []Expression
 	}
 
+	NonblockRecvExpression struct {
+		Channel Expression
+		Args    []Expression
+	}
+
+	NonblockPeekExpression struct {
+		Channel Expression
+		Args    []Expression
+	}
+
 	ArrayExpression struct {
 		Elems []Expression
 	}
 )
 
-func (x *IdentifierExpression) expression()  {}
-func (x *NumberExpression) expression()      {}
-func (x *NotExpression) expression()         {}
-func (x *UnarySubExpression) expression()    {}
-func (x *ParenExpression) expression()       {}
-func (x *BinOpExpression) expression()       {}
-func (x *TimeoutRecvExpression) expression() {}
-func (x *TimeoutPeekExpression) expression() {}
-func (x *ArrayExpression) expression()       {}
+func (x *IdentifierExpression) expression()   {}
+func (x *NumberExpression) expression()       {}
+func (x *NotExpression) expression()          {}
+func (x *UnarySubExpression) expression()     {}
+func (x *ParenExpression) expression()        {}
+func (x *BinOpExpression) expression()        {}
+func (x *TimeoutRecvExpression) expression()  {}
+func (x *TimeoutPeekExpression) expression()  {}
+func (x *NonblockRecvExpression) expression() {}
+func (x *NonblockPeekExpression) expression() {}
+func (x *ArrayExpression) expression()        {}
 
 // ========================================
 // Misc
@@ -246,6 +258,7 @@ type (
 
 	ChannelType struct {
 		IsUnstable bool
+		BufferSize Expression
 		Elems      []Type
 	}
 )

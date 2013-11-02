@@ -20,10 +20,10 @@ func TestDataDefinition(t *testing.T) {
 }
 
 func TestParseModuleDefinition(t *testing.T) {
-	parse(t, "module A(ch channel { bool }, chs []channel { bit }) { init { ; }; };",
+	parse(t, "module A(ch channel [] { bool }, chs []channel [] { bit }) { init { ; }; };",
 		[]Definition{&ModuleDefinition{"A",
-			[]Parameter{Parameter{"ch", &ChannelType{false, []Type{&NamedType{"bool"}}}},
-				Parameter{"chs", &SetType{&ChannelType{false, []Type{&NamedType{"bit"}}}}}},
+			[]Parameter{Parameter{"ch", &ChannelType{false, nil, []Type{&NamedType{"bool"}}}},
+				Parameter{"chs", &SetType{&ChannelType{false, nil, []Type{&NamedType{"bit"}}}}}},
 			[]Definition{&InitBlock{[]Statement{&NullStatement{}}}}}})
 }
 
@@ -32,10 +32,10 @@ func TestParseConstantDefinition(t *testing.T) {
 }
 
 func TestParseProcDefinition(t *testing.T) {
-	parse(t, "proc A(ch channel { bool }, chs []channel { bit }) { ; };",
+	parse(t, "proc A(ch channel [] { bool }, chs []channel [] { bit }) { ; };",
 		[]Definition{&ProcDefinition{"A",
-			[]Parameter{Parameter{"ch", &ChannelType{false, []Type{&NamedType{"bool"}}}},
-				Parameter{"chs", &SetType{&ChannelType{false, []Type{&NamedType{"bit"}}}}}},
+			[]Parameter{Parameter{"ch", &ChannelType{false, nil, []Type{&NamedType{"bool"}}}},
+				Parameter{"chs", &SetType{&ChannelType{false, nil, []Type{&NamedType{"bit"}}}}}},
 			[]Statement{&NullStatement{}}}})
 }
 
@@ -135,5 +135,48 @@ func TestParseExpression(t *testing.T) {
 
 	parseInInitBlock(t, "timeout_recv(ch);", &ExprStatement{&TimeoutRecvExpression{&IdentifierExpression{"ch"}, []Expression{}}})
 	parseInInitBlock(t, "timeout_peek(ch);", &ExprStatement{&TimeoutPeekExpression{&IdentifierExpression{"ch"}, []Expression{}}})
+	parseInInitBlock(t, "nonblock_recv(ch);", &ExprStatement{&NonblockRecvExpression{&IdentifierExpression{"ch"}, []Expression{}}})
+	parseInInitBlock(t, "nonblock_peek(ch);", &ExprStatement{&NonblockPeekExpression{&IdentifierExpression{"ch"}, []Expression{}}})
 	parseInInitBlock(t, "[a, b];", &ExprStatement{&ArrayExpression{[]Expression{aExp, bExp}}})
+}
+
+func parseType(t *testing.T, src string, expect interface{}) {
+	s := new(Scanner)
+	s.Init([]rune("init { var a "+src+"; }"), 0)
+	definitions := Parse(s)
+	if len(definitions) != 1 {
+		t.Errorf("Expect %q to be parsed", src)
+		return
+	}
+	if initBlock, isInitBlock := definitions[0].(*InitBlock); isInitBlock {
+		if len(initBlock.Statements) != 1 {
+			t.Errorf("Expect %q to be parsed in InitBlock", src)
+			return
+		}
+		if stmt, isVarDecl := initBlock.Statements[0].(*VarDeclStatement); isVarDecl {
+			if !reflect.DeepEqual(stmt.Type, expect) {
+				t.Errorf("Expect %+#v \n but got %+#v", expect, stmt.Type)
+				return
+			}
+		} else {
+			t.Errorf("Expect %q to be parsed in InitBlock", src)
+			return
+		}
+	} else {
+		t.Errorf("Expect %q to be parsed in InitBlock", src)
+		return
+	}
+}
+
+func TestParseType(t *testing.T) {
+	parseType(t, "bool", &NamedType{"bool"})
+	parseType(t, "[]bool", &SetType{&NamedType{"bool"}})
+	parseType(t, "channel [] { bool }",
+		&ChannelType{false, nil, []Type{&NamedType{"bool"}}})
+	parseType(t, "channel [1+2] { bool }",
+		&ChannelType{false, &BinOpExpression{&NumberExpression{"1"}, ADD, &NumberExpression{"2"}}, []Type{&NamedType{"bool"}}})
+	parseType(t, "unstable channel [] { bool }",
+		&ChannelType{true, nil, []Type{&NamedType{"bool"}}})
+	parseType(t, "unstable channel [1+2] { bool }",
+		&ChannelType{true, &BinOpExpression{&NumberExpression{"1"}, ADD, &NumberExpression{"2"}}, []Type{&NamedType{"bool"}}})
 }
