@@ -85,6 +85,102 @@ func (b *InitBlock) typecheck(env *TypeEnv) error {
 // ========================================
 // Typecheck of expression
 
+func (x *LabelledStatement) typecheck(env *TypeEnv) error {
+	return x.Statement.typecheck(env)
+}
+func (x *BlockStatement) typecheck(env *TypeEnv) error {
+	for _, stmt := range x.Statements {
+		if err := stmt.typecheck(env); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (x *VarDeclStatement) typecheck(env *TypeEnv) error {
+	if x.Initializer != nil {
+		if err := x.Initializer.typecheck(env); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (x *IfStatement) typecheck(env *TypeEnv) error {
+	if err := x.Condition.typecheck(env); err != nil {
+		return err
+	}
+	for _, stmt := range x.TrueBranch {
+		if err := stmt.typecheck(env); err != nil {
+			return err
+		}
+	}
+	for _, stmt := range x.FalseBranch {
+		if err := stmt.typecheck(env); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (x *AssignmentStatement) typecheck(env *TypeEnv) error {
+	if err := x.Expr.typecheck(env); err != nil {
+		return err
+	}
+	if ty := env.Lookup(x.Variable); ty != nil {
+		if !ty.equal(x.Expr.type_(env)) {
+			return fmt.Errorf("Expect %s to be a type %s", x.Expr, ty)
+		}
+	} else {
+		return fmt.Errorf("Undefined variable %s", x.Variable)
+	}
+	return nil
+}
+func (x *OpAssignmentStatement) typecheck(env *TypeEnv) error { return nil } // TODO
+func (x *ChoiceStatement) typecheck(env *TypeEnv) error {
+	for _, block := range x.Blocks {
+		if err := block.typecheck(env); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (x *RecvStatement) typecheck(env *TypeEnv) error { return channelRecvOrPeekCheck(x, env) }
+func (x *PeekStatement) typecheck(env *TypeEnv) error { return channelRecvOrPeekCheck(x, env) }
+func (x *SendStatement) typecheck(env *TypeEnv) error         { return nil }
+func (x *ForStatement) typecheck(env *TypeEnv) error          { return nil }
+func (x *ForInStatement) typecheck(env *TypeEnv) error        { return nil }
+func (x *ForInRangeStatement) typecheck(env *TypeEnv) error   { return nil }
+func (x *BreakStatement) typecheck(env *TypeEnv) error        { return nil }
+func (x *GotoStatement) typecheck(env *TypeEnv) error         { return nil }
+func (x *CallStatement) typecheck(env *TypeEnv) error         { return nil }
+
+// Always valid
+func (x *SkipStatement) typecheck(env *TypeEnv) error { return nil }
+func (x *ExprStatement) typecheck(env *TypeEnv) error { return nil }
+func (x *NullStatement) typecheck(env *TypeEnv) error { return nil }
+
+func (x *ConstantDefinition) typeexec(env *TypeEnv)    {}
+func (x *LabelledStatement) typeexec(env *TypeEnv)     {}
+func (x *BlockStatement) typeexec(env *TypeEnv)        {}
+func (x *VarDeclStatement) typeexec(env *TypeEnv)      {}
+func (x *IfStatement) typeexec(env *TypeEnv)           {}
+func (x *AssignmentStatement) typeexec(env *TypeEnv)   {}
+func (x *OpAssignmentStatement) typeexec(env *TypeEnv) {}
+func (x *ChoiceStatement) typeexec(env *TypeEnv)       {}
+func (x *RecvStatement) typeexec(env *TypeEnv)         {}
+func (x *PeekStatement) typeexec(env *TypeEnv)         {}
+func (x *SendStatement) typeexec(env *TypeEnv)         {}
+func (x *ForStatement) typeexec(env *TypeEnv)          {}
+func (x *ForInStatement) typeexec(env *TypeEnv)        {}
+func (x *ForInRangeStatement) typeexec(env *TypeEnv)   {}
+func (x *BreakStatement) typeexec(env *TypeEnv)        {}
+func (x *GotoStatement) typeexec(env *TypeEnv)         {}
+func (x *CallStatement) typeexec(env *TypeEnv)         {}
+func (x *SkipStatement) typeexec(env *TypeEnv)         {}
+func (x *ExprStatement) typeexec(env *TypeEnv)         {}
+func (x *NullStatement) typeexec(env *TypeEnv)         {}
+
+// ========================================
+// Typecheck of expression
+
 func (x *IdentifierExpression) type_(env *TypeEnv) Type {
 	return env.Lookup(x.Name)
 }
@@ -253,42 +349,6 @@ func (x *BinOpExpression) typecheck(env *TypeEnv) error {
 	return nil
 }
 
-func channelRecvOrPeekCheck(chExpr ChanRecvExpr, env *TypeEnv) error {
-	if err := chExpr.RecvChannel().typecheck(env); err != nil {
-		return err
-	}
-	for _, arg := range chExpr.RecvArgs() {
-		if err := arg.typecheck(env); err != nil {
-			return err
-		}
-	}
-
-	var elemTypes []Type
-	switch ty := chExpr.RecvChannel().type_(env).(type) {
-	case HandshakeChannelType:
-		elemTypes = ty.Elems
-	case BufferedChannelType:
-		elemTypes = ty.Elems
-	default:
-		return fmt.Errorf("Expect the first argument of %s to be a channel but got %s",
-			chExpr, chExpr.RecvChannel().type_(env))
-	}
-
-	if len(elemTypes) != len(chExpr.RecvArgs()) {
-		return fmt.Errorf("Expect the arugments of %s to have %d elements",
-			chExpr, len(elemTypes))
-	}
-	for i := 0; i < len(elemTypes); i++ {
-		if !elemTypes[i].equal(chExpr.RecvArgs()[i].type_(env)) {
-			return fmt.Errorf("Expect the argument %s to be a %s", chExpr.RecvArgs()[i], elemTypes[i])
-		}
-		if _, isIdentExpr := chExpr.RecvArgs()[i].(*IdentifierExpression); !isIdentExpr {
-			return fmt.Errorf("Expect the argument %s to be an identifier", chExpr.RecvArgs()[i])
-		}
-	}
-	return nil
-}
-
 func (x *TimeoutRecvExpression) typecheck(env *TypeEnv) error {
 	return channelRecvOrPeekCheck(x, env)
 }
@@ -313,6 +373,44 @@ func (x *ArrayExpression) typecheck(env *TypeEnv) error {
 		}
 		if !ty.equal(elem.type_(env)) {
 			return fmt.Errorf("Expect %s to be a %s", elem, ty)
+		}
+	}
+	return nil
+}
+
+// ========================================
+
+func channelRecvOrPeekCheck(ch ChanRecvPoll, env *TypeEnv) error {
+	if err := ch.RecvChannel().typecheck(env); err != nil {
+		return err
+	}
+	for _, arg := range ch.RecvArgs() {
+		if err := arg.typecheck(env); err != nil {
+			return err
+		}
+	}
+
+	var elemTypes []Type
+	switch ty := ch.RecvChannel().type_(env).(type) {
+	case HandshakeChannelType:
+		elemTypes = ty.Elems
+	case BufferedChannelType:
+		elemTypes = ty.Elems
+	default:
+		return fmt.Errorf("Expect the first argument of %s to be a channel but got %s",
+			ch, ch.RecvChannel().type_(env))
+	}
+
+	if len(elemTypes) != len(ch.RecvArgs()) {
+		return fmt.Errorf("Expect the arugments of %s to have %d elements",
+			ch, len(elemTypes))
+	}
+	for i := 0; i < len(elemTypes); i++ {
+		if !elemTypes[i].equal(ch.RecvArgs()[i].type_(env)) {
+			return fmt.Errorf("Expect the argument %s to be a %s", ch.RecvArgs()[i], elemTypes[i])
+		}
+		if _, isIdentExpr := ch.RecvArgs()[i].(*IdentifierExpression); !isIdentExpr {
+			return fmt.Errorf("Expect the argument %s to be an identifier", ch.RecvArgs()[i])
 		}
 	}
 	return nil

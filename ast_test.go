@@ -4,42 +4,6 @@ import (
 	"testing"
 )
 
-func TestExpressionStringify(t *testing.T) {
-	if s := (&IdentifierExpression{"a"}).String(); s != "a" {
-		t.Errorf("Expect %q to be %q", s, "a")
-	}
-	if s := (&NumberExpression{"1"}).String(); s != "1" {
-		t.Errorf("Expect %q to be %q", s, "1")
-	}
-	if s := (&NotExpression{&IdentifierExpression{"a"}}).String(); s != "!a" {
-		t.Errorf("Expect %q to be %q", s, "!a")
-	}
-	if s := (&UnarySubExpression{&IdentifierExpression{"a"}}).String(); s != "-a" {
-		t.Errorf("Expect %q to be %q", s, "-a")
-	}
-	if s := (&ParenExpression{&IdentifierExpression{"a"}}).String(); s != "(a)" {
-		t.Errorf("Expect %q to be %q", s, "(a)")
-	}
-	if s := (&BinOpExpression{&IdentifierExpression{"a"}, ADD, &IdentifierExpression{"b"}}).String(); s != "a+b" {
-		t.Errorf("Expect %q to be %q", s, "a+b")
-	}
-	if s := (&TimeoutRecvExpression{&IdentifierExpression{"ch"}, []Expression{&IdentifierExpression{"a"}}}).String(); s != "timeout_recv(ch, a)" {
-		t.Errorf("Expect %q to be %q", s, "timeout_recv(ch, a)")
-	}
-	if s := (&TimeoutPeekExpression{&IdentifierExpression{"ch"}, []Expression{&IdentifierExpression{"a"}}}).String(); s != "timeout_peek(ch, a)" {
-		t.Errorf("Expect %q to be %q", s, "timeout_peek(ch, a)")
-	}
-	if s := (&NonblockRecvExpression{&IdentifierExpression{"ch"}, []Expression{&IdentifierExpression{"a"}}}).String(); s != "nonblock_recv(ch, a)" {
-		t.Errorf("Expect %q to be %q", s, "nonblock_recv(ch, a)")
-	}
-	if s := (&NonblockPeekExpression{&IdentifierExpression{"ch"}, []Expression{&IdentifierExpression{"a"}}}).String(); s != "nonblock_peek(ch, a)" {
-		t.Errorf("Expect %q to be %q", s, "nonblock_peek(ch, a)")
-	}
-	if s := (&ArrayExpression{[]Expression{&IdentifierExpression{"a"}, &IdentifierExpression{"b"}}}).String(); s != "[a, b]" {
-		t.Errorf("Expect %q to be %q", s, "[a, b]")
-	}
-}
-
 func TestNamedTypeEquality(t *testing.T) {
 	intNamedTypeA := NamedType{"int"}
 	intNamedTypeB := NamedType{"int"}
@@ -139,35 +103,5 @@ func TestBufferedChannelTypeEquality(t *testing.T) {
 	}
 	if chTypeA.equal(chTypeF) {
 		t.Error("Expect channel [] {\"int\"} is not equal to channel [] {\"int\", \"int\"}")
-	}
-}
-
-func TestTypeToString(t *testing.T) {
-	if s := (NamedType{"int"}).String(); s != "int" {
-		t.Errorf("Expect int to be stringified as %q but got %q", "int", s)
-	}
-	if s := (CallableType{[]Type{NamedType{"int"}, NamedType{"bool"}}}).String(); s != "callable(int, bool)" {
-		t.Errorf("Expect callable(int) to be stringified as %q but got %q", "callable(int, bool)", s)
-	}
-	if s := (ArrayType{NamedType{"int"}}).String(); s != "[]int" {
-		t.Errorf("Expect []int to be stringified as %q bug got %q", "[]int", s)
-	}
-	if s := (HandshakeChannelType{false, []Type{NamedType{"int"}}}).String(); s != "channel {int}" {
-		t.Errorf("Expect channel {int} to be stringified as %q bug got %q", "channel {int}", s)
-	}
-	if s := (HandshakeChannelType{true, []Type{NamedType{"int"}}}).String(); s != "unstable channel {int}" {
-		t.Errorf("Expect unstable channel {int} to be stringified as %q bug got %q", "unstable channel {int}", s)
-	}
-	if s := (BufferedChannelType{false, &IdentifierExpression{"a"}, []Type{NamedType{"int"}}}).String(); s != "channel [a] {int}" {
-		t.Errorf("Expect channel [a] {int} to be stringified as %q bug got %q", "channel [a] {int}", s)
-	}
-	if s := (BufferedChannelType{true, &IdentifierExpression{"a"}, []Type{NamedType{"int"}}}).String(); s != "unstable channel [a] {int}" {
-		t.Errorf("Expect unstable channel [a] {int} to be stringified as %q bug got %q", "unstable channel [a] {int}", s)
-	}
-	if s := (BufferedChannelType{false, nil, []Type{NamedType{"int"}}}).String(); s != "channel [] {int}" {
-		t.Errorf("Expect channel [] {int} to be stringified as %q bug got %q", "channel [] {int}", s)
-	}
-	if s := (BufferedChannelType{true, nil, []Type{NamedType{"int"}}}).String(); s != "unstable channel [] {int}" {
-		t.Errorf("Expect unstable channel [] {int} to be stringified as %q bug got %q", "unstable channel [] {int}", s)
 	}
 }

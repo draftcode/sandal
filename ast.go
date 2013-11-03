@@ -1,9 +1,5 @@
 package sandal
 
-import (
-	"strings"
-)
-
 // Typecheck functions are defined in typecheck.go
 type (
 	Definition interface {
@@ -13,7 +9,9 @@ type (
 
 	Statement interface {
 		statement()
-		// typecheck(*TypeEnv) error
+		typecheck(*TypeEnv) error
+		typeexec(*TypeEnv)
+		String() string
 	}
 
 	Expression interface {
@@ -22,6 +20,14 @@ type (
 		type_(*TypeEnv) Type
 		String() string
 	}
+
+	// For type-checking
+	ChanRecvPoll interface {
+		RecvChannel() Expression
+		RecvArgs() []Expression
+		String() string
+	}
+
 )
 
 // ========================================
@@ -179,6 +185,11 @@ func (x *SkipStatement) statement()         {}
 func (x *ExprStatement) statement()         {}
 func (x *NullStatement) statement()         {}
 
+func (x *RecvStatement) RecvChannel() Expression { return x.Channel }
+func (x *PeekStatement) RecvChannel() Expression { return x.Channel }
+func (x *RecvStatement) RecvArgs() []Expression   { return x.Args }
+func (x *PeekStatement) RecvArgs() []Expression   { return x.Args }
+
 // ========================================
 // Expressions
 
@@ -207,12 +218,6 @@ type (
 		LHS      Expression
 		Operator int
 		RHS      Expression
-	}
-
-	ChanRecvExpr interface {
-		RecvChannel() Expression
-		RecvArgs() []Expression
-		String() string
 	}
 
 	TimeoutRecvExpression struct {
@@ -249,27 +254,6 @@ func (x *TimeoutPeekExpression) RecvArgs() []Expression   { return x.Args }
 func (x *NonblockRecvExpression) RecvArgs() []Expression  { return x.Args }
 func (x *NonblockPeekExpression) RecvArgs() []Expression  { return x.Args }
 
-var operatorString = map[int]string{
-	ADD:  "+",
-	SUB:  "-",
-	MUL:  "*",
-	QUO:  "/",
-	REM:  "%",
-	AND:  "&",
-	OR:   "|",
-	XOR:  "^",
-	SHL:  "<<",
-	SHR:  ">>",
-	LAND: "&&",
-	LOR:  "||",
-	EQL:  "==",
-	LSS:  "<",
-	GTR:  ">",
-	NEQ:  "!=",
-	LEQ:  "<=",
-	GEQ:  ">=",
-}
-
 func (x *IdentifierExpression) expression()   {}
 func (x *NumberExpression) expression()       {}
 func (x *NotExpression) expression()          {}
@@ -281,54 +265,6 @@ func (x *TimeoutPeekExpression) expression()  {}
 func (x *NonblockRecvExpression) expression() {}
 func (x *NonblockPeekExpression) expression() {}
 func (x *ArrayExpression) expression()        {}
-
-func (x *IdentifierExpression) String() string { return x.Name }
-func (x *NumberExpression) String() string     { return x.Lit }
-func (x *NotExpression) String() string        { return "!" + x.SubExpr.String() }
-func (x *UnarySubExpression) String() string   { return "-" + x.SubExpr.String() }
-func (x *ParenExpression) String() string      { return "(" + x.SubExpr.String() + ")" }
-func (x *BinOpExpression) String() string {
-	if s, exist := operatorString[x.Operator]; exist {
-		return x.LHS.String() + s + x.RHS.String()
-	} else {
-		panic("Unknown operator")
-	}
-}
-func (x *TimeoutRecvExpression) String() string {
-	params := []string{x.Channel.String()}
-	for _, arg := range x.Args {
-		params = append(params, arg.String())
-	}
-	return "timeout_recv(" + strings.Join(params, ", ") + ")"
-}
-func (x *TimeoutPeekExpression) String() string {
-	params := []string{x.Channel.String()}
-	for _, arg := range x.Args {
-		params = append(params, arg.String())
-	}
-	return "timeout_peek(" + strings.Join(params, ", ") + ")"
-}
-func (x *NonblockRecvExpression) String() string {
-	params := []string{x.Channel.String()}
-	for _, arg := range x.Args {
-		params = append(params, arg.String())
-	}
-	return "nonblock_recv(" + strings.Join(params, ", ") + ")"
-}
-func (x *NonblockPeekExpression) String() string {
-	params := []string{x.Channel.String()}
-	for _, arg := range x.Args {
-		params = append(params, arg.String())
-	}
-	return "nonblock_peek(" + strings.Join(params, ", ") + ")"
-}
-func (x *ArrayExpression) String() string {
-	elems := []string{}
-	for _, elem := range x.Elems {
-		elems = append(elems, elem.String())
-	}
-	return "[" + strings.Join(elems, ", ") + "]"
-}
 
 // ========================================
 // Misc
@@ -439,48 +375,3 @@ func (x BufferedChannelType) equal(ty Type) bool {
 	}
 }
 
-func (x NamedType) String() string {
-	return x.Name
-}
-
-func (x CallableType) String() string {
-	params := []string{}
-	for _, param := range x.Parameters {
-		params = append(params, param.String())
-	}
-	return "callable(" + strings.Join(params, ", ") + ")"
-}
-
-func (x ArrayType) String() string {
-	return "[]" + x.ElemType.String()
-}
-
-func (x HandshakeChannelType) String() string {
-	elems := []string{}
-	for _, elem := range x.Elems {
-		elems = append(elems, elem.String())
-	}
-	unstable := ""
-	if x.IsUnstable {
-		unstable = "unstable "
-	}
-	return unstable + "channel {" + strings.Join(elems, ", ") + "}"
-}
-
-func (x BufferedChannelType) String() string {
-	bufsize := ""
-	if x.BufferSize != nil {
-		bufsize = x.BufferSize.String()
-	}
-
-	elems := []string{}
-	for _, elem := range x.Elems {
-		elems = append(elems, elem.String())
-	}
-
-	unstable := ""
-	if x.IsUnstable {
-		unstable = "unstable "
-	}
-	return unstable + "channel [" + bufsize + "] {" + strings.Join(elems, ", ") + "}"
-}
