@@ -3,7 +3,8 @@
 package sandal
 
 import (
-	"log")
+	"log"
+)
 
 type Token struct {
 	tok int
@@ -172,9 +173,9 @@ module_body
 	| init_block
 
 const_def
-	: CONST IDENTIFIER ASSIGN expr ';' /* This should be a const expression. */
+	: CONST IDENTIFIER type ASSIGN expr ';' /* This should be a const expression. */
 	{
-		$$ = &ConstantDefinition{Name: $2.lit, Expr: $4}
+		$$ = &ConstantDefinition{Name: $2.lit, Type: $3, Expr: $5}
 	}
 
 proc_def
@@ -528,23 +529,31 @@ type	: IDENTIFIER
 	}
 	| '[' ']' type
 	{
-		$$ = &SetType{SetType: $3}
+		$$ = &ArrayType{ElemType: $3}
+	}
+	| CHANNEL '{' types_one '}'
+	{
+		$$ = &HandshakeChannelType{IsUnstable: false, Elems: $3}
+	}
+	| UNSTABLE CHANNEL '{' types_one '}'
+	{
+		$$ = &HandshakeChannelType{IsUnstable: true, Elems: $4}
 	}
 	| CHANNEL '[' ']' '{' types_one '}'
 	{
-		$$ = &ChannelType{IsUnstable: false, BufferSize: nil, Elems: $5}
+		$$ = &BufferedChannelType{IsUnstable: false, BufferSize: nil, Elems: $5}
 	}
 	| CHANNEL '[' expr ']' '{' types_one '}'
 	{
-		$$ = &ChannelType{IsUnstable: false, BufferSize: $3, Elems: $6}
+		$$ = &BufferedChannelType{IsUnstable: false, BufferSize: $3, Elems: $6}
 	}
 	| UNSTABLE CHANNEL '[' ']' '{' types_one '}'
 	{
-		$$ = &ChannelType{IsUnstable: true, BufferSize: nil, Elems: $6}
+		$$ = &BufferedChannelType{IsUnstable: true, BufferSize: nil, Elems: $6}
 	}
 	| UNSTABLE CHANNEL '[' expr ']' '{' types_one '}'
 	{
-		$$ = &ChannelType{IsUnstable: true, BufferSize: $4, Elems: $7}
+		$$ = &BufferedChannelType{IsUnstable: true, BufferSize: $4, Elems: $7}
 	}
 
 blocks_one

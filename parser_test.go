@@ -20,22 +20,22 @@ func TestDataDefinition(t *testing.T) {
 }
 
 func TestParseModuleDefinition(t *testing.T) {
-	parse(t, "module A(ch channel [] { bool }, chs []channel [] { bit }) { init { ; }; };",
+	parse(t, "module A(ch channel { bool }, chs []channel { bit }) { init { ; }; };",
 		[]Definition{&ModuleDefinition{"A",
-			[]Parameter{Parameter{"ch", &ChannelType{false, nil, []Type{&NamedType{"bool"}}}},
-				Parameter{"chs", &SetType{&ChannelType{false, nil, []Type{&NamedType{"bit"}}}}}},
+			[]Parameter{Parameter{"ch", &HandshakeChannelType{false, []Type{&NamedType{"bool"}}}},
+				Parameter{"chs", &ArrayType{&HandshakeChannelType{false, []Type{&NamedType{"bit"}}}}}},
 			[]Definition{&InitBlock{[]Statement{&NullStatement{}}}}}})
 }
 
 func TestParseConstantDefinition(t *testing.T) {
-	parse(t, "const a = 1;", []Definition{&ConstantDefinition{"a", &NumberExpression{"1"}}})
+	parse(t, "const a int = 1;", []Definition{&ConstantDefinition{"a", &NamedType{"int"}, &NumberExpression{"1"}}})
 }
 
 func TestParseProcDefinition(t *testing.T) {
-	parse(t, "proc A(ch channel [] { bool }, chs []channel [] { bit }) { ; };",
+	parse(t, "proc A(ch channel { bool }, chs []channel { bit }) { ; };",
 		[]Definition{&ProcDefinition{"A",
-			[]Parameter{Parameter{"ch", &ChannelType{false, nil, []Type{&NamedType{"bool"}}}},
-				Parameter{"chs", &SetType{&ChannelType{false, nil, []Type{&NamedType{"bit"}}}}}},
+			[]Parameter{Parameter{"ch", &HandshakeChannelType{false, []Type{&NamedType{"bool"}}}},
+				Parameter{"chs", &ArrayType{&HandshakeChannelType{false, []Type{&NamedType{"bit"}}}}}},
 			[]Statement{&NullStatement{}}}})
 }
 
@@ -102,7 +102,7 @@ func TestParseStatement(t *testing.T) {
 	parseInInitBlock(t, "skip;", &SkipStatement{})
 	parseInInitBlock(t, ";", &NullStatement{})
 	parseInInitBlock(t, "1;", &ExprStatement{&NumberExpression{"1"}})
-	parseInInitBlock(t, "const a = 1;", &ConstantDefinition{"a", &NumberExpression{"1"}})
+	parseInInitBlock(t, "const a int = 1;", &ConstantDefinition{"a", &NamedType{"int"}, &NumberExpression{"1"}})
 }
 
 func TestParseExpression(t *testing.T) {
@@ -170,13 +170,15 @@ func parseType(t *testing.T, src string, expect interface{}) {
 
 func TestParseType(t *testing.T) {
 	parseType(t, "bool", &NamedType{"bool"})
-	parseType(t, "[]bool", &SetType{&NamedType{"bool"}})
+	parseType(t, "[]bool", &ArrayType{&NamedType{"bool"}})
+	parseType(t, "channel { bool }", &HandshakeChannelType{false, []Type{&NamedType{"bool"}}})
+	parseType(t, "unstable channel { bool }", &HandshakeChannelType{true, []Type{&NamedType{"bool"}}})
 	parseType(t, "channel [] { bool }",
-		&ChannelType{false, nil, []Type{&NamedType{"bool"}}})
+		&BufferedChannelType{false, nil, []Type{&NamedType{"bool"}}})
 	parseType(t, "channel [1+2] { bool }",
-		&ChannelType{false, &BinOpExpression{&NumberExpression{"1"}, ADD, &NumberExpression{"2"}}, []Type{&NamedType{"bool"}}})
+		&BufferedChannelType{false, &BinOpExpression{&NumberExpression{"1"}, ADD, &NumberExpression{"2"}}, []Type{&NamedType{"bool"}}})
 	parseType(t, "unstable channel [] { bool }",
-		&ChannelType{true, nil, []Type{&NamedType{"bool"}}})
+		&BufferedChannelType{true, nil, []Type{&NamedType{"bool"}}})
 	parseType(t, "unstable channel [1+2] { bool }",
-		&ChannelType{true, &BinOpExpression{&NumberExpression{"1"}, ADD, &NumberExpression{"2"}}, []Type{&NamedType{"bool"}}})
+		&BufferedChannelType{true, &BinOpExpression{&NumberExpression{"1"}, ADD, &NumberExpression{"2"}}, []Type{&NamedType{"bool"}}})
 }

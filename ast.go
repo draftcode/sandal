@@ -1,16 +1,21 @@
 package sandal
 
+// Typecheck functions are defined in typecheck.go
 type (
 	Definition interface {
 		definition()
+		typecheck(*TypeEnv) error
 	}
 
 	Statement interface {
 		statement()
+		// typecheck(*TypeEnv) error
 	}
 
 	Expression interface {
 		expression()
+		typecheck(*TypeEnv) error
+		type_() Type
 	}
 )
 
@@ -32,6 +37,7 @@ type (
 	// ConstantDefinition is a definition but also is a statement.
 	ConstantDefinition struct {
 		Name string
+		Type Type
 		Expr Expression
 	}
 
@@ -246,23 +252,99 @@ type (
 
 	Type interface {
 		typetype()
+		equal(Type) bool
 	}
 
 	NamedType struct {
 		Name string
 	}
 
-	SetType struct {
-		SetType Type
+	CallableType struct {
+		Parameters []Type
 	}
 
-	ChannelType struct {
+	ArrayType struct {
+		ElemType Type
+	}
+
+	HandshakeChannelType struct {
+		IsUnstable bool
+		Elems      []Type
+	}
+
+	BufferedChannelType struct {
 		IsUnstable bool
 		BufferSize Expression
 		Elems      []Type
 	}
 )
 
-func (x *NamedType) typetype()   {}
-func (x *SetType) typetype()     {}
-func (x *ChannelType) typetype() {}
+func (x *NamedType) typetype()            {}
+func (x *CallableType) typetype()         {}
+func (x *ArrayType) typetype()            {}
+func (x *HandshakeChannelType) typetype() {}
+func (x *BufferedChannelType) typetype()  {}
+
+func (x *NamedType) equal(ty Type) bool {
+	if ty, b := ty.(*NamedType); b {
+		return (ty.Name == x.Name)
+	} else {
+		return false
+	}
+}
+
+func (x *CallableType) equal(ty Type) bool {
+	if ty, b := ty.(*CallableType); b {
+		if len(ty.Parameters) != len(x.Parameters) {
+			return false
+		}
+		for i := 0; i < len(x.Parameters); i++ {
+			if !ty.Parameters[i].equal(x.Parameters[i]) {
+				return false
+			}
+		}
+		return true
+	} else {
+		return false
+	}
+}
+
+func (x *ArrayType) equal(ty Type) bool {
+	if ty, b := ty.(*ArrayType); b {
+		return ty.ElemType.equal(x.ElemType)
+	} else {
+		return false
+	}
+}
+
+func (x *HandshakeChannelType) equal(ty Type) bool {
+	if ty, b := ty.(*HandshakeChannelType); b {
+		if len(ty.Elems) != len(x.Elems) {
+			return false
+		}
+		for i := 0; i < len(x.Elems); i++ {
+			if !ty.Elems[i].equal(x.Elems[i]) {
+				return false
+			}
+		}
+		return true
+	} else {
+		return false
+	}
+}
+
+func (x *BufferedChannelType) equal(ty Type) bool {
+	if ty, b := ty.(*BufferedChannelType); b {
+		if len(ty.Elems) != len(x.Elems) {
+			return false
+		}
+		for i := 0; i < len(x.Elems); i++ {
+			if !ty.Elems[i].equal(x.Elems[i]) {
+				return false
+			}
+		}
+		return true
+	} else {
+		return false
+	}
+}
