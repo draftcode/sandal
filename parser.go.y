@@ -42,7 +42,7 @@ type Token struct {
 %type<identifiers> idents_one
 %type<parameters> parameters_zero parameters_one
 %type<parameter> parameter
-%type<expressions> arguments_zero arguments_one
+%type<expressions> arguments_one
 %type<typetypes> types_one
 %type<typetype> type
 %type<blocks> blocks_one
@@ -434,7 +434,7 @@ expr	: IDENTIFIER
 	{
 		$$ = &NonblockPeekExpression{Channel: $3[0], Args: $3[1:]}
 	}
-	| '[' arguments_zero ']'
+	| '[' arguments_one ']'
 	{
 		$$ = &ArrayExpression{Elems: $2}
 	}
@@ -485,16 +485,6 @@ parameter
 		$$ = Parameter{Name: $1.lit, Type: $2}
 	}
 
-arguments_zero
-	:
-	{
-		$$ = nil
-	}
-	| arguments_one
-	{
-		$$ = $1
-	}
-
 arguments_one
 	: expr
 	{
@@ -525,35 +515,35 @@ types_one
 
 type	: IDENTIFIER
 	{
-		$$ = &NamedType{Name: $1.lit}
+		$$ = NamedType{Name: $1.lit}
 	}
 	| '[' ']' type
 	{
-		$$ = &ArrayType{ElemType: $3}
+		$$ = ArrayType{ElemType: $3}
 	}
 	| CHANNEL '{' types_one '}'
 	{
-		$$ = &HandshakeChannelType{IsUnstable: false, Elems: $3}
+		$$ = HandshakeChannelType{IsUnstable: false, Elems: $3}
 	}
 	| UNSTABLE CHANNEL '{' types_one '}'
 	{
-		$$ = &HandshakeChannelType{IsUnstable: true, Elems: $4}
+		$$ = HandshakeChannelType{IsUnstable: true, Elems: $4}
 	}
 	| CHANNEL '[' ']' '{' types_one '}'
 	{
-		$$ = &BufferedChannelType{IsUnstable: false, BufferSize: nil, Elems: $5}
+		$$ = BufferedChannelType{IsUnstable: false, BufferSize: nil, Elems: $5}
 	}
 	| CHANNEL '[' expr ']' '{' types_one '}'
 	{
-		$$ = &BufferedChannelType{IsUnstable: false, BufferSize: $3, Elems: $6}
+		$$ = BufferedChannelType{IsUnstable: false, BufferSize: $3, Elems: $6}
 	}
 	| UNSTABLE CHANNEL '[' ']' '{' types_one '}'
 	{
-		$$ = &BufferedChannelType{IsUnstable: true, BufferSize: nil, Elems: $6}
+		$$ = BufferedChannelType{IsUnstable: true, BufferSize: nil, Elems: $6}
 	}
 	| UNSTABLE CHANNEL '[' expr ']' '{' types_one '}'
 	{
-		$$ = &BufferedChannelType{IsUnstable: true, BufferSize: $4, Elems: $7}
+		$$ = BufferedChannelType{IsUnstable: true, BufferSize: $4, Elems: $7}
 	}
 
 blocks_one

@@ -20,3 +20,14 @@ func NewTypeEnvFromUpper(upper *TypeEnv) (ret *TypeEnv) {
 func (env *TypeEnv) Add(name string, ty Type) {
 	env.scope[name] = ty
 }
+
+func (env *TypeEnv) Lookup(name string) Type {
+	if ty, found := env.scope[name]; found {
+		return ty
+	}
+	if env.upper != nil {
+		return env.upper.Lookup(name)
+	} else {
+		return nil
+	}
+}
