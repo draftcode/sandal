@@ -22,12 +22,11 @@ type (
 	}
 
 	// For type-checking
-	ChanRecvPoll interface {
-		RecvChannel() Expression
-		RecvArgs() []Expression
+	ChanExpr interface {
+		channel() Expression
+		args() []Expression
 		String() string
 	}
-
 )
 
 // ========================================
@@ -185,10 +184,12 @@ func (x *SkipStatement) statement()         {}
 func (x *ExprStatement) statement()         {}
 func (x *NullStatement) statement()         {}
 
-func (x *RecvStatement) RecvChannel() Expression { return x.Channel }
-func (x *PeekStatement) RecvChannel() Expression { return x.Channel }
-func (x *RecvStatement) RecvArgs() []Expression   { return x.Args }
-func (x *PeekStatement) RecvArgs() []Expression   { return x.Args }
+func (x *RecvStatement) channel() Expression { return x.Channel }
+func (x *PeekStatement) channel() Expression { return x.Channel }
+func (x *SendStatement) channel() Expression { return x.Channel }
+func (x *RecvStatement) args() []Expression  { return x.Args }
+func (x *PeekStatement) args() []Expression  { return x.Args }
+func (x *SendStatement) args() []Expression  { return x.Args }
 
 // ========================================
 // Expressions
@@ -245,14 +246,14 @@ type (
 	}
 )
 
-func (x *TimeoutRecvExpression) RecvChannel() Expression  { return x.Channel }
-func (x *TimeoutPeekExpression) RecvChannel() Expression  { return x.Channel }
-func (x *NonblockRecvExpression) RecvChannel() Expression { return x.Channel }
-func (x *NonblockPeekExpression) RecvChannel() Expression { return x.Channel }
-func (x *TimeoutRecvExpression) RecvArgs() []Expression   { return x.Args }
-func (x *TimeoutPeekExpression) RecvArgs() []Expression   { return x.Args }
-func (x *NonblockRecvExpression) RecvArgs() []Expression  { return x.Args }
-func (x *NonblockPeekExpression) RecvArgs() []Expression  { return x.Args }
+func (x *TimeoutRecvExpression) channel() Expression  { return x.Channel }
+func (x *TimeoutPeekExpression) channel() Expression  { return x.Channel }
+func (x *NonblockRecvExpression) channel() Expression { return x.Channel }
+func (x *NonblockPeekExpression) channel() Expression { return x.Channel }
+func (x *TimeoutRecvExpression) args() []Expression   { return x.Args }
+func (x *TimeoutPeekExpression) args() []Expression   { return x.Args }
+func (x *NonblockRecvExpression) args() []Expression  { return x.Args }
+func (x *NonblockPeekExpression) args() []Expression  { return x.Args }
 
 func (x *IdentifierExpression) expression()   {}
 func (x *NumberExpression) expression()       {}
@@ -374,4 +375,3 @@ func (x BufferedChannelType) equal(ty Type) bool {
 		return false
 	}
 }
-
