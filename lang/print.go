@@ -1,4 +1,4 @@
-package sandal
+package lang
 
 import (
 	"fmt"

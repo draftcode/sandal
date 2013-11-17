@@ -1,6 +1,6 @@
 // vim: noet sw=8 sts=8
 %{
-package sandal
+package lang
 
 import (
 	"log"

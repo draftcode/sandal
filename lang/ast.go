@@ -1,4 +1,4 @@
-package sandal
+package lang
 
 // Typecheck functions are defined in typecheck.go
 type (

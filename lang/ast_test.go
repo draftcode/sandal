@@ -1,4 +1,4 @@
-package sandal
+package lang
 
 import (
 	"testing"
@@ -62,19 +62,19 @@ func TestHandshakeChannelTypeEquality(t *testing.T) {
 	chTypeE := HandshakeChannelType{false, []Type{NamedType{"int"}, NamedType{"int"}}}
 	bufCh := BufferedChannelType{false, nil, []Type{NamedType{"int"}}}
 	if !chTypeA.equal(chTypeB) {
-		t.Error("Expect channel {\"int\"} is equal to channel {\"int\"}")
+		t.Error(`Expect channel {"int"} is equal to channel {"int"}`)
 	}
 	if chTypeA.equal(bufCh) {
-		t.Error("Expect channel {\"int\"} is not equal to channel [] {\"int\"}")
+		t.Error(`Expect channel {"int"} is not equal to channel [] {"int"}`)
 	}
 	if chTypeA.equal(chTypeC) {
-		t.Error("Expect channel {\"int\"} is not equal to channel {\"bool\"}")
+		t.Error(`Expect channel {"int"} is not equal to channel {"bool"}`)
 	}
 	if !chTypeA.equal(chTypeD) {
-		t.Error("Expect channel {\"int\"} is equal to unstable channel {\"int\"}")
+		t.Error(`Expect channel {"int"} is equal to unstable channel {"int"}`)
 	}
 	if chTypeA.equal(chTypeE) {
-		t.Error("Expect channel {\"int\"} is not equal to channel {\"int\", \"int\"}")
+		t.Error(`Expect channel {"int"} is not equal to channel {"int", "int"}`)
 	}
 }
 
@@ -87,21 +87,21 @@ func TestBufferedChannelTypeEquality(t *testing.T) {
 	chTypeF := BufferedChannelType{false, nil, []Type{NamedType{"int"}, NamedType{"int"}}}
 	handshakeType := HandshakeChannelType{false, []Type{NamedType{"int"}}}
 	if !chTypeA.equal(chTypeB) {
-		t.Error("Expect channel [] {\"int\"} is equal to channel [] {\"int\"}")
+		t.Error(`Expect channel [] {"int"} is equal to channel [] {"int"}`)
 	}
 	if chTypeA.equal(handshakeType) {
-		t.Error("Expect channel [] {\"int\"} is not equal to channel {\"int\"}")
+		t.Error(`Expect channel [] {"int"} is not equal to channel {"int"}`)
 	}
 	if chTypeA.equal(chTypeC) {
-		t.Error("Expect channel [] {\"int\"} is not equal to channel [] {\"bool\"}")
+		t.Error(`Expect channel [] {"int"} is not equal to channel [] {"bool"}`)
 	}
 	if !chTypeA.equal(chTypeD) {
-		t.Error("Expect channel [] {\"int\"} is equal to unstable channel [] {\"int\"}")
+		t.Error(`Expect channel [] {"int"} is equal to unstable channel [] {"int"}`)
 	}
 	if !chTypeA.equal(chTypeE) {
-		t.Error("Expect channel [] {\"int\"} is equal to channel [1] {\"int\"}")
+		t.Error(`Expect channel [] {"int"} is equal to channel [1] {"int"}`)
 	}
 	if chTypeA.equal(chTypeF) {
-		t.Error("Expect channel [] {\"int\"} is not equal to channel [] {\"int\", \"int\"}")
+		t.Error(`Expect channel [] {"int"} is not equal to channel [] {"int", "int"}`)
 	}
 }

@@ -1,6 +1,6 @@
 
 //line parser.go.y:3
-package sandal
+package lang
 import __yyfmt__ "fmt"
 //line parser.go.y:3
 		

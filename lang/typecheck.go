@@ -1,8 +1,40 @@
-package sandal
+package lang
 
 import (
 	"fmt"
 )
+
+type TypeEnv struct {
+	upper *TypeEnv
+	scope map[string]Type
+}
+
+func NewTypeEnv() (ret *TypeEnv) {
+	ret = new(TypeEnv)
+	ret.scope = make(map[string]Type)
+	return
+}
+
+func NewTypeEnvFromUpper(upper *TypeEnv) (ret *TypeEnv) {
+	ret = NewTypeEnv()
+	ret.upper = upper
+	return
+}
+
+func (env *TypeEnv) Add(name string, ty Type) {
+	env.scope[name] = ty
+}
+
+func (env *TypeEnv) Lookup(name string) Type {
+	if ty, found := env.scope[name]; found {
+		return ty
+	}
+	if env.upper != nil {
+		return env.upper.Lookup(name)
+	} else {
+		return nil
+	}
+}
 
 func TypeCheck(defs []Definition, env *TypeEnv) error {
 	// Put all definitions to the env first. Module and toplevel definition
