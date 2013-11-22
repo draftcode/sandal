@@ -1,4 +1,4 @@
-package lang
+package parsing
 
 import (
 	"unicode"
@@ -59,6 +59,7 @@ type Scanner struct {
 	lastToken int
 }
 
+// Init initializes the scanner. mode is for internal use, expect it to be zero.
 func (s *Scanner) Init(src []rune, mode Mode) {
 	s.src = src
 	s.mode = mode

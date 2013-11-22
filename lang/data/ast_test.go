@@ -1,4 +1,4 @@
-package lang
+package data
 
 import (
 	"testing"
@@ -9,13 +9,13 @@ func TestNamedTypeEquality(t *testing.T) {
 	intNamedTypeB := NamedType{"int"}
 	boolNamedType := NamedType{"bool"}
 	boolArrayType := ArrayType{NamedType{"bool"}}
-	if !intNamedTypeA.equal(intNamedTypeB) {
+	if !intNamedTypeA.Equal(intNamedTypeB) {
 		t.Error("Expect int is equal to int")
 	}
-	if intNamedTypeA.equal(boolNamedType) {
+	if intNamedTypeA.Equal(boolNamedType) {
 		t.Error("Expect bool is not equal to int")
 	}
-	if intNamedTypeA.equal(boolArrayType) {
+	if intNamedTypeA.Equal(boolArrayType) {
 		t.Error("Expect []bool is not equal to int")
 	}
 }
@@ -25,16 +25,16 @@ func TestCallaleTypeEquality(t *testing.T) {
 	callableTypeB := CallableType{[]Type{NamedType{"int"}}}
 	callableTypeC := CallableType{[]Type{NamedType{"bool"}}}
 	callableTypeD := CallableType{[]Type{NamedType{"int"}, NamedType{"int"}}}
-	if !callableTypeA.equal(callableTypeB) {
+	if !callableTypeA.Equal(callableTypeB) {
 		t.Error("Expect callable(int) is equal to callable(int)")
 	}
-	if callableTypeA.equal(callableTypeC) {
+	if callableTypeA.Equal(callableTypeC) {
 		t.Error("Expect callable(int) is not equal to callable(bool)")
 	}
-	if callableTypeA.equal(callableTypeD) {
+	if callableTypeA.Equal(callableTypeD) {
 		t.Error("Expect callable(int) is not equal to callable(int, int)")
 	}
-	if callableTypeA.equal(NamedType{"int"}) {
+	if callableTypeA.Equal(NamedType{"int"}) {
 		t.Error("Expect callable(int) is not equal to int")
 	}
 }
@@ -43,13 +43,13 @@ func TestArrayTypeEquality(t *testing.T) {
 	arrayTypeA := ArrayType{NamedType{"int"}}
 	arrayTypeB := ArrayType{NamedType{"int"}}
 	arrayTypeC := ArrayType{NamedType{"bool"}}
-	if !arrayTypeA.equal(arrayTypeB) {
+	if !arrayTypeA.Equal(arrayTypeB) {
 		t.Error("Expect []int is equal to []int")
 	}
-	if arrayTypeA.equal(arrayTypeC) {
+	if arrayTypeA.Equal(arrayTypeC) {
 		t.Error("Expect []int is not equal to []bool")
 	}
-	if arrayTypeA.equal(NamedType{"int"}) {
+	if arrayTypeA.Equal(NamedType{"int"}) {
 		t.Error("Expect []int is not equal to int")
 	}
 }
@@ -61,19 +61,19 @@ func TestHandshakeChannelTypeEquality(t *testing.T) {
 	chTypeD := HandshakeChannelType{true, []Type{NamedType{"int"}}}
 	chTypeE := HandshakeChannelType{false, []Type{NamedType{"int"}, NamedType{"int"}}}
 	bufCh := BufferedChannelType{false, nil, []Type{NamedType{"int"}}}
-	if !chTypeA.equal(chTypeB) {
+	if !chTypeA.Equal(chTypeB) {
 		t.Error(`Expect channel {"int"} is equal to channel {"int"}`)
 	}
-	if chTypeA.equal(bufCh) {
+	if chTypeA.Equal(bufCh) {
 		t.Error(`Expect channel {"int"} is not equal to channel [] {"int"}`)
 	}
-	if chTypeA.equal(chTypeC) {
+	if chTypeA.Equal(chTypeC) {
 		t.Error(`Expect channel {"int"} is not equal to channel {"bool"}`)
 	}
-	if !chTypeA.equal(chTypeD) {
+	if !chTypeA.Equal(chTypeD) {
 		t.Error(`Expect channel {"int"} is equal to unstable channel {"int"}`)
 	}
-	if chTypeA.equal(chTypeE) {
+	if chTypeA.Equal(chTypeE) {
 		t.Error(`Expect channel {"int"} is not equal to channel {"int", "int"}`)
 	}
 }
@@ -86,22 +86,22 @@ func TestBufferedChannelTypeEquality(t *testing.T) {
 	chTypeE := BufferedChannelType{false, &NumberExpression{"1"}, []Type{NamedType{"int"}}}
 	chTypeF := BufferedChannelType{false, nil, []Type{NamedType{"int"}, NamedType{"int"}}}
 	handshakeType := HandshakeChannelType{false, []Type{NamedType{"int"}}}
-	if !chTypeA.equal(chTypeB) {
+	if !chTypeA.Equal(chTypeB) {
 		t.Error(`Expect channel [] {"int"} is equal to channel [] {"int"}`)
 	}
-	if chTypeA.equal(handshakeType) {
+	if chTypeA.Equal(handshakeType) {
 		t.Error(`Expect channel [] {"int"} is not equal to channel {"int"}`)
 	}
-	if chTypeA.equal(chTypeC) {
+	if chTypeA.Equal(chTypeC) {
 		t.Error(`Expect channel [] {"int"} is not equal to channel [] {"bool"}`)
 	}
-	if !chTypeA.equal(chTypeD) {
+	if !chTypeA.Equal(chTypeD) {
 		t.Error(`Expect channel [] {"int"} is equal to unstable channel [] {"int"}`)
 	}
-	if !chTypeA.equal(chTypeE) {
+	if !chTypeA.Equal(chTypeE) {
 		t.Error(`Expect channel [] {"int"} is equal to channel [1] {"int"}`)
 	}
-	if chTypeA.equal(chTypeF) {
+	if chTypeA.Equal(chTypeF) {
 		t.Error(`Expect channel [] {"int"} is not equal to channel [] {"int", "int"}`)
 	}
 }

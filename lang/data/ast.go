@@ -1,30 +1,24 @@
-package lang
+package data
 
-// Typecheck functions are defined in typecheck.go
 type (
 	Definition interface {
 		definition()
-		typecheck(*TypeEnv) error
 	}
 
 	Statement interface {
 		statement()
-		typecheck(*TypeEnv) error
-		typeexec(*TypeEnv)
 		String() string
 	}
 
 	Expression interface {
 		expression()
-		typecheck(*TypeEnv) error
-		type_(*TypeEnv) Type
 		String() string
 	}
 
 	// For type-checking
 	ChanExpr interface {
-		channel() Expression
-		args() []Expression
+		ChannelExpr() Expression
+		ArgExprs() []Expression
 		String() string
 	}
 )
@@ -58,7 +52,7 @@ type (
 	}
 
 	InitBlock struct {
-		Statements []Statement
+		Vars []InitVar
 	}
 )
 
@@ -101,7 +95,7 @@ type (
 
 	OpAssignmentStatement struct {
 		Variable string
-		Operator int
+		Operator string
 		Expr     Expression
 	}
 
@@ -148,11 +142,6 @@ type (
 		Label string
 	}
 
-	CallStatement struct {
-		Name string
-		Args []Expression
-	}
-
 	SkipStatement struct {
 	}
 
@@ -179,17 +168,16 @@ func (x *ForInStatement) statement()        {}
 func (x *ForInRangeStatement) statement()   {}
 func (x *BreakStatement) statement()        {}
 func (x *GotoStatement) statement()         {}
-func (x *CallStatement) statement()         {}
 func (x *SkipStatement) statement()         {}
 func (x *ExprStatement) statement()         {}
 func (x *NullStatement) statement()         {}
 
-func (x *RecvStatement) channel() Expression { return x.Channel }
-func (x *PeekStatement) channel() Expression { return x.Channel }
-func (x *SendStatement) channel() Expression { return x.Channel }
-func (x *RecvStatement) args() []Expression  { return x.Args }
-func (x *PeekStatement) args() []Expression  { return x.Args }
-func (x *SendStatement) args() []Expression  { return x.Args }
+func (x *RecvStatement) ChannelExpr() Expression { return x.Channel }
+func (x *PeekStatement) ChannelExpr() Expression { return x.Channel }
+func (x *SendStatement) ChannelExpr() Expression { return x.Channel }
+func (x *RecvStatement) ArgExprs() []Expression  { return x.Args }
+func (x *PeekStatement) ArgExprs() []Expression  { return x.Args }
+func (x *SendStatement) ArgExprs() []Expression  { return x.Args }
 
 // ========================================
 // Expressions
@@ -217,7 +205,7 @@ type (
 
 	BinOpExpression struct {
 		LHS      Expression
-		Operator int
+		Operator string
 		RHS      Expression
 	}
 
@@ -246,14 +234,14 @@ type (
 	}
 )
 
-func (x *TimeoutRecvExpression) channel() Expression  { return x.Channel }
-func (x *TimeoutPeekExpression) channel() Expression  { return x.Channel }
-func (x *NonblockRecvExpression) channel() Expression { return x.Channel }
-func (x *NonblockPeekExpression) channel() Expression { return x.Channel }
-func (x *TimeoutRecvExpression) args() []Expression   { return x.Args }
-func (x *TimeoutPeekExpression) args() []Expression   { return x.Args }
-func (x *NonblockRecvExpression) args() []Expression  { return x.Args }
-func (x *NonblockPeekExpression) args() []Expression  { return x.Args }
+func (x *TimeoutRecvExpression) ChannelExpr() Expression  { return x.Channel }
+func (x *TimeoutPeekExpression) ChannelExpr() Expression  { return x.Channel }
+func (x *NonblockRecvExpression) ChannelExpr() Expression { return x.Channel }
+func (x *NonblockPeekExpression) ChannelExpr() Expression { return x.Channel }
+func (x *TimeoutRecvExpression) ArgExprs() []Expression   { return x.Args }
+func (x *TimeoutPeekExpression) ArgExprs() []Expression   { return x.Args }
+func (x *NonblockRecvExpression) ArgExprs() []Expression  { return x.Args }
+func (x *NonblockPeekExpression) ArgExprs() []Expression  { return x.Args }
 
 func (x *IdentifierExpression) expression()   {}
 func (x *NumberExpression) expression()       {}
@@ -276,9 +264,24 @@ type (
 		Type Type
 	}
 
+	InitVar interface {
+		initvar()
+	}
+
+	ChannelVar struct {
+		Name string
+		Type Type
+	}
+
+	InstanceVar struct {
+		Name       string
+		ModuleName string
+		Args       []Expression
+	}
+
 	Type interface {
 		typetype()
-		equal(Type) bool
+		Equal(Type) bool
 		String() string
 	}
 
@@ -306,13 +309,15 @@ type (
 	}
 )
 
+func (x ChannelVar) initvar()            {}
+func (x InstanceVar) initvar()           {}
 func (x NamedType) typetype()            {}
 func (x CallableType) typetype()         {}
 func (x ArrayType) typetype()            {}
 func (x HandshakeChannelType) typetype() {}
 func (x BufferedChannelType) typetype()  {}
 
-func (x NamedType) equal(ty Type) bool {
+func (x NamedType) Equal(ty Type) bool {
 	if ty, b := ty.(NamedType); b {
 		return (ty.Name == x.Name)
 	} else {
@@ -320,13 +325,13 @@ func (x NamedType) equal(ty Type) bool {
 	}
 }
 
-func (x CallableType) equal(ty Type) bool {
+func (x CallableType) Equal(ty Type) bool {
 	if ty, b := ty.(CallableType); b {
 		if len(ty.Parameters) != len(x.Parameters) {
 			return false
 		}
 		for i := 0; i < len(x.Parameters); i++ {
-			if !ty.Parameters[i].equal(x.Parameters[i]) {
+			if !ty.Parameters[i].Equal(x.Parameters[i]) {
 				return false
 			}
 		}
@@ -336,21 +341,21 @@ func (x CallableType) equal(ty Type) bool {
 	}
 }
 
-func (x ArrayType) equal(ty Type) bool {
+func (x ArrayType) Equal(ty Type) bool {
 	if ty, b := ty.(ArrayType); b {
-		return ty.ElemType.equal(x.ElemType)
+		return ty.ElemType.Equal(x.ElemType)
 	} else {
 		return false
 	}
 }
 
-func (x HandshakeChannelType) equal(ty Type) bool {
+func (x HandshakeChannelType) Equal(ty Type) bool {
 	if ty, b := ty.(HandshakeChannelType); b {
 		if len(ty.Elems) != len(x.Elems) {
 			return false
 		}
 		for i := 0; i < len(x.Elems); i++ {
-			if !ty.Elems[i].equal(x.Elems[i]) {
+			if !ty.Elems[i].Equal(x.Elems[i]) {
 				return false
 			}
 		}
@@ -360,13 +365,13 @@ func (x HandshakeChannelType) equal(ty Type) bool {
 	}
 }
 
-func (x BufferedChannelType) equal(ty Type) bool {
+func (x BufferedChannelType) Equal(ty Type) bool {
 	if ty, b := ty.(BufferedChannelType); b {
 		if len(ty.Elems) != len(x.Elems) {
 			return false
 		}
 		for i := 0; i < len(x.Elems); i++ {
-			if !ty.Elems[i].equal(x.Elems[i]) {
+			if !ty.Elems[i].Equal(x.Elems[i]) {
 				return false
 			}
 		}

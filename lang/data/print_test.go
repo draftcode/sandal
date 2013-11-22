@@ -1,4 +1,4 @@
-package lang
+package data
 
 import (
 	"testing"
@@ -27,7 +27,7 @@ func TestStatementStringify(t *testing.T) {
 	expectString(t, &IfStatement{&IdentifierExpression{"a"}, []Statement{&SkipStatement{}}, []Statement{}}, "if a { skip; } else {  };")
 	expectString(t, &IfStatement{&IdentifierExpression{"a"}, []Statement{&SkipStatement{}}, []Statement{&SkipStatement{}}}, "if a { skip; } else { skip; };")
 	expectString(t, &AssignmentStatement{"a", &NumberExpression{"1"}}, "a = 1;")
-	expectString(t, &OpAssignmentStatement{"a", ADD, &NumberExpression{"1"}}, "a += 1;")
+	expectString(t, &OpAssignmentStatement{"a", "+", &NumberExpression{"1"}}, "a += 1;")
 	expectString(t,
 		&ChoiceStatement{[]BlockStatement{
 			BlockStatement{[]Statement{&SkipStatement{}}},
@@ -41,7 +41,6 @@ func TestStatementStringify(t *testing.T) {
 	expectString(t, &ForInRangeStatement{"i", &NumberExpression{"1"}, &NumberExpression{"5"}, []Statement{&SkipStatement{}}}, "for i in range 1 to 5 { skip; };")
 	expectString(t, &BreakStatement{}, "break;")
 	expectString(t, &GotoStatement{"label"}, "goto label;")
-	expectString(t, &CallStatement{"Mod", []Expression{&NumberExpression{"1"}}}, "Mod(1);")
 	expectString(t, &SkipStatement{}, "skip;")
 	expectString(t, &ExprStatement{&NumberExpression{"1"}}, "1;")
 	expectString(t, &NullStatement{}, ";")
@@ -53,7 +52,7 @@ func TestExpressionStringify(t *testing.T) {
 	expectString(t, &NotExpression{&IdentifierExpression{"a"}}, "!a")
 	expectString(t, &UnarySubExpression{&IdentifierExpression{"a"}}, "-a")
 	expectString(t, &ParenExpression{&IdentifierExpression{"a"}}, "(a)")
-	expectString(t, &BinOpExpression{&IdentifierExpression{"a"}, ADD, &IdentifierExpression{"b"}}, "a+b")
+	expectString(t, &BinOpExpression{&IdentifierExpression{"a"}, "+", &IdentifierExpression{"b"}}, "a+b")
 	expectString(t, &TimeoutRecvExpression{&IdentifierExpression{"ch"}, []Expression{&IdentifierExpression{"a"}}}, "timeout_recv(ch, a)")
 	expectString(t, &TimeoutPeekExpression{&IdentifierExpression{"ch"}, []Expression{&IdentifierExpression{"a"}}}, "timeout_peek(ch, a)")
 	expectString(t, &NonblockRecvExpression{&IdentifierExpression{"ch"}, []Expression{&IdentifierExpression{"a"}}}, "nonblock_recv(ch, a)")

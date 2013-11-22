@@ -60,16 +60,17 @@ type AssignCond struct {
 }
 
 func NewAssignCond() *AssignCond {
-	return &AssignCond{make(map[string][]string)}
+	return &AssignCond{make(map[string][]struct {
+		condition string
+		value     string
+	})}
 }
 
 func (cond *AssignCond) Add(variable, condition, value string) {
-	var entry map[string]string
-	if entry, hasEntry := cond.cond[variable]; !hasEntry {
-		entry = make(map[string]string)
-		cond.cond[variable] = entry
-	}
-	entry[condition] = value
+	cond.cond[variable] = append(cond.cond[variable], struct {
+		condition string
+		value     string
+	}{condition, value})
 }
 
 func ConvertAbstractModuleToTemplate(module absNuSMVModule) (tmpl tmplNuSMVModule, err error) {

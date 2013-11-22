@@ -1,30 +1,9 @@
-package lang
+package data
 
 import (
 	"fmt"
 	"strings"
 )
-
-var operatorString = map[int]string{
-	ADD:  "+",
-	SUB:  "-",
-	MUL:  "*",
-	QUO:  "/",
-	REM:  "%",
-	AND:  "&",
-	OR:   "|",
-	XOR:  "^",
-	SHL:  "<<",
-	SHR:  ">>",
-	LAND: "&&",
-	LOR:  "||",
-	EQL:  "==",
-	LSS:  "<",
-	GTR:  ">",
-	NEQ:  "!=",
-	LEQ:  "<=",
-	GEQ:  ">=",
-}
 
 // ========================================
 // Definitions
@@ -74,11 +53,7 @@ func (x *AssignmentStatement) String() string {
 	return fmt.Sprintf("%s = %s;", x.Variable, x.Expr)
 }
 func (x *OpAssignmentStatement) String() string {
-	if op, exist := operatorString[x.Operator]; exist {
-		return fmt.Sprintf("%s %s= %s;", x.Variable, op, x.Expr)
-	} else {
-		panic("Unknown Operator")
-	}
+	return fmt.Sprintf("%s %s= %s;", x.Variable, x.Operator, x.Expr)
 }
 func (x *ChoiceStatement) String() string {
 	blocks := []string{}
@@ -141,13 +116,6 @@ func (x *BreakStatement) String() string {
 func (x *GotoStatement) String() string {
 	return "goto " + x.Label + ";"
 }
-func (x *CallStatement) String() string {
-	args := []string{}
-	for _, arg := range x.Args {
-		args = append(args, arg.String())
-	}
-	return x.Name + "(" + strings.Join(args, ", ") + ");"
-}
 func (x *SkipStatement) String() string {
 	return "skip;"
 }
@@ -177,11 +145,7 @@ func (x *ParenExpression) String() string {
 	return "(" + x.SubExpr.String() + ")"
 }
 func (x *BinOpExpression) String() string {
-	if s, exist := operatorString[x.Operator]; exist {
-		return x.LHS.String() + s + x.RHS.String()
-	} else {
-		panic("Unknown operator")
-	}
+	return x.LHS.String() + x.Operator + x.RHS.String()
 }
 func (x *TimeoutRecvExpression) String() string {
 	params := []string{x.Channel.String()}

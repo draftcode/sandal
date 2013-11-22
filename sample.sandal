@@ -53,14 +53,14 @@ module Sample(chA channel { bit }, chBs []channel { bit }) {
   }
 
   init {
-    var ch channel { byte }
-    D(ch)
-    E(ch)
+    ch : channel { byte },
+    d : D(ch),
+    E(ch),
   }
 }
 
 init {
-  var chA unstable channel { bit }
-  var chB channel { bit }
-  Sample(chA, [chA, chB])
+  chA : unstable channel { bit },
+  chB : channel { bit },
+  Sample(chA, [chA, chB]),
 }
