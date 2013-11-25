@@ -266,6 +266,7 @@ type (
 
 	InitVar interface {
 		initvar()
+		VarName() string
 	}
 
 	ChannelVar struct {
@@ -309,8 +310,11 @@ type (
 	}
 )
 
-func (x ChannelVar) initvar()            {}
-func (x InstanceVar) initvar()           {}
+func (x ChannelVar) initvar()         {}
+func (x InstanceVar) initvar()        {}
+func (x ChannelVar) VarName() string  { return x.Name }
+func (x InstanceVar) VarName() string { return x.Name }
+
 func (x NamedType) typetype()            {}
 func (x CallableType) typetype()         {}
 func (x ArrayType) typetype()            {}

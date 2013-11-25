@@ -106,10 +106,58 @@ func typeCheckProcDefinition(def *ProcDefinition, env *typeEnv) error {
 }
 
 func typeCheckInitBlock(b *InitBlock, env *typeEnv) error {
-	// TODO
-	// Name duplication
-	// Type should be a kind of channel
-	// Module must be a callable type
-	// Argument should be match
+	env = newTypeEnvFromUpper(env)
+	names := make(map[string]bool)
+	for _, initVar := range b.Vars {
+		if _, defined := names[initVar.VarName()]; defined {
+			return fmt.Errorf("Varname %s is duplicated", initVar.VarName())
+		}
+		names[initVar.VarName()] = true
+
+		switch initVar := initVar.(type) {
+		case ChannelVar:
+			env.add(initVar.Name, initVar.Type)
+		case InstanceVar:
+			calleeType := env.lookup(initVar.ModuleName)
+			if calleeType == nil {
+				return fmt.Errorf("%q should be a callable type", initVar.ModuleName)
+			}
+			env.add(initVar.Name, calleeType)
+		default:
+			panic("Unknown initvar type")
+		}
+	}
+
+	for _, initVar := range b.Vars {
+		switch initVar := initVar.(type) {
+		case ChannelVar:
+			switch initVar.Type.(type) {
+			case HandshakeChannelType, BufferedChannelType:
+				// OK
+			default:
+				return fmt.Errorf("%s should be a channel", initVar.Name)
+			}
+		case InstanceVar:
+			calleeType := env.lookup(initVar.ModuleName)
+			if t, isCallableType := calleeType.(CallableType); isCallableType {
+				if len(t.Parameters) != len(initVar.Args) {
+					return fmt.Errorf("Argument count mismatch")
+				}
+				for i := 0; i < len(t.Parameters); i++ {
+					if err := typeCheckExpression(initVar.Args[i], env); err != nil {
+						return err
+					}
+					argType := typeOfExpression(initVar.Args[i], env)
+					if !argType.Equal(t.Parameters[i]) {
+						return fmt.Errorf("Argument type mismatch")
+					}
+				}
+			} else {
+				return fmt.Errorf("%q should be a callable type", initVar.ModuleName)
+			}
+		default:
+			panic("Unknown initvar type")
+		}
+	}
 	return nil
 }
