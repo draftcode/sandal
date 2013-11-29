@@ -1,4 +1,4 @@
-package lang
+package conversion
 
 import (
 	"bytes"
@@ -8,72 +8,7 @@ import (
 	"text/template"
 )
 
-// ========================================
-// AbstractModule
-
-type absNuSMVModule struct {
-	Name      string
-	Args      []string
-	Vars      []absVar
-	InitState absState
-	Trans     map[absState][]absTransition
-	Defaults  map[string]string
-	Defs      []absAssign
-}
-
-type absState string
-
-type absVar struct {
-	Name string
-	Type string
-}
-
-type absTransition struct {
-	Condition string
-	Actions   map[absState][]absAssign
-}
-
-type absAssign struct {
-	LHS string
-	RHS string
-}
-
-const caseTemplate = `case{{range .Cases}}
-  {{.Condition}} : {{.Value}}{{end}}
-  TRUE : {{.Default}}
-esac;`
-
-type caseTmplValue struct {
-	Cases []struct {
-		Condition string
-		Value     string
-	}
-	Default string
-}
-
-// AssignCond holds assignment condition to the variables.
-type AssignCond struct {
-	cond map[string][]struct {
-		condition string
-		value     string
-	}
-}
-
-func NewAssignCond() *AssignCond {
-	return &AssignCond{make(map[string][]struct {
-		condition string
-		value     string
-	})}
-}
-
-func (cond *AssignCond) Add(variable, condition, value string) {
-	cond.cond[variable] = append(cond.cond[variable], struct {
-		condition string
-		value     string
-	}{condition, value})
-}
-
-func ConvertAbstractModuleToTemplate(module absNuSMVModule) (tmpl tmplNuSMVModule, err error) {
+func ConvertIntermediateModuleToTemplate(module intNuSMVModule) (tmpl tmplNuSMVModule, err error) {
 	tmpl.Name = module.Name
 	tmpl.Args = append([]string{"running_pid", "pid"}, module.Args...)
 	tmpl.Vars = []tmplVar{
@@ -98,31 +33,6 @@ func ConvertAbstractModuleToTemplate(module absNuSMVModule) (tmpl tmplNuSMVModul
 	}
 	return
 }
-
-func extractStates(module absNuSMVModule) (states []string) {
-	states_map := make(map[absState]bool)
-	states_map[module.InitState] = true
-	for s, transes := range module.Trans {
-		states_map[s] = true
-		for _, trans := range transes {
-			for t, _ := range trans.Actions {
-				states_map[t] = true
-			}
-		}
-	}
-
-	for state, _ := range states_map {
-		states = append(states, string(state))
-	}
-	sort.StringSlice(states).Sort()
-	return
-}
-
-func extractAssignCondition(state absState, trans absTransition, assignCond map[string][]string) {
-}
-
-// ========================================
-// Template
 
 type tmplNuSMVModule struct {
 	Name    string
