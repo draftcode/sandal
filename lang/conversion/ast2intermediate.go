@@ -185,6 +185,17 @@ func (x *intModConverter) convertBasicExpr(expr Expression) (error, []string) {
 	}
 }
 
+func (x *intModConverter) countArrayLength(expr Expression) int {
+	switch expr := expr.(type) {
+	case *ParenExpression:
+		return x.countArrayLength(expr.SubExpr)
+	case *ArrayExpression:
+		return len(expr.Elems)
+	default:
+		panic("expr is not an array")
+	}
+}
+
 func (x *intModConverter) buildMainModule() error {
 	if len(x.procs) == 0 {
 		return fmt.Errorf("No running procs")
@@ -202,6 +213,7 @@ func (x *intModConverter) buildMainModule() error {
 			Type: fmt.Sprintf("%s(running_pid, %s_filled, %s_received, %s_value)",
 				chVal.ModuleName, chVal.Name, chVal.Name, chVal.Name),
 		})
+		// TODO: each proxy should be set default
 		for _, pid := range pids {
 			module.Vars = append(module.Vars, intVar{
 				Name: fmt.Sprintf("__pid%s_%s", pid, chVal.Name),
@@ -288,7 +300,7 @@ func (x *intModConverter) buildProcVal(initVar InstanceVar) (error, intInternalP
 	if intVal == nil {
 		panic(initVar.ProcDefName + " should be found in env")
 	}
-	var def Definition
+	var def *ProcDefinition
 	if intProcDef, ok := intVal.(intInternalProcDef); ok {
 		def = intProcDef.Def
 	} else {
@@ -303,9 +315,13 @@ func (x *intModConverter) buildProcVal(initVar InstanceVar) (error, intInternalP
 		}
 		args = append(args, basicExprs...)
 	}
+	moduleName := fmt.Sprintf("__pid%d_%s", x.pid, initVar.ProcDefName)
+	if err := x.instantiateProcDef(def, moduleName, initVar.Args); err != nil {
+		return err, intInternalProcVal{}
+	}
 	val := intInternalProcVal{
 		Name: initVar.Name,
-		ModuleName: fmt.Sprintf("__pid%d_%s", x.pid, initVar.ProcDefName),
+		ModuleName: moduleName,
 		Def: def,
 		Args: args,
 		Pid: x.pid,
@@ -314,9 +330,63 @@ func (x *intModConverter) buildProcVal(initVar InstanceVar) (error, intInternalP
 	return nil, val
 }
 
+func (x *intModConverter) instantiateProcDef(def *ProcDefinition, moduleName string, argExprs []Expression) error {
+	x.pushEnv()
+	defer x.popEnv()
+
+	args := []string{"running_pid", "pid"}
+	defaults := make(map[string]string)
+	for idx, param := range def.Parameters {
+		switch param.Type.(type) {
+		case ArrayType:
+			count := x.countArrayLength(argExprs[idx])
+			args = append(args, "__size_" + param.Name)
+			for i := 0; i < count; i++ {
+				args = append(args, fmt.Sprintf("__elem%d_%s", i, param.Name))
+			}
+		case HandshakeChannelType:
+			args = append(args, param.Name)
+			defaults[param.Name+".next_filled"] = param.Name+".filled"
+			defaults[param.Name+".next_received"] = param.Name+".received"
+			defaults[param.Name+".next_value"] = param.Name+".value"
+		case BufferedChannelType:
+			args = append(args, param.Name)
+			defaults[param.Name+".next_filled"] = param.Name+".filled"
+			defaults[param.Name+".next_received"] = param.Name+".received"
+			defaults[param.Name+".next_value"] = param.Name+".value"
+		default:
+			args = append(args, param.Name)
+		}
+		x.env.add(param.Name, intInternalPrimitiveVar{param.Type})
+	}
+	vars, initState, trans := x.convertStatements(def.Statements)
+
+	x.modules = append(x.modules, intProcModule{
+		Name: moduleName,
+		Args: args,
+		Vars: vars,
+		InitState: initState,
+		Trans: trans,
+		Defaults: defaults,
+	})
+	return nil
+}
+
 func (x *intModConverter) convertTypeToString(ty Type) string {
 	// TODO
-	return ty.String()
+	switch ty := ty.(type) {
+	case NamedType:
+		switch ty.Name {
+		case "bool":
+			return "boolean"
+		case "int":
+			return "0..8"
+		default:
+			return ty.Name
+		}
+	default:
+		return ty.String()
+	}
 }
 
 func (x *intModConverter) calculateConstExpression(expr Expression) int {

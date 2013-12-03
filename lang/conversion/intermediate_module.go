@@ -84,7 +84,7 @@ type (
 	}
 
 	intInternalProcDef struct {
-		Def Definition
+		Def *ProcDefinition
 	}
 
 	intInternalConstant struct {

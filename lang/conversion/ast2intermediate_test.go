@@ -13,7 +13,7 @@ func TestConvertASTToIntModule(t *testing.T) {
 			Name: "ProcA",
 			Parameters: []Parameter{
 				{
-					Name: "ch",
+					Name: "ch0",
 					Type: HandshakeChannelType{
 						IsUnstable: false,
 						Elems:      []Type{NamedType{"bool"}},
@@ -26,7 +26,7 @@ func TestConvertASTToIntModule(t *testing.T) {
 					Type: NamedType{"int"},
 				},
 				&SendStatement{
-					Channel: &IdentifierExpression{"ch"},
+					Channel: &IdentifierExpression{"ch0"},
 					Args: []Expression{
 						&IdentifierExpression{"true"},
 					},
@@ -106,7 +106,7 @@ func TestConvertASTToIntModule(t *testing.T) {
 			Defs: []intAssign{
 				{"ch_filled", "[__pid0_ch.next_filled]"},
 				{"ch_received", "[__pid0_ch.next_received]"},
-				{"ch_next_value", "[__pid0_ch.next_value]"},
+				{"ch_value", "[__pid0_ch.next_value]"},
 			},
 		},
 	}
