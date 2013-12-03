@@ -275,9 +275,9 @@ type (
 	}
 
 	InstanceVar struct {
-		Name       string
-		ModuleName string
-		Args       []Expression
+		Name        string
+		ProcDefName string
+		Args        []Expression
 	}
 
 	Type interface {

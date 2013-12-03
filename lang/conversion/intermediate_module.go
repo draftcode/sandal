@@ -1,34 +1,114 @@
 package conversion
 
 import (
-	"fmt"
 	. "github.com/draftcode/sandal/lang/data"
 )
 
-func convetASTToIntModule(defs []Definition) (ret []intModule) {
-	converter := intModConverter{}
-	for _, def := range defs {
-		switch def := def.(type) {
-		case *InitBlock:
-			converter.convertInitBlock(def)
-		default:
-			panic("Not implemented")
-		}
-	}
-	return
+type intModule interface {
+	intmodule()
 }
+
+type (
+	intMainModule struct {
+		Vars    []intVar
+		Assigns []intAssign
+		Defs    []intAssign
+	}
+
+	intHandshakeChannel struct {
+		Name      string
+		ValueType []string
+	}
+
+	intBufferedChannel struct {
+		Name      string
+		Length    int
+		ValueType []string
+	}
+
+	intProcModule struct {
+		Name      string
+		Args      []string
+		Vars      []intVar
+		InitState intState
+		Trans     map[intState][]intTransition
+		Defaults  map[string]string
+		Defs      []intAssign
+	}
+)
+
+func (x intMainModule) intmodule()       {}
+func (x intHandshakeChannel) intmodule() {}
+func (x intBufferedChannel) intmodule()  {}
+func (x intProcModule) intmodule()       {}
+
+type (
+	intState string
+
+	intVar struct {
+		Name string
+		Type string
+	}
+
+	intTransition struct {
+		Condition string
+		Actions   map[intState][]intAssign
+	}
+
+	intAssign struct {
+		LHS string
+		RHS string
+	}
+)
+
+type (
+	intInternalVal interface {
+		intinternalval()
+	}
+
+	intInternalChannelVal struct {
+		Name       string
+		ModuleName string
+	}
+
+	intInternalProcVal struct {
+		Name       string
+		ModuleName string
+		Def        Definition
+		Args       []string
+		Pid        int
+	}
+
+	intInternalPrimitiveVar struct {
+		Type Type
+	}
+
+	intInternalProcDef struct {
+		Def Definition
+	}
+
+	intInternalConstant struct {
+		Type Type
+		Expr Expression
+	}
+)
+
+func (x intInternalChannelVal) intinternalval()   {}
+func (x intInternalProcDef) intinternalval()      {}
+func (x intInternalProcVal) intinternalval()      {}
+func (x intInternalPrimitiveVar) intinternalval() {}
+func (x intInternalConstant) intinternalval()     {}
 
 // ========================================
 
 type varEnv struct {
-	upper *varEnv
-	// Variable name to NuSMV level variable name
-	mapping map[string]string
+	upper   *varEnv
+	mapping map[string]intInternalVal
 }
 
 func newVarEnv() (ret *varEnv) {
 	ret = new(varEnv)
-	ret.mapping = make(map[string]string)
+	ret.mapping = make(map[string]intInternalVal)
 	return
 }
 
@@ -38,71 +118,22 @@ func newVarEnvFromUpper(upper *varEnv) (ret *varEnv) {
 	return
 }
 
-func (env *varEnv) add(name, nusmvName string) {
-	env.mapping[name] = nusmvName
+func (env *varEnv) add(name string, intVar intInternalVal) {
+	env.mapping[name] = intVar
 }
 
-func (env *varEnv) lookup(name string) string {
-	if nusmvName, found := env.mapping[name]; found {
-		return nusmvName
+func (env *varEnv) lookup(name string) intInternalVal {
+	if intVar, found := env.mapping[name]; found {
+		return intVar
 	}
 	if env.upper != nil {
 		return env.upper.lookup(name)
 	} else {
-		return ""
+		return nil
 	}
 }
 
 // ========================================
-
-type intModConverter struct {
-	env *varEnv
-}
-
-func newIntModConverter() (converter *intModConverter) {
-	converter = new(intModConverter)
-	converter.env = newVarEnv()
-	return
-}
-
-func (x *intModConverter) convertInitBlock(def *InitBlock) {
-}
-
-// ========================================
-
-// intModule represents intermediate module between Sandal and NuSMV.
-type intModule interface {
-	intmodule()
-}
-
-type intProcModule struct {
-	Name      string
-	Args      []string
-	Vars      []intVar
-	InitState intState
-	Trans     map[intState][]intTransition
-	Defaults  map[string]string
-	Defs      []intAssign
-}
-
-func (x intProcModule) intmodule() {}
-
-type intState string
-
-type intVar struct {
-	Name string
-	Type string
-}
-
-type intTransition struct {
-	Condition string
-	Actions   map[intState][]intAssign
-}
-
-type intAssign struct {
-	LHS string
-	RHS string
-}
 
 const caseTemplate = `case{{range .Cases}}
   {{.Condition}} : {{.Value}}{{end}}
@@ -115,52 +146,4 @@ type caseTmplValue struct {
 		Value     string
 	}
 	Default string
-}
-
-type assignCond struct {
-	state     string
-	condition string
-	value     string
-}
-
-// AssignCond holds assignment condition to the variables.
-type AssignCond struct {
-	cond map[string][]struct {
-	}
-}
-
-func NewAssignCond() *AssignCond {
-	return &AssignCond{make(map[string][]struct {
-		condition string
-		value     string
-	})}
-}
-
-func (cond *AssignCond) Add(variable, condition, value string) {
-	cond.cond[variable] = append(cond.cond[variable], struct {
-		condition string
-		value     string
-	}{condition, value})
-}
-
-func extractStates(module intModule) (states []string) {
-	states_map := make(map[intState]bool)
-	states_map[module.InitState] = true
-	for s, transes := range module.Trans {
-		states_map[s] = true
-		for _, trans := range transes {
-			for t, _ := range trans.Actions {
-				states_map[t] = true
-			}
-		}
-	}
-
-	for state, _ := range states_map {
-		states = append(states, string(state))
-	}
-	sort.StringSlice(states).Sort()
-	return
-}
-
-func extractAssignCondition(state intState, trans intTransition, assignCond map[string][]string) {
 }

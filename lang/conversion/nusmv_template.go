@@ -2,35 +2,33 @@ package conversion
 
 import (
 	"bytes"
-	"fmt"
-	"sort"
 	"strings"
 	"text/template"
 )
 
-func ConvertIntermediateModuleToTemplate(module intNuSMVModule) (tmpl tmplNuSMVModule, err error) {
-	tmpl.Name = module.Name
-	tmpl.Args = append([]string{"running_pid", "pid"}, module.Args...)
-	tmpl.Vars = []tmplVar{
-		{"state", "{" + strings.Join(extractStates(module), ", ") + "}"},
-	}
-	for _, absvar := range module.Vars {
-		tmpl.Vars = append(tmpl.Vars, tmplVar{absvar.Name, absvar.Type})
-	}
-	assignCond := make(map[string]map[string]string)
-	for state, transes := range module.Trans {
-		for _, trans := range transes {
-			extractAssignCondition(state, trans, assignCond)
-		}
-	}
-	for variable, cases := range assignCond {
-		var defaultValue string
-		if variable == "next(state)" {
-			defaultValue = "state"
-		} else if defaultValue, hasValue := module.Defaults[variable]; !hasValue {
-			return tmplNuSMVModule{}, fmt.Errorf("There is no default value for %s", variable)
-		}
-	}
+func ConvertIntermediateModuleToTemplate(module intModule) (tmpl tmplNuSMVModule, err error) {
+	// tmpl.Name = module.Name
+	// tmpl.Args = append([]string{"running_pid", "pid"}, module.Args...)
+	// tmpl.Vars = []tmplVar{
+	// 	{"state", "{" + strings.Join(extractStates(module), ", ") + "}"},
+	// }
+	// for _, absvar := range module.Vars {
+	// 	tmpl.Vars = append(tmpl.Vars, tmplVar{absvar.Name, absvar.Type})
+	// }
+	// assignCond := make(map[string]map[string]string)
+	// for state, transes := range module.Trans {
+	// 	for _, trans := range transes {
+	// 		extractAssignCondition(state, trans, assignCond)
+	// 	}
+	// }
+	// for variable, cases := range assignCond {
+	// 	var defaultValue string
+	// 	if variable == "next(state)" {
+	// 		defaultValue = "state"
+	// 	} else if defaultValue, hasValue := module.Defaults[variable]; !hasValue {
+	// 		return tmplNuSMVModule{}, fmt.Errorf("There is no default value for %s", variable)
+	// 	}
+	// }
 	return
 }
 

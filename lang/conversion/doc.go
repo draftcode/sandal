@@ -16,27 +16,27 @@
 //
 //   intMainModule{
 //   	Vars: []intVar{
+//   		{"ch", "HandshakeChannel0(running_pid, __filled_ch, __received_ch, __value_ch)"},
+//   		{"proc1", "__pid0_ProcA(running_pid, 0, __pid0_ch)"},
+//   		{"__pid0_ch", "HandshakeChannel0Proxy(ch)"},
 //   		{"running_pid", "{0}"},
-//   		{"ch": HandshakeChannel0(running_pid, ch_filled, ch_received, ch_value},
-//   		{"proc1": "ProcA(running_pid, 0, ch_pid0)"},
-//   		{"ch_pid0", "HandshakeChannel0Proxy(ch)"},
 //   	},
 //   	Assigns: []intAssign{
 //   		{"running_pid", "{0}"},
 //   	},
 //   	Defs: []intAssign{
-//   		{"ch_filled", "[ch_pid0.next_filled]"}
-//   		{"ch_received", "[ch_pid0.next_received]"}
-//   		{"ch_next_value", "[ch_pid0.next_value]"}
-//   	}
+//   		{"__filled_ch", "[__pid0_ch.next_filled]"},
+//   		{"__received_ch", "[__pid0_ch.next_received]"},
+//   		{"__next_value_ch", "[__pid0_ch.next_value]"},
+//   	},
 //   }
 //   intHandshakeChannel{
 //   	Name: "HandshakeChannel0",
-//   	ValueType: "boolean",
+//   	ValueType: []string{"boolean"},
 //   }
 //   intProcModule{
-//   	Name: "ProcA",
-//   	Args: []string{"running_pid, "pid", "ch0"},
+//   	Name: "__pid0_ProcA",
+//   	Args: []string{"running_pid", "pid", "ch0"},
 //   	Vars: []intVar{
 //   		{"b", "0..8"},
 //   	},
@@ -118,13 +118,13 @@
 //   		{"next_value", "boolean"},
 //   	},
 //   	Defs: []tmplAssign{
-//   		{"filled)", "ch.filled"},
+//   		{"filled", "ch.filled"},
 //   		{"received", "ch.received"},
 //   		{"value", "ch.value"},
 //   	},
 //   }
 //   tmplNuSMVModule{
-//   	Name: "ProcA",
+//   	Name: "ProcA_proc1",
 //   	Args: []string{"running_pid", "pid", "ch0"},
 //   	Vars: []tmplVar{
 //   		{"state", "{state0, state1, state2}"},
@@ -197,7 +197,7 @@
 //       received := ch.received;
 //       value := ch.value;
 //
-//   MODULE ProcA(running_pid, pid, ch0)
+//   MODULE ProcA_proc1(running_pid, pid, ch0)
 //     VAR
 //       state : {state0, state1, state2};
 //     ASSIGN
