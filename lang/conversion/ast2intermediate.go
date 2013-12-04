@@ -30,10 +30,6 @@ func convertASTToIntModule(defs []Definition) (error, []intModule) {
 	}
 	for _, def := range defs {
 		switch def := def.(type) {
-		case DataDefinition:
-		case ModuleDefinition:
-		case ConstantDefinition:
-		case ProcDefinition:
 		case InitBlock:
 			converter.convertInitBlock(def)
 		}
@@ -48,7 +44,7 @@ func convertASTToIntModule(defs []Definition) (error, []intModule) {
 
 type intModConverter struct {
 	env      *varEnv
-	channels []intInternalChannelVal
+	channels []intInternalVal
 	procs    []intInternalProcVal
 	modules  []intModule
 	pid      int
@@ -109,7 +105,9 @@ func (x *intModConverter) convertBasicExpr(expr Expression) (error, []string) {
 			panic("Undefined variable")
 		}
 		switch val.(type) {
-		case intInternalChannelVal:
+		case intInternalHandshakeChannelVal:
+			return nil, []string{fmt.Sprintf("__pid%d_%s", x.pid, expr.Name)}
+		case intInternalBufferedChannelVal:
 			return nil, []string{fmt.Sprintf("__pid%d_%s", x.pid, expr.Name)}
 		case intInternalConstant:
 			// TODO
@@ -208,20 +206,27 @@ func (x *intModConverter) buildMainModule() error {
 	module := intMainModule{}
 	// Vars
 	for _, chVal := range x.channels {
-		args := []string{"running_pid", chVal.Name + "_filled", chVal.Name + "_received"}
-		for i := 0; i < chVal.ArgLen; i++ {
-			args = append(args, fmt.Sprintf("%s_value_%d", chVal.Name, i))
-		}
-		module.Vars = append(module.Vars, intVar{
-			Name: chVal.Name,
-			Type: fmt.Sprintf("%s(%s)", chVal.ModuleName, argJoin(args)),
-		})
-		// TODO: each proxy should be set default
-		for _, pid := range pids {
+		switch chVal := chVal.(type) {
+		case intInternalHandshakeChannelVal:
+			args := []string{"running_pid", chVal.Name + "_filled", chVal.Name + "_received"}
+			for i := 0; i < chVal.ArgLen; i++ {
+				args = append(args, fmt.Sprintf("%s_value_%d", chVal.Name, i))
+			}
 			module.Vars = append(module.Vars, intVar{
-				Name: fmt.Sprintf("__pid%s_%s", pid, chVal.Name),
-				Type: fmt.Sprintf("%sProxy(%s)", chVal.ModuleName, chVal.Name),
+				Name: chVal.Name,
+				Type: fmt.Sprintf("%s(%s)", chVal.ModuleName, argJoin(args)),
 			})
+			// TODO: each proxy should be set default
+			for _, pid := range pids {
+				module.Vars = append(module.Vars, intVar{
+					Name: fmt.Sprintf("__pid%s_%s", pid, chVal.Name),
+					Type: fmt.Sprintf("%sProxy(%s)", chVal.ModuleName, chVal.Name),
+				})
+			}
+		case intInternalBufferedChannelVal:
+			// TODO
+		default:
+			panic("Unknown channel value")
 		}
 	}
 	for _, procVal := range x.procs {
@@ -239,24 +244,28 @@ func (x *intModConverter) buildMainModule() error {
 
 	// Defs
 	for _, chVal := range x.channels {
-		// TODO: this is only for handshake channel. write for buffered channel
-		nextFilled := []string{}
-		nextReceived := []string{}
-		nextValues := make([][]string, chVal.ArgLen)
-		for _, pid := range pids {
-			nextFilled = append(nextFilled, fmt.Sprintf("__pid%s_%s.next_filled", pid, chVal.Name))
-			nextReceived = append(nextReceived, fmt.Sprintf("__pid%s_%s.next_received", pid, chVal.Name))
-			for i := 0; i < chVal.ArgLen; i++ {
-				nextValues[i] = append(nextValues[i], fmt.Sprintf("__pid%s_%s.next_value_%d", pid, chVal.Name, i))
+		switch chVal := chVal.(type) {
+		case intInternalHandshakeChannelVal:
+			nextFilled := []string{}
+			nextReceived := []string{}
+			nextValues := make([][]string, chVal.ArgLen)
+			for _, pid := range pids {
+				nextFilled = append(nextFilled, fmt.Sprintf("__pid%s_%s.next_filled", pid, chVal.Name))
+				nextReceived = append(nextReceived, fmt.Sprintf("__pid%s_%s.next_received", pid, chVal.Name))
+				for i := 0; i < chVal.ArgLen; i++ {
+					nextValues[i] = append(nextValues[i], fmt.Sprintf("__pid%s_%s.next_value_%d", pid, chVal.Name, i))
+				}
 			}
-		}
-		module.Defs = append(module.Defs, intAssign{chVal.Name + "_filled", "[" + argJoin(nextFilled) + "]"})
-		module.Defs = append(module.Defs, intAssign{chVal.Name + "_received", "[" + argJoin(nextReceived) + "]"})
-		for i := 0; i < chVal.ArgLen; i++ {
-			module.Defs = append(module.Defs, intAssign{
-				LHS: fmt.Sprintf("%s_value_%d", chVal.Name, i),
-				RHS: "[" + argJoin(nextValues[i]) + "]",
-			})
+			module.Defs = append(module.Defs, intAssign{chVal.Name + "_filled", "[" + argJoin(nextFilled) + "]"})
+			module.Defs = append(module.Defs, intAssign{chVal.Name + "_received", "[" + argJoin(nextReceived) + "]"})
+			for i := 0; i < chVal.ArgLen; i++ {
+				module.Defs = append(module.Defs, intAssign{
+					LHS: fmt.Sprintf("%s_value_%d", chVal.Name, i),
+					RHS: "[" + argJoin(nextValues[i]) + "]",
+				})
+			}
+		case intInternalBufferedChannelVal:
+			// TODO
 		}
 	}
 
@@ -264,7 +273,7 @@ func (x *intModConverter) buildMainModule() error {
 	return nil
 }
 
-func (x *intModConverter) buildChannelVal(name string, ty Type) (error, intInternalChannelVal) {
+func (x *intModConverter) buildChannelVal(name string, ty Type) (error, intInternalVal) {
 	chNumber := len(x.channels)
 	chTypeName := ""
 	switch ty.(type) {
@@ -279,6 +288,7 @@ func (x *intModConverter) buildChannelVal(name string, ty Type) (error, intInter
 	argLen := 0
 
 	var mod intModule
+	var val intInternalVal
 	switch ty := ty.(type) {
 	case HandshakeChannelType:
 		types := []string{}
@@ -289,6 +299,11 @@ func (x *intModConverter) buildChannelVal(name string, ty Type) (error, intInter
 		mod = intHandshakeChannel{
 			Name:      chModName,
 			ValueType: types,
+		}
+		val = intInternalHandshakeChannelVal{
+			Name: name,
+			ModuleName: chModName,
+			ArgLen: argLen,
 		}
 	case BufferedChannelType:
 		types := []string{}
@@ -301,12 +316,14 @@ func (x *intModConverter) buildChannelVal(name string, ty Type) (error, intInter
 			Length:    x.calculateConstExpression(ty.BufferSize),
 			ValueType: types,
 		}
+		val = intInternalBufferedChannelVal{
+			Name: name,
+			ModuleName: chModName,
+			ArgLen: argLen,
+		}
 	}
 	x.modules = append(x.modules, mod)
-
-	val := intInternalChannelVal{Name: name, ModuleName: chModName, ArgLen: argLen}
 	x.channels = append(x.channels, val)
-
 	return nil, val
 }
 

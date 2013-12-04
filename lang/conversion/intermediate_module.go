@@ -66,7 +66,13 @@ type (
 		intinternalval()
 	}
 
-	intInternalChannelVal struct {
+	intInternalHandshakeChannelVal struct {
+		Name       string
+		ModuleName string
+		ArgLen     int
+	}
+
+	intInternalBufferedChannelVal struct {
 		Name       string
 		ModuleName string
 		ArgLen     int
@@ -75,7 +81,7 @@ type (
 	intInternalProcVal struct {
 		Name       string
 		ModuleName string
-		Def        Definition
+		Def        ProcDefinition
 		Args       []string
 		Pid        int
 	}
@@ -94,11 +100,12 @@ type (
 	}
 )
 
-func (x intInternalChannelVal) intinternalval()   {}
-func (x intInternalProcDef) intinternalval()      {}
-func (x intInternalProcVal) intinternalval()      {}
-func (x intInternalPrimitiveVar) intinternalval() {}
-func (x intInternalConstant) intinternalval()     {}
+func (x intInternalHandshakeChannelVal) intinternalval() {}
+func (x intInternalBufferedChannelVal) intinternalval()  {}
+func (x intInternalProcDef) intinternalval()             {}
+func (x intInternalProcVal) intinternalval()             {}
+func (x intInternalPrimitiveVar) intinternalval()        {}
+func (x intInternalConstant) intinternalval()            {}
 
 // ========================================
 
