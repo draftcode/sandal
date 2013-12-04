@@ -3,13 +3,12 @@ package conversion
 import (
 	"github.com/cookieo9/go-misc/pp"
 	. "github.com/draftcode/sandal/lang/data"
-	"reflect"
 	"testing"
 )
 
 func TestConvertASTToIntModule(t *testing.T) {
 	defs := []Definition{
-		&ProcDefinition{
+		ProcDefinition{
 			Name: "ProcA",
 			Parameters: []Parameter{
 				{
@@ -21,19 +20,19 @@ func TestConvertASTToIntModule(t *testing.T) {
 				},
 			},
 			Statements: []Statement{
-				&VarDeclStatement{
+				VarDeclStatement{
 					Name: "b",
 					Type: NamedType{"int"},
 				},
-				&SendStatement{
-					Channel: &IdentifierExpression{"ch0"},
+				SendStatement{
+					Channel: IdentifierExpression{"ch0"},
 					Args: []Expression{
-						&IdentifierExpression{"true"},
+						IdentifierExpression{"true"},
 					},
 				},
 			},
 		},
-		&InitBlock{
+		InitBlock{
 			Vars: []InitVar{
 				ChannelVar{
 					Name: "ch",
@@ -46,7 +45,7 @@ func TestConvertASTToIntModule(t *testing.T) {
 					Name:        "proc1",
 					ProcDefName: "ProcA",
 					Args: []Expression{
-						&IdentifierExpression{"ch"},
+						IdentifierExpression{"ch"},
 					},
 				},
 			},
@@ -80,7 +79,7 @@ func TestConvertASTToIntModule(t *testing.T) {
 							"state2": []intAssign{
 								{"ch0.next_filled", "TRUE"},
 								{"ch0.next_received", "FALSE"},
-								{"ch0.next_value", "TRUE"},
+								{"ch0.next_value_0", "TRUE"},
 							},
 						},
 					},
@@ -89,13 +88,13 @@ func TestConvertASTToIntModule(t *testing.T) {
 			Defaults: map[string]string{
 				"ch0.next_filled":   "ch0.filled",
 				"ch0.next_received": "ch0.received",
-				"ch0.next_value":    "ch0.value",
+				"ch0.next_value_0":  "ch0.value_0",
 			},
 			Defs: []intAssign{},
 		},
 		intMainModule{
 			Vars: []intVar{
-				{"ch", "HandshakeChannel0(running_pid, ch_filled, ch_received, ch_value)"},
+				{"ch", "HandshakeChannel0(running_pid, ch_filled, ch_received, ch_value_0)"},
 				{"__pid0_ch", "HandshakeChannel0Proxy(ch)"},
 				{"proc1", "__pid0_ProcA(running_pid, 0, __pid0_ch)"},
 				{"running_pid", "{0}"},
@@ -106,7 +105,7 @@ func TestConvertASTToIntModule(t *testing.T) {
 			Defs: []intAssign{
 				{"ch_filled", "[__pid0_ch.next_filled]"},
 				{"ch_received", "[__pid0_ch.next_received]"},
-				{"ch_value", "[__pid0_ch.next_value]"},
+				{"ch_value_0", "[__pid0_ch.next_value_0]"},
 			},
 		},
 	}
@@ -114,8 +113,9 @@ func TestConvertASTToIntModule(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-	if !reflect.DeepEqual(intMods, expected) {
-		t.Errorf("Unmatched\nExpected %s\nGot      %s",
-			pp.PP(expected), pp.PP(intMods))
+	expectPP := pp.PP(expected)
+	actualPP := pp.PP(intMods)
+	if expectPP != actualPP {
+		t.Errorf("Unmatched\nExpected %s\nGot      %s", expectPP, actualPP)
 	}
 }

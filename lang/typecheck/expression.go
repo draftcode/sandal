@@ -10,49 +10,49 @@ import (
 
 func typeOfExpression(x Expression, env *typeEnv) Type {
 	switch x := x.(type) {
-	case *IdentifierExpression:
+	case IdentifierExpression:
 		return typeOfIdentifierExpression(x, env)
-	case *NumberExpression:
+	case NumberExpression:
 		return typeOfNumberExpression(x, env)
-	case *NotExpression:
+	case NotExpression:
 		return typeOfNotExpression(x, env)
-	case *UnarySubExpression:
+	case UnarySubExpression:
 		return typeOfUnarySubExpression(x, env)
-	case *ParenExpression:
+	case ParenExpression:
 		return typeOfParenExpression(x, env)
-	case *BinOpExpression:
+	case BinOpExpression:
 		return typeOfBinOpExpression(x, env)
-	case *TimeoutRecvExpression:
+	case TimeoutRecvExpression:
 		return typeOfTimeoutRecvExpression(x, env)
-	case *TimeoutPeekExpression:
+	case TimeoutPeekExpression:
 		return typeOfTimeoutPeekExpression(x, env)
-	case *NonblockRecvExpression:
+	case NonblockRecvExpression:
 		return typeOfNonblockRecvExpression(x, env)
-	case *NonblockPeekExpression:
+	case NonblockPeekExpression:
 		return typeOfNonblockPeekExpression(x, env)
-	case *ArrayExpression:
+	case ArrayExpression:
 		return typeOfArrayExpression(x, env)
 	}
 	panic("Unknown Expression")
 }
 
-func typeOfIdentifierExpression(x *IdentifierExpression, env *typeEnv) Type {
+func typeOfIdentifierExpression(x IdentifierExpression, env *typeEnv) Type {
 	return env.lookup(x.Name)
 }
 
-func typeOfNumberExpression(x *NumberExpression, env *typeEnv) Type {
+func typeOfNumberExpression(x NumberExpression, env *typeEnv) Type {
 	return NamedType{Name: "int"}
 }
 
-func typeOfNotExpression(x *NotExpression, env *typeEnv) Type {
+func typeOfNotExpression(x NotExpression, env *typeEnv) Type {
 	return typeOfExpression(x.SubExpr, env)
 }
 
-func typeOfUnarySubExpression(x *UnarySubExpression, env *typeEnv) Type {
+func typeOfUnarySubExpression(x UnarySubExpression, env *typeEnv) Type {
 	return typeOfExpression(x.SubExpr, env)
 }
 
-func typeOfParenExpression(x *ParenExpression, env *typeEnv) Type {
+func typeOfParenExpression(x ParenExpression, env *typeEnv) Type {
 	return typeOfExpression(x.SubExpr, env)
 }
 
@@ -77,7 +77,7 @@ var operatorResultType = map[string]Type{
 	">=": NamedType{"bool"},
 }
 
-func typeOfBinOpExpression(x *BinOpExpression, env *typeEnv) Type {
+func typeOfBinOpExpression(x BinOpExpression, env *typeEnv) Type {
 	if ty, exist := operatorResultType[x.Operator]; exist {
 		return ty
 	} else {
@@ -85,23 +85,23 @@ func typeOfBinOpExpression(x *BinOpExpression, env *typeEnv) Type {
 	}
 }
 
-func typeOfTimeoutRecvExpression(x *TimeoutRecvExpression, env *typeEnv) Type {
+func typeOfTimeoutRecvExpression(x TimeoutRecvExpression, env *typeEnv) Type {
 	return NamedType{Name: "bool"}
 }
 
-func typeOfTimeoutPeekExpression(x *TimeoutPeekExpression, env *typeEnv) Type {
+func typeOfTimeoutPeekExpression(x TimeoutPeekExpression, env *typeEnv) Type {
 	return NamedType{Name: "bool"}
 }
 
-func typeOfNonblockRecvExpression(x *NonblockRecvExpression, env *typeEnv) Type {
+func typeOfNonblockRecvExpression(x NonblockRecvExpression, env *typeEnv) Type {
 	return NamedType{Name: "bool"}
 }
 
-func typeOfNonblockPeekExpression(x *NonblockPeekExpression, env *typeEnv) Type {
+func typeOfNonblockPeekExpression(x NonblockPeekExpression, env *typeEnv) Type {
 	return NamedType{Name: "bool"}
 }
 
-func typeOfArrayExpression(x *ArrayExpression, env *typeEnv) Type {
+func typeOfArrayExpression(x ArrayExpression, env *typeEnv) Type {
 	if len(x.Elems) == 0 {
 		panic("An array should have at least one element")
 	}
@@ -114,45 +114,45 @@ func typeOfArrayExpression(x *ArrayExpression, env *typeEnv) Type {
 
 func typeCheckExpression(x Expression, env *typeEnv) error {
 	switch x := x.(type) {
-	case *IdentifierExpression:
+	case IdentifierExpression:
 		return typeCheckIdentifierExpression(x, env)
-	case *NumberExpression:
+	case NumberExpression:
 		return typeCheckNumberExpression(x, env)
-	case *NotExpression:
+	case NotExpression:
 		return typeCheckNotExpression(x, env)
-	case *UnarySubExpression:
+	case UnarySubExpression:
 		return typeCheckUnarySubExpression(x, env)
-	case *ParenExpression:
+	case ParenExpression:
 		return typeCheckParenExpression(x, env)
-	case *BinOpExpression:
+	case BinOpExpression:
 		return typeCheckBinOpExpression(x, env)
-	case *TimeoutRecvExpression:
+	case TimeoutRecvExpression:
 		return typeCheckTimeoutRecvExpression(x, env)
-	case *TimeoutPeekExpression:
+	case TimeoutPeekExpression:
 		return typeCheckTimeoutPeekExpression(x, env)
-	case *NonblockRecvExpression:
+	case NonblockRecvExpression:
 		return typeCheckNonblockRecvExpression(x, env)
-	case *NonblockPeekExpression:
+	case NonblockPeekExpression:
 		return typeCheckNonblockPeekExpression(x, env)
-	case *ArrayExpression:
+	case ArrayExpression:
 		return typeCheckArrayExpression(x, env)
 	}
 	panic("Unknown Expression")
 }
 
-func typeCheckIdentifierExpression(x *IdentifierExpression, env *typeEnv) error {
+func typeCheckIdentifierExpression(x IdentifierExpression, env *typeEnv) error {
 	if env.lookup(x.Name) == nil {
 		return fmt.Errorf("Undefined variable %s", x.Name)
 	}
 	return nil
 }
 
-func typeCheckNumberExpression(x *NumberExpression, env *typeEnv) error {
+func typeCheckNumberExpression(x NumberExpression, env *typeEnv) error {
 	// Number expressions are always valid.
 	return nil
 }
 
-func typeCheckNotExpression(x *NotExpression, env *typeEnv) error {
+func typeCheckNotExpression(x NotExpression, env *typeEnv) error {
 	if err := typeCheckExpression(x.SubExpr, env); err != nil {
 		return err
 	}
@@ -163,7 +163,7 @@ func typeCheckNotExpression(x *NotExpression, env *typeEnv) error {
 	return nil
 }
 
-func typeCheckUnarySubExpression(x *UnarySubExpression, env *typeEnv) error {
+func typeCheckUnarySubExpression(x UnarySubExpression, env *typeEnv) error {
 	if err := typeCheckExpression(x.SubExpr, env); err != nil {
 		return err
 	}
@@ -174,7 +174,7 @@ func typeCheckUnarySubExpression(x *UnarySubExpression, env *typeEnv) error {
 	return nil
 }
 
-func typeCheckParenExpression(x *ParenExpression, env *typeEnv) error {
+func typeCheckParenExpression(x ParenExpression, env *typeEnv) error {
 	if err := typeCheckExpression(x.SubExpr, env); err != nil {
 		return err
 	}
@@ -202,7 +202,7 @@ var operatorOperandType = map[string]Type{
 	">=": NamedType{"int"},
 }
 
-func typeCheckBinOpExpression(x *BinOpExpression, env *typeEnv) error {
+func typeCheckBinOpExpression(x BinOpExpression, env *typeEnv) error {
 	if err := typeCheckExpression(x.LHS, env); err != nil {
 		return err
 	}
@@ -235,23 +235,23 @@ func typeCheckBinOpExpression(x *BinOpExpression, env *typeEnv) error {
 	return nil
 }
 
-func typeCheckTimeoutRecvExpression(x *TimeoutRecvExpression, env *typeEnv) error {
+func typeCheckTimeoutRecvExpression(x TimeoutRecvExpression, env *typeEnv) error {
 	return channelExprCheck(x, env, true)
 }
 
-func typeCheckTimeoutPeekExpression(x *TimeoutPeekExpression, env *typeEnv) error {
+func typeCheckTimeoutPeekExpression(x TimeoutPeekExpression, env *typeEnv) error {
 	return channelExprCheck(x, env, true)
 }
 
-func typeCheckNonblockRecvExpression(x *NonblockRecvExpression, env *typeEnv) error {
+func typeCheckNonblockRecvExpression(x NonblockRecvExpression, env *typeEnv) error {
 	return channelExprCheck(x, env, true)
 }
 
-func typeCheckNonblockPeekExpression(x *NonblockPeekExpression, env *typeEnv) error {
+func typeCheckNonblockPeekExpression(x NonblockPeekExpression, env *typeEnv) error {
 	return channelExprCheck(x, env, true)
 }
 
-func typeCheckArrayExpression(x *ArrayExpression, env *typeEnv) error {
+func typeCheckArrayExpression(x ArrayExpression, env *typeEnv) error {
 	ty := typeOfExpression(x.Elems[0], env)
 	for _, elem := range x.Elems {
 		if err := typeCheckExpression(elem, env); err != nil {

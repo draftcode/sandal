@@ -153,13 +153,13 @@ toplevel_body
 data_def
 	: DATA IDENTIFIER '{' idents_one '}' ';'
 	{
-		$$ = &data.DataDefinition{Name: $2.lit, Elems: $4}
+		$$ = data.DataDefinition{Name: $2.lit, Elems: $4}
 	}
 
 module_def
 	: MODULE IDENTIFIER '(' parameters_zero ')' '{' module_body_zero '}' ';'
 	{
-		$$ = &data.ModuleDefinition{Name: $2.lit, Parameters: $4, Definitions: $7}
+		$$ = data.ModuleDefinition{Name: $2.lit, Parameters: $4, Definitions: $7}
 	}
 
 module_body_zero
@@ -180,19 +180,19 @@ module_body
 const_def
 	: CONST IDENTIFIER type ASSIGN expr ';' /* This should be a const expression. */
 	{
-		$$ = &data.ConstantDefinition{Name: $2.lit, Type: $3, Expr: $5}
+		$$ = data.ConstantDefinition{Name: $2.lit, Type: $3, Expr: $5}
 	}
 
 proc_def
 	: PROC IDENTIFIER '(' parameters_zero ')' '{' statements_zero '}' ';'
 	{
-		$$ = &data.ProcDefinition{Name: $2.lit, Parameters: $4, Statements: $7}
+		$$ = data.ProcDefinition{Name: $2.lit, Parameters: $4, Statements: $7}
 	}
 
 init_block
 	: INIT '{' initvars_zero '}' ';'
 	{
-		$$ = &data.InitBlock{Vars: $3}
+		$$ = data.InitBlock{Vars: $3}
 	}
 
 initvars_zero
@@ -225,7 +225,7 @@ initvar	: IDENTIFIER ':' type
 	}
 	| IDENTIFIER ':' IDENTIFIER '(' arguments_one ')'
 	{
-		$$ = data.InstanceVar{Name: $1.lit, ModuleName: $3.lit, Args: $5}
+		$$ = data.InstanceVar{Name: $1.lit, ProcDefName: $3.lit, Args: $5}
 	}
 
 statements_zero
@@ -241,119 +241,119 @@ statements_zero
 statement
 	: IDENTIFIER ':' statement /* no semicolon */
 	{
-		$$ = &data.LabelledStatement{Label: $1.lit, Statement: $3}
+		$$ = data.LabelledStatement{Label: $1.lit, Statement: $3}
 	}
 	| '{' statements_zero '}' ';'
 	{
-		$$ = &data.BlockStatement{Statements: $2}
+		$$ = data.BlockStatement{Statements: $2}
 	}
 	| VAR IDENTIFIER type ';'
 	{
-		$$ = &data.VarDeclStatement{Name: $2.lit, Type: $3}
+		$$ = data.VarDeclStatement{Name: $2.lit, Type: $3}
 	}
 	| VAR IDENTIFIER type ASSIGN expr ';'
 	{
-		$$ = &data.VarDeclStatement{Name: $2.lit, Type: $3, Initializer: $5}
+		$$ = data.VarDeclStatement{Name: $2.lit, Type: $3, Initializer: $5}
 	}
 	| IF expr '{' statements_zero '}' ';'
 	{
-		$$ = &data.IfStatement{Condition: $2, TrueBranch: $4}
+		$$ = data.IfStatement{Condition: $2, TrueBranch: $4}
 	}
 	| IF expr '{' statements_zero '}' ELSE '{' statements_zero '}' ';'
 	{
-		$$ = &data.IfStatement{Condition: $2, TrueBranch: $4, FalseBranch: $8}
+		$$ = data.IfStatement{Condition: $2, TrueBranch: $4, FalseBranch: $8}
 	}
 	| IDENTIFIER ASSIGN expr ';'
 	{
-		$$ = &data.AssignmentStatement{Variable: $1.lit, Expr: $3}
+		$$ = data.AssignmentStatement{Variable: $1.lit, Expr: $3}
 	}
 	| IDENTIFIER ADD_ASSIGN expr ';'
 	{
-		$$ = &data.OpAssignmentStatement{Variable: $1.lit, Operator: "+", Expr: $3}
+		$$ = data.OpAssignmentStatement{Variable: $1.lit, Operator: "+", Expr: $3}
 	}
 	| IDENTIFIER SUB_ASSIGN expr ';'
 	{
-		$$ = &data.OpAssignmentStatement{Variable: $1.lit, Operator: "-", Expr: $3}
+		$$ = data.OpAssignmentStatement{Variable: $1.lit, Operator: "-", Expr: $3}
 	}
 	| IDENTIFIER MUL_ASSIGN expr ';'
 	{
-		$$ = &data.OpAssignmentStatement{Variable: $1.lit, Operator: "*", Expr: $3}
+		$$ = data.OpAssignmentStatement{Variable: $1.lit, Operator: "*", Expr: $3}
 	}
 	| IDENTIFIER QUO_ASSIGN expr ';'
 	{
-		$$ = &data.OpAssignmentStatement{Variable: $1.lit, Operator: "/", Expr: $3}
+		$$ = data.OpAssignmentStatement{Variable: $1.lit, Operator: "/", Expr: $3}
 	}
 	| IDENTIFIER REM_ASSIGN expr ';'
 	{
-		$$ = &data.OpAssignmentStatement{Variable: $1.lit, Operator: "%", Expr: $3}
+		$$ = data.OpAssignmentStatement{Variable: $1.lit, Operator: "%", Expr: $3}
 	}
 	| IDENTIFIER AND_ASSIGN expr ';'
 	{
-		$$ = &data.OpAssignmentStatement{Variable: $1.lit, Operator: "&", Expr: $3}
+		$$ = data.OpAssignmentStatement{Variable: $1.lit, Operator: "&", Expr: $3}
 	}
 	| IDENTIFIER OR_ASSIGN expr ';'
 	{
-		$$ = &data.OpAssignmentStatement{Variable: $1.lit, Operator: "|", Expr: $3}
+		$$ = data.OpAssignmentStatement{Variable: $1.lit, Operator: "|", Expr: $3}
 	}
 	| IDENTIFIER XOR_ASSIGN expr ';'
 	{
-		$$ = &data.OpAssignmentStatement{Variable: $1.lit, Operator: "^", Expr: $3}
+		$$ = data.OpAssignmentStatement{Variable: $1.lit, Operator: "^", Expr: $3}
 	}
 	| IDENTIFIER SHL_ASSIGN expr ';'
 	{
-		$$ = &data.OpAssignmentStatement{Variable: $1.lit, Operator: "<<", Expr: $3}
+		$$ = data.OpAssignmentStatement{Variable: $1.lit, Operator: "<<", Expr: $3}
 	}
 	| IDENTIFIER SHR_ASSIGN expr ';'
 	{
-		$$ = &data.OpAssignmentStatement{Variable: $1.lit, Operator: ">>", Expr: $3}
+		$$ = data.OpAssignmentStatement{Variable: $1.lit, Operator: ">>", Expr: $3}
 	}
 	| CHOICE blocks_one ';'
 	{
-		$$ = &data.ChoiceStatement{Blocks: $2}
+		$$ = data.ChoiceStatement{Blocks: $2}
 	}
 	| RECV '(' arguments_one ')' ';'
 	{
-		$$ = &data.RecvStatement{Channel: $3[0], Args: $3[1:]}
+		$$ = data.RecvStatement{Channel: $3[0], Args: $3[1:]}
 	}
 	| PEEK '(' arguments_one ')' ';'
 	{
-		$$ = &data.PeekStatement{Channel: $3[0], Args: $3[1:]}
+		$$ = data.PeekStatement{Channel: $3[0], Args: $3[1:]}
 	}
 	| SEND '(' arguments_one ')' ';'
 	{
-		$$ = &data.SendStatement{Channel: $3[0], Args: $3[1:]}
+		$$ = data.SendStatement{Channel: $3[0], Args: $3[1:]}
 	}
 	| FOR '{' statements_zero '}' ';'
 	{
-		$$ = &data.ForStatement{Statements: $3}
+		$$ = data.ForStatement{Statements: $3}
 	}
 	| FOR IDENTIFIER IN expr '{' statements_zero '}' ';'
 	{
-		$$ = &data.ForInStatement{Variable: $2.lit, Container: $4, Statements: $6}
+		$$ = data.ForInStatement{Variable: $2.lit, Container: $4, Statements: $6}
 	}
 	| FOR IDENTIFIER IN RANGE expr TO expr '{' statements_zero '}' ';'
 	{
-		$$ = &data.ForInRangeStatement{Variable: $2.lit, FromExpr: $5, ToExpr: $7, Statements: $9}
+		$$ = data.ForInRangeStatement{Variable: $2.lit, FromExpr: $5, ToExpr: $7, Statements: $9}
 	}
 	| BREAK ';'
 	{
-		$$ = &data.BreakStatement{}
+		$$ = data.BreakStatement{}
 	}
 	| GOTO IDENTIFIER ';'
 	{
-		$$ = &data.GotoStatement{Label: $2.lit}
+		$$ = data.GotoStatement{Label: $2.lit}
 	}
 	| SKIP ';'
 	{
-		$$ = &data.SkipStatement{}
+		$$ = data.SkipStatement{}
 	}
 	| expr ';'
 	{
-		$$ = &data.ExprStatement{Expr: $1}
+		$$ = data.ExprStatement{Expr: $1}
 	}
 	| ';'
 	{
-		$$ = &data.NullStatement{}
+		$$ = data.NullStatement{}
 	}
 	| const_def
 	{
@@ -362,115 +362,115 @@ statement
 
 expr	: IDENTIFIER
 	{
-		$$ = &data.IdentifierExpression{Name: $1.lit}
+		$$ = data.IdentifierExpression{Name: $1.lit}
 	}
 	| NUMBER
 	{
-		$$ = &data.NumberExpression{Lit: $1.lit}
+		$$ = data.NumberExpression{Lit: $1.lit}
 	}
 	| NOT expr      %prec UNARY
 	{
-		$$ = &data.NotExpression{SubExpr: $2}
+		$$ = data.NotExpression{SubExpr: $2}
 	}
 	| SUB expr      %prec UNARY
 	{
-		$$ = &data.UnarySubExpression{SubExpr: $2}
+		$$ = data.UnarySubExpression{SubExpr: $2}
 	}
 	| '(' expr ')'
 	{
-		$$ = &data.ParenExpression{SubExpr: $2}
+		$$ = data.ParenExpression{SubExpr: $2}
 	}
 	| expr ADD expr
 	{
-		$$ = &data.BinOpExpression{LHS: $1, Operator: "+", RHS: $3}
+		$$ = data.BinOpExpression{LHS: $1, Operator: "+", RHS: $3}
 	}
 	| expr SUB expr
 	{
-		$$ = &data.BinOpExpression{LHS: $1, Operator: "-", RHS: $3}
+		$$ = data.BinOpExpression{LHS: $1, Operator: "-", RHS: $3}
 	}
 	| expr MUL expr
 	{
-		$$ = &data.BinOpExpression{LHS: $1, Operator: "*", RHS: $3}
+		$$ = data.BinOpExpression{LHS: $1, Operator: "*", RHS: $3}
 	}
 	| expr QUO expr
 	{
-		$$ = &data.BinOpExpression{LHS: $1, Operator: "/", RHS: $3}
+		$$ = data.BinOpExpression{LHS: $1, Operator: "/", RHS: $3}
 	}
 	| expr REM expr
 	{
-		$$ = &data.BinOpExpression{LHS: $1, Operator: "%", RHS: $3}
+		$$ = data.BinOpExpression{LHS: $1, Operator: "%", RHS: $3}
 	}
 	| expr AND expr
 	{
-		$$ = &data.BinOpExpression{LHS: $1, Operator: "&", RHS: $3}
+		$$ = data.BinOpExpression{LHS: $1, Operator: "&", RHS: $3}
 	}
 	| expr OR expr
 	{
-		$$ = &data.BinOpExpression{LHS: $1, Operator: "|", RHS: $3}
+		$$ = data.BinOpExpression{LHS: $1, Operator: "|", RHS: $3}
 	}
 	| expr XOR expr
 	{
-		$$ = &data.BinOpExpression{LHS: $1, Operator: "^", RHS: $3}
+		$$ = data.BinOpExpression{LHS: $1, Operator: "^", RHS: $3}
 	}
 	| expr SHL expr
 	{
-		$$ = &data.BinOpExpression{LHS: $1, Operator: "<<", RHS: $3}
+		$$ = data.BinOpExpression{LHS: $1, Operator: "<<", RHS: $3}
 	}
 	| expr SHR expr
 	{
-		$$ = &data.BinOpExpression{LHS: $1, Operator: ">>", RHS: $3}
+		$$ = data.BinOpExpression{LHS: $1, Operator: ">>", RHS: $3}
 	}
 	| expr LAND expr
 	{
-		$$ = &data.BinOpExpression{LHS: $1, Operator: "&&", RHS: $3}
+		$$ = data.BinOpExpression{LHS: $1, Operator: "&&", RHS: $3}
 	}
 	| expr LOR expr
 	{
-		$$ = &data.BinOpExpression{LHS: $1, Operator: "||", RHS: $3}
+		$$ = data.BinOpExpression{LHS: $1, Operator: "||", RHS: $3}
 	}
 	| expr EQL expr
 	{
-		$$ = &data.BinOpExpression{LHS: $1, Operator: "==", RHS: $3}
+		$$ = data.BinOpExpression{LHS: $1, Operator: "==", RHS: $3}
 	}
 	| expr LSS expr
 	{
-		$$ = &data.BinOpExpression{LHS: $1, Operator: "<", RHS: $3}
+		$$ = data.BinOpExpression{LHS: $1, Operator: "<", RHS: $3}
 	}
 	| expr GTR expr
 	{
-		$$ = &data.BinOpExpression{LHS: $1, Operator: ">", RHS: $3}
+		$$ = data.BinOpExpression{LHS: $1, Operator: ">", RHS: $3}
 	}
 	| expr NEQ expr
 	{
-		$$ = &data.BinOpExpression{LHS: $1, Operator: "!=", RHS: $3}
+		$$ = data.BinOpExpression{LHS: $1, Operator: "!=", RHS: $3}
 	}
 	| expr LEQ expr
 	{
-		$$ = &data.BinOpExpression{LHS: $1, Operator: "<=", RHS: $3}
+		$$ = data.BinOpExpression{LHS: $1, Operator: "<=", RHS: $3}
 	}
 	| expr GEQ expr
 	{
-		$$ = &data.BinOpExpression{LHS: $1, Operator: ">=", RHS: $3}
+		$$ = data.BinOpExpression{LHS: $1, Operator: ">=", RHS: $3}
 	}
 	| TIMEOUT_RECV '(' arguments_one ')'
 	{
-		$$ = &data.TimeoutRecvExpression{Channel: $3[0], Args: $3[1:]}
+		$$ = data.TimeoutRecvExpression{Channel: $3[0], Args: $3[1:]}
 	}
 	| TIMEOUT_PEEK '(' arguments_one ')'
 	{
-		$$ = &data.TimeoutPeekExpression{Channel: $3[0], Args: $3[1:]}
+		$$ = data.TimeoutPeekExpression{Channel: $3[0], Args: $3[1:]}
 	}
 	| NONBLOCK_RECV '(' arguments_one ')'
 	{
-		$$ = &data.NonblockRecvExpression{Channel: $3[0], Args: $3[1:]}
+		$$ = data.NonblockRecvExpression{Channel: $3[0], Args: $3[1:]}
 	}
 	| NONBLOCK_PEEK '(' arguments_one ')'
 	{
-		$$ = &data.NonblockPeekExpression{Channel: $3[0], Args: $3[1:]}
+		$$ = data.NonblockPeekExpression{Channel: $3[0], Args: $3[1:]}
 	}
 	| '[' arguments_one ']'
 	{
-		$$ = &data.ArrayExpression{Elems: $2}
+		$$ = data.ArrayExpression{Elems: $2}
 	}
 
 /* ======================================== */

@@ -13,26 +13,26 @@ func typeCheckDefinitions(defs []Definition, env *typeEnv) error {
 	// has a scope that can see all names within the block.
 	for _, def := range defs {
 		switch def := def.(type) {
-		case *DataDefinition:
-			namedType := &NamedType{Name: def.Name}
+		case DataDefinition:
+			namedType := NamedType{Name: def.Name}
 			for _, elem := range def.Elems {
 				env.add(elem, namedType)
 			}
-		case *ModuleDefinition:
+		case ModuleDefinition:
 			params := make([]Type, len(def.Parameters))
 			for _, p := range def.Parameters {
 				params = append(params, p.Type)
 			}
-			env.add(def.Name, &CallableType{Parameters: params})
-		case *ConstantDefinition:
+			env.add(def.Name, CallableType{Parameters: params})
+		case ConstantDefinition:
 			env.add(def.Name, def.Type)
-		case *ProcDefinition:
+		case ProcDefinition:
 			params := make([]Type, len(def.Parameters))
 			for _, p := range def.Parameters {
 				params = append(params, p.Type)
 			}
-			env.add(def.Name, &CallableType{Parameters: params})
-		case *InitBlock:
+			env.add(def.Name, CallableType{Parameters: params})
+		case InitBlock:
 			// Do nothing
 		default:
 			panic("Unknown definition type")
@@ -49,25 +49,25 @@ func typeCheckDefinitions(defs []Definition, env *typeEnv) error {
 
 func typeCheckDefinition(x Definition, env *typeEnv) error {
 	switch x := x.(type) {
-	case *DataDefinition:
+	case DataDefinition:
 		return typeCheckDataDefinition(x, env)
-	case *ModuleDefinition:
+	case ModuleDefinition:
 		return typeCheckModuleDefinition(x, env)
-	case *ConstantDefinition:
+	case ConstantDefinition:
 		return typeCheckConstantDefinition(x, env)
-	case *ProcDefinition:
+	case ProcDefinition:
 		return typeCheckProcDefinition(x, env)
-	case *InitBlock:
+	case InitBlock:
 		return typeCheckInitBlock(x, env)
 	}
 	panic("Unknown Definition")
 }
 
-func typeCheckDataDefinition(def *DataDefinition, env *typeEnv) error {
+func typeCheckDataDefinition(def DataDefinition, env *typeEnv) error {
 	return nil
 }
 
-func typeCheckModuleDefinition(def *ModuleDefinition, env *typeEnv) error {
+func typeCheckModuleDefinition(def ModuleDefinition, env *typeEnv) error {
 	env = newTypeEnvFromUpper(env)
 	for _, def := range def.Definitions {
 		if err := typeCheckDefinition(def, env); err != nil {
@@ -77,7 +77,7 @@ func typeCheckModuleDefinition(def *ModuleDefinition, env *typeEnv) error {
 	return nil
 }
 
-func typeCheckConstantDefinition(def *ConstantDefinition, env *typeEnv) error {
+func typeCheckConstantDefinition(def ConstantDefinition, env *typeEnv) error {
 	if err := typeCheckExpression(def.Expr, env); err != nil {
 		return err
 	}
@@ -89,23 +89,23 @@ func typeCheckConstantDefinition(def *ConstantDefinition, env *typeEnv) error {
 	return nil
 }
 
-func typeCheckProcDefinition(def *ProcDefinition, env *typeEnv) error {
+func typeCheckProcDefinition(def ProcDefinition, env *typeEnv) error {
 	procEnv := newTypeEnvFromUpper(env)
 	for _, stmt := range def.Statements {
 		if err := typeCheckStatement(stmt, procEnv); err != nil {
 			return err
 		}
 		switch s := stmt.(type) {
-		case *ConstantDefinition:
+		case ConstantDefinition:
 			env.add(s.Name, s.Type)
-		case *VarDeclStatement:
+		case VarDeclStatement:
 			env.add(s.Name, s.Type)
 		}
 	}
 	return nil
 }
 
-func typeCheckInitBlock(b *InitBlock, env *typeEnv) error {
+func typeCheckInitBlock(b InitBlock, env *typeEnv) error {
 	env = newTypeEnvFromUpper(env)
 	names := make(map[string]bool)
 	for _, initVar := range b.Vars {
@@ -118,9 +118,9 @@ func typeCheckInitBlock(b *InitBlock, env *typeEnv) error {
 		case ChannelVar:
 			env.add(initVar.Name, initVar.Type)
 		case InstanceVar:
-			calleeType := env.lookup(initVar.ModuleName)
+			calleeType := env.lookup(initVar.ProcDefName)
 			if calleeType == nil {
-				return fmt.Errorf("%q should be a callable type", initVar.ModuleName)
+				return fmt.Errorf("%q should be a callable type", initVar.ProcDefName)
 			}
 			env.add(initVar.Name, calleeType)
 		default:
@@ -138,7 +138,7 @@ func typeCheckInitBlock(b *InitBlock, env *typeEnv) error {
 				return fmt.Errorf("%s should be a channel", initVar.Name)
 			}
 		case InstanceVar:
-			calleeType := env.lookup(initVar.ModuleName)
+			calleeType := env.lookup(initVar.ProcDefName)
 			if t, isCallableType := calleeType.(CallableType); isCallableType {
 				if len(t.Parameters) != len(initVar.Args) {
 					return fmt.Errorf("Argument count mismatch")
@@ -153,7 +153,7 @@ func typeCheckInitBlock(b *InitBlock, env *typeEnv) error {
 					}
 				}
 			} else {
-				return fmt.Errorf("%q should be a callable type", initVar.ModuleName)
+				return fmt.Errorf("%q should be a callable type", initVar.ProcDefName)
 			}
 		default:
 			panic("Unknown initvar type")

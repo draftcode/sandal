@@ -56,12 +56,12 @@ type (
 	}
 )
 
-func (x *DataDefinition) definition()     {}
-func (x *ModuleDefinition) definition()   {}
-func (x *ConstantDefinition) definition() {}
-func (x *ConstantDefinition) statement()  {}
-func (x *ProcDefinition) definition()     {}
-func (x *InitBlock) definition()          {}
+func (x DataDefinition) definition()     {}
+func (x ModuleDefinition) definition()   {}
+func (x ConstantDefinition) definition() {}
+func (x ConstantDefinition) statement()  {}
+func (x ProcDefinition) definition()     {}
+func (x InitBlock) definition()          {}
 
 // ========================================
 // Statements
@@ -153,31 +153,31 @@ type (
 	}
 )
 
-func (x *LabelledStatement) statement()     {}
-func (x *BlockStatement) statement()        {}
-func (x *VarDeclStatement) statement()      {}
-func (x *IfStatement) statement()           {}
-func (x *AssignmentStatement) statement()   {}
-func (x *OpAssignmentStatement) statement() {}
-func (x *ChoiceStatement) statement()       {}
-func (x *RecvStatement) statement()         {}
-func (x *PeekStatement) statement()         {}
-func (x *SendStatement) statement()         {}
-func (x *ForStatement) statement()          {}
-func (x *ForInStatement) statement()        {}
-func (x *ForInRangeStatement) statement()   {}
-func (x *BreakStatement) statement()        {}
-func (x *GotoStatement) statement()         {}
-func (x *SkipStatement) statement()         {}
-func (x *ExprStatement) statement()         {}
-func (x *NullStatement) statement()         {}
+func (x LabelledStatement) statement()     {}
+func (x BlockStatement) statement()        {}
+func (x VarDeclStatement) statement()      {}
+func (x IfStatement) statement()           {}
+func (x AssignmentStatement) statement()   {}
+func (x OpAssignmentStatement) statement() {}
+func (x ChoiceStatement) statement()       {}
+func (x RecvStatement) statement()         {}
+func (x PeekStatement) statement()         {}
+func (x SendStatement) statement()         {}
+func (x ForStatement) statement()          {}
+func (x ForInStatement) statement()        {}
+func (x ForInRangeStatement) statement()   {}
+func (x BreakStatement) statement()        {}
+func (x GotoStatement) statement()         {}
+func (x SkipStatement) statement()         {}
+func (x ExprStatement) statement()         {}
+func (x NullStatement) statement()         {}
 
-func (x *RecvStatement) ChannelExpr() Expression { return x.Channel }
-func (x *PeekStatement) ChannelExpr() Expression { return x.Channel }
-func (x *SendStatement) ChannelExpr() Expression { return x.Channel }
-func (x *RecvStatement) ArgExprs() []Expression  { return x.Args }
-func (x *PeekStatement) ArgExprs() []Expression  { return x.Args }
-func (x *SendStatement) ArgExprs() []Expression  { return x.Args }
+func (x RecvStatement) ChannelExpr() Expression { return x.Channel }
+func (x PeekStatement) ChannelExpr() Expression { return x.Channel }
+func (x SendStatement) ChannelExpr() Expression { return x.Channel }
+func (x RecvStatement) ArgExprs() []Expression  { return x.Args }
+func (x PeekStatement) ArgExprs() []Expression  { return x.Args }
+func (x SendStatement) ArgExprs() []Expression  { return x.Args }
 
 // ========================================
 // Expressions
@@ -234,26 +234,26 @@ type (
 	}
 )
 
-func (x *TimeoutRecvExpression) ChannelExpr() Expression  { return x.Channel }
-func (x *TimeoutPeekExpression) ChannelExpr() Expression  { return x.Channel }
-func (x *NonblockRecvExpression) ChannelExpr() Expression { return x.Channel }
-func (x *NonblockPeekExpression) ChannelExpr() Expression { return x.Channel }
-func (x *TimeoutRecvExpression) ArgExprs() []Expression   { return x.Args }
-func (x *TimeoutPeekExpression) ArgExprs() []Expression   { return x.Args }
-func (x *NonblockRecvExpression) ArgExprs() []Expression  { return x.Args }
-func (x *NonblockPeekExpression) ArgExprs() []Expression  { return x.Args }
+func (x TimeoutRecvExpression) ChannelExpr() Expression  { return x.Channel }
+func (x TimeoutPeekExpression) ChannelExpr() Expression  { return x.Channel }
+func (x NonblockRecvExpression) ChannelExpr() Expression { return x.Channel }
+func (x NonblockPeekExpression) ChannelExpr() Expression { return x.Channel }
+func (x TimeoutRecvExpression) ArgExprs() []Expression   { return x.Args }
+func (x TimeoutPeekExpression) ArgExprs() []Expression   { return x.Args }
+func (x NonblockRecvExpression) ArgExprs() []Expression  { return x.Args }
+func (x NonblockPeekExpression) ArgExprs() []Expression  { return x.Args }
 
-func (x *IdentifierExpression) expression()   {}
-func (x *NumberExpression) expression()       {}
-func (x *NotExpression) expression()          {}
-func (x *UnarySubExpression) expression()     {}
-func (x *ParenExpression) expression()        {}
-func (x *BinOpExpression) expression()        {}
-func (x *TimeoutRecvExpression) expression()  {}
-func (x *TimeoutPeekExpression) expression()  {}
-func (x *NonblockRecvExpression) expression() {}
-func (x *NonblockPeekExpression) expression() {}
-func (x *ArrayExpression) expression()        {}
+func (x IdentifierExpression) expression()   {}
+func (x NumberExpression) expression()       {}
+func (x NotExpression) expression()          {}
+func (x UnarySubExpression) expression()     {}
+func (x ParenExpression) expression()        {}
+func (x BinOpExpression) expression()        {}
+func (x TimeoutRecvExpression) expression()  {}
+func (x TimeoutPeekExpression) expression()  {}
+func (x NonblockRecvExpression) expression() {}
+func (x NonblockPeekExpression) expression() {}
+func (x ArrayExpression) expression()        {}
 
 // ========================================
 // Misc

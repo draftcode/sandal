@@ -1,11 +1,12 @@
-package parsing
-
-import __yyfmt__ "fmt"
 
 //line parser.go.y:3
+package parsing
+import __yyfmt__ "fmt"
+//line parser.go.y:3
+		
 import (
-	data "github.com/draftcode/sandal/lang/data"
 	"log"
+	data "github.com/draftcode/sandal/lang/data"
 )
 
 type token struct {
@@ -13,8 +14,10 @@ type token struct {
 	lit string
 	pos Position
 }
-type yySymType struct {
-	yys         int
+
+//line parser.go.y:17
+type yySymType struct{
+	yys int
 	definitions []data.Definition
 	definition  data.Definition
 	statements  []data.Statement
@@ -30,7 +33,7 @@ type yySymType struct {
 	initvars    []data.InitVar
 	initvar     data.InitVar
 
-	tok token
+	tok         token
 }
 
 const IDENTIFIER = 57346
@@ -159,6 +162,9 @@ var yyStatenames = []string{}
 const yyEofCode = 1
 const yyErrCode = 2
 const yyMaxDepth = 200
+
+//line parser.go.y:597
+
 
 type lexerWrapper struct {
 	s           *Scanner
@@ -698,6 +704,7 @@ yydefault:
 	switch yynt {
 
 	case 1:
+		//line parser.go.y:132
 		{
 			yyVAL.definitions = []data.Definition{yyS[yypt-0].definition}
 			if l, isLexerWrapper := yylex.(*lexerWrapper); isLexerWrapper {
@@ -705,6 +712,7 @@ yydefault:
 			}
 		}
 	case 2:
+		//line parser.go.y:139
 		{
 			yyVAL.definitions = append([]data.Definition{yyS[yypt-1].definition}, yyS[yypt-0].definitions...)
 			if l, isLexerWrapper := yylex.(*lexerWrapper); isLexerWrapper {
@@ -722,18 +730,22 @@ yydefault:
 	case 7:
 		yyVAL.definition = yyS[yypt-0].definition
 	case 8:
+		//line parser.go.y:155
 		{
-			yyVAL.definition = &data.DataDefinition{Name: yyS[yypt-4].tok.lit, Elems: yyS[yypt-2].identifiers}
+			yyVAL.definition = data.DataDefinition{Name: yyS[yypt-4].tok.lit, Elems: yyS[yypt-2].identifiers}
 		}
 	case 9:
+		//line parser.go.y:161
 		{
-			yyVAL.definition = &data.ModuleDefinition{Name: yyS[yypt-7].tok.lit, Parameters: yyS[yypt-5].parameters, Definitions: yyS[yypt-2].definitions}
+			yyVAL.definition = data.ModuleDefinition{Name: yyS[yypt-7].tok.lit, Parameters: yyS[yypt-5].parameters, Definitions: yyS[yypt-2].definitions}
 		}
 	case 10:
+		//line parser.go.y:167
 		{
 			yyVAL.definitions = nil
 		}
 	case 11:
+		//line parser.go.y:171
 		{
 			yyVAL.definitions = append([]data.Definition{yyS[yypt-1].definition}, yyS[yypt-0].definitions...)
 		}
@@ -744,386 +756,482 @@ yydefault:
 	case 14:
 		yyVAL.definition = yyS[yypt-0].definition
 	case 15:
+		//line parser.go.y:182
 		{
-			yyVAL.definition = &data.ConstantDefinition{Name: yyS[yypt-4].tok.lit, Type: yyS[yypt-3].typetype, Expr: yyS[yypt-1].expression}
+			yyVAL.definition = data.ConstantDefinition{Name: yyS[yypt-4].tok.lit, Type: yyS[yypt-3].typetype, Expr: yyS[yypt-1].expression}
 		}
 	case 16:
+		//line parser.go.y:188
 		{
-			yyVAL.definition = &data.ProcDefinition{Name: yyS[yypt-7].tok.lit, Parameters: yyS[yypt-5].parameters, Statements: yyS[yypt-2].statements}
+			yyVAL.definition = data.ProcDefinition{Name: yyS[yypt-7].tok.lit, Parameters: yyS[yypt-5].parameters, Statements: yyS[yypt-2].statements}
 		}
 	case 17:
+		//line parser.go.y:194
 		{
-			yyVAL.definition = &data.InitBlock{Vars: yyS[yypt-2].initvars}
+			yyVAL.definition = data.InitBlock{Vars: yyS[yypt-2].initvars}
 		}
 	case 18:
+		//line parser.go.y:200
 		{
 			yyVAL.initvars = nil
 		}
 	case 19:
+		//line parser.go.y:204
 		{
 			yyVAL.initvars = yyS[yypt-0].initvars
 		}
 	case 20:
+		//line parser.go.y:210
 		{
 			yyVAL.initvars = []data.InitVar{yyS[yypt-0].initvar}
 		}
 	case 21:
+		//line parser.go.y:214
 		{
 			yyVAL.initvars = []data.InitVar{yyS[yypt-1].initvar}
 		}
 	case 22:
+		//line parser.go.y:218
 		{
 			yyVAL.initvars = append([]data.InitVar{yyS[yypt-2].initvar}, yyS[yypt-0].initvars...)
 		}
 	case 23:
+		//line parser.go.y:223
 		{
 			yyVAL.initvar = data.ChannelVar{Name: yyS[yypt-2].tok.lit, Type: yyS[yypt-0].typetype}
 		}
 	case 24:
+		//line parser.go.y:227
 		{
-			yyVAL.initvar = data.InstanceVar{Name: yyS[yypt-5].tok.lit, ModuleName: yyS[yypt-3].tok.lit, Args: yyS[yypt-1].expressions}
+			yyVAL.initvar = data.InstanceVar{Name: yyS[yypt-5].tok.lit, ProcDefName: yyS[yypt-3].tok.lit, Args: yyS[yypt-1].expressions}
 		}
 	case 25:
+		//line parser.go.y:233
 		{
 			yyVAL.statements = nil
 		}
 	case 26:
+		//line parser.go.y:237
 		{
 			yyVAL.statements = append([]data.Statement{yyS[yypt-1].statement}, yyS[yypt-0].statements...)
 		}
 	case 27:
+		//line parser.go.y:243
 		{
-			yyVAL.statement = &data.LabelledStatement{Label: yyS[yypt-2].tok.lit, Statement: yyS[yypt-0].statement}
+			yyVAL.statement = data.LabelledStatement{Label: yyS[yypt-2].tok.lit, Statement: yyS[yypt-0].statement}
 		}
 	case 28:
+		//line parser.go.y:247
 		{
-			yyVAL.statement = &data.BlockStatement{Statements: yyS[yypt-2].statements}
+			yyVAL.statement = data.BlockStatement{Statements: yyS[yypt-2].statements}
 		}
 	case 29:
+		//line parser.go.y:251
 		{
-			yyVAL.statement = &data.VarDeclStatement{Name: yyS[yypt-2].tok.lit, Type: yyS[yypt-1].typetype}
+			yyVAL.statement = data.VarDeclStatement{Name: yyS[yypt-2].tok.lit, Type: yyS[yypt-1].typetype}
 		}
 	case 30:
+		//line parser.go.y:255
 		{
-			yyVAL.statement = &data.VarDeclStatement{Name: yyS[yypt-4].tok.lit, Type: yyS[yypt-3].typetype, Initializer: yyS[yypt-1].expression}
+			yyVAL.statement = data.VarDeclStatement{Name: yyS[yypt-4].tok.lit, Type: yyS[yypt-3].typetype, Initializer: yyS[yypt-1].expression}
 		}
 	case 31:
+		//line parser.go.y:259
 		{
-			yyVAL.statement = &data.IfStatement{Condition: yyS[yypt-4].expression, TrueBranch: yyS[yypt-2].statements}
+			yyVAL.statement = data.IfStatement{Condition: yyS[yypt-4].expression, TrueBranch: yyS[yypt-2].statements}
 		}
 	case 32:
+		//line parser.go.y:263
 		{
-			yyVAL.statement = &data.IfStatement{Condition: yyS[yypt-8].expression, TrueBranch: yyS[yypt-6].statements, FalseBranch: yyS[yypt-2].statements}
+			yyVAL.statement = data.IfStatement{Condition: yyS[yypt-8].expression, TrueBranch: yyS[yypt-6].statements, FalseBranch: yyS[yypt-2].statements}
 		}
 	case 33:
+		//line parser.go.y:267
 		{
-			yyVAL.statement = &data.AssignmentStatement{Variable: yyS[yypt-3].tok.lit, Expr: yyS[yypt-1].expression}
+			yyVAL.statement = data.AssignmentStatement{Variable: yyS[yypt-3].tok.lit, Expr: yyS[yypt-1].expression}
 		}
 	case 34:
+		//line parser.go.y:271
 		{
-			yyVAL.statement = &data.OpAssignmentStatement{Variable: yyS[yypt-3].tok.lit, Operator: "+", Expr: yyS[yypt-1].expression}
+			yyVAL.statement = data.OpAssignmentStatement{Variable: yyS[yypt-3].tok.lit, Operator: "+", Expr: yyS[yypt-1].expression}
 		}
 	case 35:
+		//line parser.go.y:275
 		{
-			yyVAL.statement = &data.OpAssignmentStatement{Variable: yyS[yypt-3].tok.lit, Operator: "-", Expr: yyS[yypt-1].expression}
+			yyVAL.statement = data.OpAssignmentStatement{Variable: yyS[yypt-3].tok.lit, Operator: "-", Expr: yyS[yypt-1].expression}
 		}
 	case 36:
+		//line parser.go.y:279
 		{
-			yyVAL.statement = &data.OpAssignmentStatement{Variable: yyS[yypt-3].tok.lit, Operator: "*", Expr: yyS[yypt-1].expression}
+			yyVAL.statement = data.OpAssignmentStatement{Variable: yyS[yypt-3].tok.lit, Operator: "*", Expr: yyS[yypt-1].expression}
 		}
 	case 37:
+		//line parser.go.y:283
 		{
-			yyVAL.statement = &data.OpAssignmentStatement{Variable: yyS[yypt-3].tok.lit, Operator: "/", Expr: yyS[yypt-1].expression}
+			yyVAL.statement = data.OpAssignmentStatement{Variable: yyS[yypt-3].tok.lit, Operator: "/", Expr: yyS[yypt-1].expression}
 		}
 	case 38:
+		//line parser.go.y:287
 		{
-			yyVAL.statement = &data.OpAssignmentStatement{Variable: yyS[yypt-3].tok.lit, Operator: "%", Expr: yyS[yypt-1].expression}
+			yyVAL.statement = data.OpAssignmentStatement{Variable: yyS[yypt-3].tok.lit, Operator: "%", Expr: yyS[yypt-1].expression}
 		}
 	case 39:
+		//line parser.go.y:291
 		{
-			yyVAL.statement = &data.OpAssignmentStatement{Variable: yyS[yypt-3].tok.lit, Operator: "&", Expr: yyS[yypt-1].expression}
+			yyVAL.statement = data.OpAssignmentStatement{Variable: yyS[yypt-3].tok.lit, Operator: "&", Expr: yyS[yypt-1].expression}
 		}
 	case 40:
+		//line parser.go.y:295
 		{
-			yyVAL.statement = &data.OpAssignmentStatement{Variable: yyS[yypt-3].tok.lit, Operator: "|", Expr: yyS[yypt-1].expression}
+			yyVAL.statement = data.OpAssignmentStatement{Variable: yyS[yypt-3].tok.lit, Operator: "|", Expr: yyS[yypt-1].expression}
 		}
 	case 41:
+		//line parser.go.y:299
 		{
-			yyVAL.statement = &data.OpAssignmentStatement{Variable: yyS[yypt-3].tok.lit, Operator: "^", Expr: yyS[yypt-1].expression}
+			yyVAL.statement = data.OpAssignmentStatement{Variable: yyS[yypt-3].tok.lit, Operator: "^", Expr: yyS[yypt-1].expression}
 		}
 	case 42:
+		//line parser.go.y:303
 		{
-			yyVAL.statement = &data.OpAssignmentStatement{Variable: yyS[yypt-3].tok.lit, Operator: "<<", Expr: yyS[yypt-1].expression}
+			yyVAL.statement = data.OpAssignmentStatement{Variable: yyS[yypt-3].tok.lit, Operator: "<<", Expr: yyS[yypt-1].expression}
 		}
 	case 43:
+		//line parser.go.y:307
 		{
-			yyVAL.statement = &data.OpAssignmentStatement{Variable: yyS[yypt-3].tok.lit, Operator: ">>", Expr: yyS[yypt-1].expression}
+			yyVAL.statement = data.OpAssignmentStatement{Variable: yyS[yypt-3].tok.lit, Operator: ">>", Expr: yyS[yypt-1].expression}
 		}
 	case 44:
+		//line parser.go.y:311
 		{
-			yyVAL.statement = &data.ChoiceStatement{Blocks: yyS[yypt-1].blocks}
+			yyVAL.statement = data.ChoiceStatement{Blocks: yyS[yypt-1].blocks}
 		}
 	case 45:
+		//line parser.go.y:315
 		{
-			yyVAL.statement = &data.RecvStatement{Channel: yyS[yypt-2].expressions[0], Args: yyS[yypt-2].expressions[1:]}
+			yyVAL.statement = data.RecvStatement{Channel: yyS[yypt-2].expressions[0], Args: yyS[yypt-2].expressions[1:]}
 		}
 	case 46:
+		//line parser.go.y:319
 		{
-			yyVAL.statement = &data.PeekStatement{Channel: yyS[yypt-2].expressions[0], Args: yyS[yypt-2].expressions[1:]}
+			yyVAL.statement = data.PeekStatement{Channel: yyS[yypt-2].expressions[0], Args: yyS[yypt-2].expressions[1:]}
 		}
 	case 47:
+		//line parser.go.y:323
 		{
-			yyVAL.statement = &data.SendStatement{Channel: yyS[yypt-2].expressions[0], Args: yyS[yypt-2].expressions[1:]}
+			yyVAL.statement = data.SendStatement{Channel: yyS[yypt-2].expressions[0], Args: yyS[yypt-2].expressions[1:]}
 		}
 	case 48:
+		//line parser.go.y:327
 		{
-			yyVAL.statement = &data.ForStatement{Statements: yyS[yypt-2].statements}
+			yyVAL.statement = data.ForStatement{Statements: yyS[yypt-2].statements}
 		}
 	case 49:
+		//line parser.go.y:331
 		{
-			yyVAL.statement = &data.ForInStatement{Variable: yyS[yypt-6].tok.lit, Container: yyS[yypt-4].expression, Statements: yyS[yypt-2].statements}
+			yyVAL.statement = data.ForInStatement{Variable: yyS[yypt-6].tok.lit, Container: yyS[yypt-4].expression, Statements: yyS[yypt-2].statements}
 		}
 	case 50:
+		//line parser.go.y:335
 		{
-			yyVAL.statement = &data.ForInRangeStatement{Variable: yyS[yypt-9].tok.lit, FromExpr: yyS[yypt-6].expression, ToExpr: yyS[yypt-4].expression, Statements: yyS[yypt-2].statements}
+			yyVAL.statement = data.ForInRangeStatement{Variable: yyS[yypt-9].tok.lit, FromExpr: yyS[yypt-6].expression, ToExpr: yyS[yypt-4].expression, Statements: yyS[yypt-2].statements}
 		}
 	case 51:
+		//line parser.go.y:339
 		{
-			yyVAL.statement = &data.BreakStatement{}
+			yyVAL.statement = data.BreakStatement{}
 		}
 	case 52:
+		//line parser.go.y:343
 		{
-			yyVAL.statement = &data.GotoStatement{Label: yyS[yypt-1].tok.lit}
+			yyVAL.statement = data.GotoStatement{Label: yyS[yypt-1].tok.lit}
 		}
 	case 53:
+		//line parser.go.y:347
 		{
-			yyVAL.statement = &data.SkipStatement{}
+			yyVAL.statement = data.SkipStatement{}
 		}
 	case 54:
+		//line parser.go.y:351
 		{
-			yyVAL.statement = &data.ExprStatement{Expr: yyS[yypt-1].expression}
+			yyVAL.statement = data.ExprStatement{Expr: yyS[yypt-1].expression}
 		}
 	case 55:
+		//line parser.go.y:355
 		{
-			yyVAL.statement = &data.NullStatement{}
+			yyVAL.statement = data.NullStatement{}
 		}
 	case 56:
+		//line parser.go.y:359
 		{
 			yyVAL.statement = yyS[yypt-0].definition.(data.Statement)
 		}
 	case 57:
+		//line parser.go.y:364
 		{
-			yyVAL.expression = &data.IdentifierExpression{Name: yyS[yypt-0].tok.lit}
+			yyVAL.expression = data.IdentifierExpression{Name: yyS[yypt-0].tok.lit}
 		}
 	case 58:
+		//line parser.go.y:368
 		{
-			yyVAL.expression = &data.NumberExpression{Lit: yyS[yypt-0].tok.lit}
+			yyVAL.expression = data.NumberExpression{Lit: yyS[yypt-0].tok.lit}
 		}
 	case 59:
+		//line parser.go.y:372
 		{
-			yyVAL.expression = &data.NotExpression{SubExpr: yyS[yypt-0].expression}
+			yyVAL.expression = data.NotExpression{SubExpr: yyS[yypt-0].expression}
 		}
 	case 60:
+		//line parser.go.y:376
 		{
-			yyVAL.expression = &data.UnarySubExpression{SubExpr: yyS[yypt-0].expression}
+			yyVAL.expression = data.UnarySubExpression{SubExpr: yyS[yypt-0].expression}
 		}
 	case 61:
+		//line parser.go.y:380
 		{
-			yyVAL.expression = &data.ParenExpression{SubExpr: yyS[yypt-1].expression}
+			yyVAL.expression = data.ParenExpression{SubExpr: yyS[yypt-1].expression}
 		}
 	case 62:
+		//line parser.go.y:384
 		{
-			yyVAL.expression = &data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "+", RHS: yyS[yypt-0].expression}
+			yyVAL.expression = data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "+", RHS: yyS[yypt-0].expression}
 		}
 	case 63:
+		//line parser.go.y:388
 		{
-			yyVAL.expression = &data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "-", RHS: yyS[yypt-0].expression}
+			yyVAL.expression = data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "-", RHS: yyS[yypt-0].expression}
 		}
 	case 64:
+		//line parser.go.y:392
 		{
-			yyVAL.expression = &data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "*", RHS: yyS[yypt-0].expression}
+			yyVAL.expression = data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "*", RHS: yyS[yypt-0].expression}
 		}
 	case 65:
+		//line parser.go.y:396
 		{
-			yyVAL.expression = &data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "/", RHS: yyS[yypt-0].expression}
+			yyVAL.expression = data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "/", RHS: yyS[yypt-0].expression}
 		}
 	case 66:
+		//line parser.go.y:400
 		{
-			yyVAL.expression = &data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "%", RHS: yyS[yypt-0].expression}
+			yyVAL.expression = data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "%", RHS: yyS[yypt-0].expression}
 		}
 	case 67:
+		//line parser.go.y:404
 		{
-			yyVAL.expression = &data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "&", RHS: yyS[yypt-0].expression}
+			yyVAL.expression = data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "&", RHS: yyS[yypt-0].expression}
 		}
 	case 68:
+		//line parser.go.y:408
 		{
-			yyVAL.expression = &data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "|", RHS: yyS[yypt-0].expression}
+			yyVAL.expression = data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "|", RHS: yyS[yypt-0].expression}
 		}
 	case 69:
+		//line parser.go.y:412
 		{
-			yyVAL.expression = &data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "^", RHS: yyS[yypt-0].expression}
+			yyVAL.expression = data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "^", RHS: yyS[yypt-0].expression}
 		}
 	case 70:
+		//line parser.go.y:416
 		{
-			yyVAL.expression = &data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "<<", RHS: yyS[yypt-0].expression}
+			yyVAL.expression = data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "<<", RHS: yyS[yypt-0].expression}
 		}
 	case 71:
+		//line parser.go.y:420
 		{
-			yyVAL.expression = &data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: ">>", RHS: yyS[yypt-0].expression}
+			yyVAL.expression = data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: ">>", RHS: yyS[yypt-0].expression}
 		}
 	case 72:
+		//line parser.go.y:424
 		{
-			yyVAL.expression = &data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "&&", RHS: yyS[yypt-0].expression}
+			yyVAL.expression = data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "&&", RHS: yyS[yypt-0].expression}
 		}
 	case 73:
+		//line parser.go.y:428
 		{
-			yyVAL.expression = &data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "||", RHS: yyS[yypt-0].expression}
+			yyVAL.expression = data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "||", RHS: yyS[yypt-0].expression}
 		}
 	case 74:
+		//line parser.go.y:432
 		{
-			yyVAL.expression = &data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "==", RHS: yyS[yypt-0].expression}
+			yyVAL.expression = data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "==", RHS: yyS[yypt-0].expression}
 		}
 	case 75:
+		//line parser.go.y:436
 		{
-			yyVAL.expression = &data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "<", RHS: yyS[yypt-0].expression}
+			yyVAL.expression = data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "<", RHS: yyS[yypt-0].expression}
 		}
 	case 76:
+		//line parser.go.y:440
 		{
-			yyVAL.expression = &data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: ">", RHS: yyS[yypt-0].expression}
+			yyVAL.expression = data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: ">", RHS: yyS[yypt-0].expression}
 		}
 	case 77:
+		//line parser.go.y:444
 		{
-			yyVAL.expression = &data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "!=", RHS: yyS[yypt-0].expression}
+			yyVAL.expression = data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "!=", RHS: yyS[yypt-0].expression}
 		}
 	case 78:
+		//line parser.go.y:448
 		{
-			yyVAL.expression = &data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "<=", RHS: yyS[yypt-0].expression}
+			yyVAL.expression = data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: "<=", RHS: yyS[yypt-0].expression}
 		}
 	case 79:
+		//line parser.go.y:452
 		{
-			yyVAL.expression = &data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: ">=", RHS: yyS[yypt-0].expression}
+			yyVAL.expression = data.BinOpExpression{LHS: yyS[yypt-2].expression, Operator: ">=", RHS: yyS[yypt-0].expression}
 		}
 	case 80:
+		//line parser.go.y:456
 		{
-			yyVAL.expression = &data.TimeoutRecvExpression{Channel: yyS[yypt-1].expressions[0], Args: yyS[yypt-1].expressions[1:]}
+			yyVAL.expression = data.TimeoutRecvExpression{Channel: yyS[yypt-1].expressions[0], Args: yyS[yypt-1].expressions[1:]}
 		}
 	case 81:
+		//line parser.go.y:460
 		{
-			yyVAL.expression = &data.TimeoutPeekExpression{Channel: yyS[yypt-1].expressions[0], Args: yyS[yypt-1].expressions[1:]}
+			yyVAL.expression = data.TimeoutPeekExpression{Channel: yyS[yypt-1].expressions[0], Args: yyS[yypt-1].expressions[1:]}
 		}
 	case 82:
+		//line parser.go.y:464
 		{
-			yyVAL.expression = &data.NonblockRecvExpression{Channel: yyS[yypt-1].expressions[0], Args: yyS[yypt-1].expressions[1:]}
+			yyVAL.expression = data.NonblockRecvExpression{Channel: yyS[yypt-1].expressions[0], Args: yyS[yypt-1].expressions[1:]}
 		}
 	case 83:
+		//line parser.go.y:468
 		{
-			yyVAL.expression = &data.NonblockPeekExpression{Channel: yyS[yypt-1].expressions[0], Args: yyS[yypt-1].expressions[1:]}
+			yyVAL.expression = data.NonblockPeekExpression{Channel: yyS[yypt-1].expressions[0], Args: yyS[yypt-1].expressions[1:]}
 		}
 	case 84:
+		//line parser.go.y:472
 		{
-			yyVAL.expression = &data.ArrayExpression{Elems: yyS[yypt-1].expressions}
+			yyVAL.expression = data.ArrayExpression{Elems: yyS[yypt-1].expressions}
 		}
 	case 85:
+		//line parser.go.y:480
 		{
 			yyVAL.identifiers = []string{yyS[yypt-0].tok.lit}
 		}
 	case 86:
+		//line parser.go.y:484
 		{
 			yyVAL.identifiers = []string{yyS[yypt-1].tok.lit}
 		}
 	case 87:
+		//line parser.go.y:488
 		{
 			yyVAL.identifiers = append([]string{yyS[yypt-2].tok.lit}, yyS[yypt-0].identifiers...)
 		}
 	case 88:
+		//line parser.go.y:494
 		{
 			yyVAL.parameters = nil
 		}
 	case 89:
+		//line parser.go.y:498
 		{
 			yyVAL.parameters = yyS[yypt-0].parameters
 		}
 	case 90:
+		//line parser.go.y:504
 		{
 			yyVAL.parameters = []data.Parameter{yyS[yypt-0].parameter}
 		}
 	case 91:
+		//line parser.go.y:508
 		{
 			yyVAL.parameters = []data.Parameter{yyS[yypt-1].parameter}
 		}
 	case 92:
+		//line parser.go.y:512
 		{
 			yyVAL.parameters = append([]data.Parameter{yyS[yypt-2].parameter}, yyS[yypt-0].parameters...)
 		}
 	case 93:
+		//line parser.go.y:518
 		{
 			yyVAL.parameter = data.Parameter{Name: yyS[yypt-1].tok.lit, Type: yyS[yypt-0].typetype}
 		}
 	case 94:
+		//line parser.go.y:524
 		{
 			yyVAL.expressions = []data.Expression{yyS[yypt-0].expression}
 		}
 	case 95:
+		//line parser.go.y:528
 		{
 			yyVAL.expressions = []data.Expression{yyS[yypt-1].expression}
 		}
 	case 96:
+		//line parser.go.y:532
 		{
 			yyVAL.expressions = append([]data.Expression{yyS[yypt-2].expression}, yyS[yypt-0].expressions...)
 		}
 	case 97:
+		//line parser.go.y:538
 		{
 			yyVAL.typetypes = []data.Type{yyS[yypt-0].typetype}
 		}
 	case 98:
+		//line parser.go.y:542
 		{
 			yyVAL.typetypes = []data.Type{yyS[yypt-1].typetype}
 		}
 	case 99:
+		//line parser.go.y:546
 		{
 			yyVAL.typetypes = append([]data.Type{yyS[yypt-2].typetype}, yyS[yypt-0].typetypes...)
 		}
 	case 100:
+		//line parser.go.y:551
 		{
 			yyVAL.typetype = data.NamedType{Name: yyS[yypt-0].tok.lit}
 		}
 	case 101:
+		//line parser.go.y:555
 		{
 			yyVAL.typetype = data.ArrayType{ElemType: yyS[yypt-0].typetype}
 		}
 	case 102:
+		//line parser.go.y:559
 		{
 			yyVAL.typetype = data.HandshakeChannelType{IsUnstable: false, Elems: yyS[yypt-1].typetypes}
 		}
 	case 103:
+		//line parser.go.y:563
 		{
 			yyVAL.typetype = data.HandshakeChannelType{IsUnstable: true, Elems: yyS[yypt-1].typetypes}
 		}
 	case 104:
+		//line parser.go.y:567
 		{
 			yyVAL.typetype = data.BufferedChannelType{IsUnstable: false, BufferSize: nil, Elems: yyS[yypt-1].typetypes}
 		}
 	case 105:
+		//line parser.go.y:571
 		{
 			yyVAL.typetype = data.BufferedChannelType{IsUnstable: false, BufferSize: yyS[yypt-4].expression, Elems: yyS[yypt-1].typetypes}
 		}
 	case 106:
+		//line parser.go.y:575
 		{
 			yyVAL.typetype = data.BufferedChannelType{IsUnstable: true, BufferSize: nil, Elems: yyS[yypt-1].typetypes}
 		}
 	case 107:
+		//line parser.go.y:579
 		{
 			yyVAL.typetype = data.BufferedChannelType{IsUnstable: true, BufferSize: yyS[yypt-4].expression, Elems: yyS[yypt-1].typetypes}
 		}
 	case 108:
+		//line parser.go.y:585
 		{
 			yyVAL.blocks = []data.BlockStatement{data.BlockStatement{Statements: yyS[yypt-1].statements}}
 		}
 	case 109:
+		//line parser.go.y:589
 		{
 			yyVAL.blocks = []data.BlockStatement{data.BlockStatement{Statements: yyS[yypt-2].statements}}
 		}
 	case 110:
+		//line parser.go.y:593
 		{
 			yyVAL.blocks = append([]data.BlockStatement{data.BlockStatement{Statements: yyS[yypt-3].statements}}, yyS[yypt-0].blocks...)
 		}

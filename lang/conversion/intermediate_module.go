@@ -69,6 +69,7 @@ type (
 	intInternalChannelVal struct {
 		Name       string
 		ModuleName string
+		ArgLen     int
 	}
 
 	intInternalProcVal struct {
@@ -84,7 +85,7 @@ type (
 	}
 
 	intInternalProcDef struct {
-		Def *ProcDefinition
+		Def ProcDefinition
 	}
 
 	intInternalConstant struct {

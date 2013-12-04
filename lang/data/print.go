@@ -8,31 +8,31 @@ import (
 // ========================================
 // Definitions
 
-func (x *ConstantDefinition) String() string {
+func (x ConstantDefinition) String() string {
 	return fmt.Sprintf("const %s %s = %s;", x.Name, x.Type, x.Expr)
 }
 
 // ========================================
 // Statements
 
-func (x *LabelledStatement) String() string {
+func (x LabelledStatement) String() string {
 	return x.Label + ": " + x.Statement.String()
 }
-func (x *BlockStatement) String() string {
+func (x BlockStatement) String() string {
 	stmts := []string{}
 	for _, stmt := range x.Statements {
 		stmts = append(stmts, stmt.String())
 	}
 	return "{ " + strings.Join(stmts, " ") + " };"
 }
-func (x *VarDeclStatement) String() string {
+func (x VarDeclStatement) String() string {
 	if x.Initializer != nil {
 		return fmt.Sprintf("var %s %s = %s;", x.Name, x.Type, x.Initializer)
 	} else {
 		return fmt.Sprintf("var %s %s;", x.Name, x.Type)
 	}
 }
-func (x *IfStatement) String() string {
+func (x IfStatement) String() string {
 	cond := x.Condition.String()
 	tBranch := []string{}
 	for _, stmt := range x.TrueBranch {
@@ -49,13 +49,13 @@ func (x *IfStatement) String() string {
 			strings.Join(tBranch, " "), strings.Join(fBranch, " "))
 	}
 }
-func (x *AssignmentStatement) String() string {
+func (x AssignmentStatement) String() string {
 	return fmt.Sprintf("%s = %s;", x.Variable, x.Expr)
 }
-func (x *OpAssignmentStatement) String() string {
+func (x OpAssignmentStatement) String() string {
 	return fmt.Sprintf("%s %s= %s;", x.Variable, x.Operator, x.Expr)
 }
-func (x *ChoiceStatement) String() string {
+func (x ChoiceStatement) String() string {
 	blocks := []string{}
 	for _, block := range x.Blocks {
 		stmts := []string{}
@@ -66,35 +66,35 @@ func (x *ChoiceStatement) String() string {
 	}
 	return "choice " + strings.Join(blocks, ", ") + ";"
 }
-func (x *RecvStatement) String() string {
+func (x RecvStatement) String() string {
 	args := []string{x.Channel.String()}
 	for _, arg := range x.Args {
 		args = append(args, arg.String())
 	}
 	return "recv(" + strings.Join(args, ", ") + ");"
 }
-func (x *PeekStatement) String() string {
+func (x PeekStatement) String() string {
 	args := []string{x.Channel.String()}
 	for _, arg := range x.Args {
 		args = append(args, arg.String())
 	}
 	return "peek(" + strings.Join(args, ", ") + ");"
 }
-func (x *SendStatement) String() string {
+func (x SendStatement) String() string {
 	args := []string{x.Channel.String()}
 	for _, arg := range x.Args {
 		args = append(args, arg.String())
 	}
 	return "send(" + strings.Join(args, ", ") + ");"
 }
-func (x *ForStatement) String() string {
+func (x ForStatement) String() string {
 	stmts := []string{}
 	for _, stmt := range x.Statements {
 		stmts = append(stmts, stmt.String())
 	}
 	return fmt.Sprintf("for { %s };", strings.Join(stmts, " "))
 }
-func (x *ForInStatement) String() string {
+func (x ForInStatement) String() string {
 	stmts := []string{}
 	for _, stmt := range x.Statements {
 		stmts = append(stmts, stmt.String())
@@ -102,7 +102,7 @@ func (x *ForInStatement) String() string {
 	return fmt.Sprintf("for %s in %s { %s };", x.Variable, x.Container,
 		strings.Join(stmts, " "))
 }
-func (x *ForInRangeStatement) String() string {
+func (x ForInRangeStatement) String() string {
 	stmts := []string{}
 	for _, stmt := range x.Statements {
 		stmts = append(stmts, stmt.String())
@@ -110,72 +110,72 @@ func (x *ForInRangeStatement) String() string {
 	return fmt.Sprintf("for %s in range %s to %s { %s };", x.Variable,
 		x.FromExpr, x.ToExpr, strings.Join(stmts, " "))
 }
-func (x *BreakStatement) String() string {
+func (x BreakStatement) String() string {
 	return "break;"
 }
-func (x *GotoStatement) String() string {
+func (x GotoStatement) String() string {
 	return "goto " + x.Label + ";"
 }
-func (x *SkipStatement) String() string {
+func (x SkipStatement) String() string {
 	return "skip;"
 }
-func (x *ExprStatement) String() string {
+func (x ExprStatement) String() string {
 	return x.Expr.String() + ";"
 }
-func (x *NullStatement) String() string {
+func (x NullStatement) String() string {
 	return ";"
 }
 
 // ========================================
 // Expressions
 
-func (x *IdentifierExpression) String() string {
+func (x IdentifierExpression) String() string {
 	return x.Name
 }
-func (x *NumberExpression) String() string {
+func (x NumberExpression) String() string {
 	return x.Lit
 }
-func (x *NotExpression) String() string {
+func (x NotExpression) String() string {
 	return "!" + x.SubExpr.String()
 }
-func (x *UnarySubExpression) String() string {
+func (x UnarySubExpression) String() string {
 	return "-" + x.SubExpr.String()
 }
-func (x *ParenExpression) String() string {
+func (x ParenExpression) String() string {
 	return "(" + x.SubExpr.String() + ")"
 }
-func (x *BinOpExpression) String() string {
+func (x BinOpExpression) String() string {
 	return x.LHS.String() + x.Operator + x.RHS.String()
 }
-func (x *TimeoutRecvExpression) String() string {
+func (x TimeoutRecvExpression) String() string {
 	params := []string{x.Channel.String()}
 	for _, arg := range x.Args {
 		params = append(params, arg.String())
 	}
 	return "timeout_recv(" + strings.Join(params, ", ") + ")"
 }
-func (x *TimeoutPeekExpression) String() string {
+func (x TimeoutPeekExpression) String() string {
 	params := []string{x.Channel.String()}
 	for _, arg := range x.Args {
 		params = append(params, arg.String())
 	}
 	return "timeout_peek(" + strings.Join(params, ", ") + ")"
 }
-func (x *NonblockRecvExpression) String() string {
+func (x NonblockRecvExpression) String() string {
 	params := []string{x.Channel.String()}
 	for _, arg := range x.Args {
 		params = append(params, arg.String())
 	}
 	return "nonblock_recv(" + strings.Join(params, ", ") + ")"
 }
-func (x *NonblockPeekExpression) String() string {
+func (x NonblockPeekExpression) String() string {
 	params := []string{x.Channel.String()}
 	for _, arg := range x.Args {
 		params = append(params, arg.String())
 	}
 	return "nonblock_peek(" + strings.Join(params, ", ") + ")"
 }
-func (x *ArrayExpression) String() string {
+func (x ArrayExpression) String() string {
 	elems := []string{}
 	for _, elem := range x.Elems {
 		elems = append(elems, elem.String())

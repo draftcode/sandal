@@ -75,7 +75,7 @@ func channelExprCheck(ch ChanExpr, env *typeEnv, recvOrPeek bool) error {
 			return fmt.Errorf("Expect the argument %s to be a %s", args[i], elemTypes[i])
 		}
 		if recvOrPeek {
-			if _, isIdentExpr := args[i].(*IdentifierExpression); !isIdentExpr {
+			if _, isIdentExpr := args[i].(IdentifierExpression); !isIdentExpr {
 				return fmt.Errorf("Expect the argument %s to be an identifier", args[i])
 			}
 		}
