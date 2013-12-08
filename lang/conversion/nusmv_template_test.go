@@ -28,7 +28,7 @@ func TestInstantiateTemplate(t *testing.T) {
 		Defs:    []tmplAssign{tmplAssign{"var3", "TRUE"}},
 	}
 
-	if result := InstantiateTemplate(mod); result != expectedTemplateResult {
+	if result := instantiateTemplate(mod); result != expectedTemplateResult {
 		t.Errorf("Expect %s to be %s", result, expectedTemplateResult)
 	}
 }

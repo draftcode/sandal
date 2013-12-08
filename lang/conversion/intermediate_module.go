@@ -140,18 +140,3 @@ func (env *varEnv) lookup(name string) intInternalVal {
 		return nil
 	}
 }
-
-// ========================================
-
-const caseTemplate = `case{{range .Cases}}
-  {{.Condition}} : {{.Value}}{{end}}
-  TRUE : {{.Default}}
-esac;`
-
-type caseTmplValue struct {
-	Cases []struct {
-		Condition string
-		Value     string
-	}
-	Default string
-}

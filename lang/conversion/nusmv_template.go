@@ -47,7 +47,7 @@ var funcMap template.FuncMap = template.FuncMap{
 	"rhsFormat": rhsFormat,
 }
 
-func InstantiateTemplate(module tmplModule) string {
+func instantiateTemplate(module tmplModule) string {
 	tmpl, err := template.New("NuSMVModule").Funcs(funcMap).Parse(moduleTemplate)
 	if err != nil {
 		panic(err)

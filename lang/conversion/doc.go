@@ -14,24 +14,8 @@
 //
 // Intermediate module
 //
-//   intMainModule{
-//   	Vars: []intVar{
-//   		{"ch", "HandshakeChannel0(running_pid, __filled_ch, __received_ch, __value_ch)"},
-//   		{"proc1", "__pid0_ProcA(running_pid, 0, __pid0_ch)"},
-//   		{"__pid0_ch", "HandshakeChannel0Proxy(ch)"},
-//   		{"running_pid", "{0}"},
-//   	},
-//   	Assigns: []intAssign{
-//   		{"running_pid", "{0}"},
-//   	},
-//   	Defs: []intAssign{
-//   		{"__filled_ch", "[__pid0_ch.next_filled]"},
-//   		{"__received_ch", "[__pid0_ch.next_received]"},
-//   		{"__next_value_ch", "[__pid0_ch.next_value]"},
-//   	},
-//   }
 //   intHandshakeChannel{
-//   	Name: "HandshakeChannel0",
+//   	Name:      "HandshakeChannel0",
 //   	ValueType: []string{"boolean"},
 //   }
 //   intProcModule{
@@ -57,7 +41,7 @@
 //   					"state2": []intAssign{
 //   						{"ch0.next_filled", "TRUE"},
 //   						{"ch0.next_received", "FALSE"},
-//   						{"ch0.next_value", "TRUE"},
+//   						{"ch0.next_value_0", "TRUE"},
 //   					},
 //   				},
 //   			},
@@ -66,96 +50,112 @@
 //   	Defaults: map[string]string{
 //   		"ch0.next_filled":   "ch0.filled",
 //   		"ch0.next_received": "ch0.received",
-//   		"ch0.next_value":    "ch0.value",
+//   		"ch0.next_value_0":  "ch0.value_0",
+//   	},
+//   	Defs: []intAssign{},
+//   }
+//   intMainModule{
+//   	Vars: []intVar{
+//   		{"ch", "HandshakeChannel0(running_pid, ch_filled, ch_received, ch_value_0)"},
+//   		{"__pid0_ch", "HandshakeChannel0Proxy(ch)"},
+//   		{"proc1", "__pid0_ProcA(running_pid, 0, __pid0_ch)"},
+//   		{"running_pid", "{0}"},
+//   	},
+//   	Assigns: []intAssign{
+//   		{"running_pid", "{0}"},
 //   	},
 //   	Defs: []intAssign{
+//   		{"ch_filled", "[__pid0_ch.next_filled]"},
+//   		{"ch_received", "[__pid0_ch.next_received]"},
+//   		{"ch_value_0", "[__pid0_ch.next_value_0]"},
 //   	},
 //   }
 //
 // Template module
 //
 //   tmplModule{
-//   	Name: "main",
-//   	Args: []string{},
-//   	Vars: []tmplVar{
-//   		{"running_pid", "{0}"},
-//   		{"ch", "HandshakeChannel0(running_pid, ch_filled, ch_received, ch_value)"},
-//   		{"proc1", "ProcA(running_pid, 0, ch_pid0)"},
-//   		{"ch_pid0", "HandshakeChannel0Proxy(ch)"},
-//   	},
-//   	Assigns: []tmplAssign{
-//   		{"running_pid", "{0}"},
-//   	},
-//   	Defs: []tmplAssign{
-//   		{"ch_filled", "[ch_pid0.next_filled]"}
-//   		{"ch_received", "[ch_pid0.next_received]"}
-//   		{"ch_next_value", "[ch_pid0.next_value]"}
-//   	}
-//   }
-//   tmplNuSMVModule{
 //   	Name: "HandshakeChannel0",
-//   	Args: []string{"running_pid", "filleds", "receiveds", "values"},
+//   	Args: []string{"running_pid", "filleds", "receiveds", "values_0"},
 //   	Vars: []tmplVar{
 //   		{"filled", "boolean"},
 //   		{"received", "boolean"},
-//   		{"value", "boolean"},
+//   		{"value_0", "boolean"},
 //   	},
 //   	Assigns: []tmplAssign{
 //   		{"init(filled)", "FALSE"},
 //   		{"next(filled)", "filleds[running_pid]"},
 //   		{"init(received)", "FALSE"},
 //   		{"next(received)", "receiveds[running_pid]"},
-//   		{"init(value)", "FALSE"},
-//   		{"next(value)", "values[running_pid]"},
+//   		{"init(value_0)", "FALSE"},
+//   		{"next(value_0)", "values_0[running_pid]"},
 //   	},
 //   }
-//   tmplNuSMVModule{
+//   tmplModule{
 //   	Name: "HandshakeChannel0Proxy",
 //   	Args: []string{"ch"},
 //   	Vars: []tmplVar{
 //   		{"next_filled", "boolean"},
 //   		{"next_received", "boolean"},
-//   		{"next_value", "boolean"},
+//   		{"next_value_0", "boolean"},
 //   	},
 //   	Defs: []tmplAssign{
 //   		{"filled", "ch.filled"},
 //   		{"received", "ch.received"},
-//   		{"value", "ch.value"},
+//   		{"value_0", "ch.value_0"},
 //   	},
 //   }
-//   tmplNuSMVModule{
-//   	Name: "ProcA_proc1",
+//   intProcModule{
+//   	Name: "__pid0_ProcA",
 //   	Args: []string{"running_pid", "pid", "ch0"},
+//   	Vars: []intVar{
+//   		{"b", "0..8"},
+//   	},
+//   	InitState: intState("state0"),
+//   	Trans: map[intState][]intTransition{
+//   		"state0": []intTransition{
+//   			{
+//   				Condition: "",
+//   				Actions: map[intState][]intAssign{
+//   					"state1": nil,
+//   				},
+//   			},
+//   		},
+//   		"state1": []intTransition{
+//   			{
+//   				Condition: "!ch0.filled",
+//   				Actions: map[intState][]intAssign{
+//   					"state2": []intAssign{
+//   						{"ch0.next_filled", "TRUE"},
+//   						{"ch0.next_received", "FALSE"},
+//   						{"ch0.next_value_0", "TRUE"},
+//   					},
+//   				},
+//   			},
+//   		},
+//   	},
+//   	Defaults: map[string]string{
+//   		"ch0.next_filled":   "ch0.filled",
+//   		"ch0.next_received": "ch0.received",
+//   		"ch0.next_value_0":  "ch0.value_0",
+//   	},
+//   	Defs: []intAssign{},
+//   }
+//   tmplModule{
+//   	Name: "main",
+//   	Args: []string{},
 //   	Vars: []tmplVar{
-//   		{"state", "{state0, state1, state2}"},
+//   		{"ch", "HandshakeChannel0(running_pid, ch_filled, ch_received, ch_value_0)"},
+//   		{"__pid0_ch", "HandshakeChannel0Proxy(ch)"},
+//   		{"proc1", "__pid0_ProcA(running_pid, 0, __pid0_ch)"},
+//   		{"running_pid", "{0}"},
 //   	},
 //   	Assigns: []tmplAssign{
-//   		{"init(state)", "state0"},
-//   		{"next(state)", strings.Join([]string{
-//   			"case",
-//   			"  running_pid = pid & state = state0 : state1;",
-//   			"  running_pid = pid & state = state1 & !ch0.filled : state2;",
-//   			"  TRUE : state;",
-//   			"esac;",
-//   		}, "\n")},
-//   		{"ch0.next_filled", strings.Join([]string{
-//   			"case",
-//   			"  running_pid = pid & state = state1 & !ch0.filled : TRUE;"
-//   			"  TRUE : ch0.filled;"
-//   			"esac;",
-//   		}, "\n")},
-//   		{"ch0.next_received", strings.Join([]string{
-//   			"case",
-//   			"  running_pid = pid & state = state1 & !ch0.filled : TRUE;"
-//   			"  TRUE : ch0.received;"
-//   			"esac;",
-//   		}, "\n")},
-//   		{"ch0.next_value", strings.Join([]string{
-//   			"case",
-//   			"  running_pid = pid & state = state1 & !ch0.filled : TRUE;"
-//   			"  TRUE : ch0.value;"
-//   			"esac;",
-//   		}, "\n")},
+//   		{"running_pid", "{0}"},
+//   	},
+//   	Defs: []tmplAssign{
+//   		{"ch_filled", "[__pid0_ch.next_filled]"},
+//   		{"ch_received", "[__pid0_ch.next_received]"},
+//   		{"ch_value_0", "[__pid0_ch.next_value_0]"},
 //   	},
 //   }
 //
@@ -215,7 +215,7 @@
 //         esac;
 //       ch0.next_received :=
 //         case
-//           running_pid = pid & state = state1 & !ch0.filled : TRUE;
+//           running_pid = pid & state = state1 & !ch0.filled : FALSE;
 //           TRUE : ch0.received;
 //         esac;
 //       ch0.next_value :=

@@ -1,56 +1,36 @@
 package conversion
 
 import (
+	"bytes"
 	"fmt"
 	"sort"
+	"text/template"
 )
 
 func convertIntermediateModuleToTemplate(mods []intModule) (error, []tmplModule) {
-	tmplMods := []tmplModule{}
+	retTmplMods := []tmplModule{}
 	for _, mod := range mods {
-		var tmplMod tmplModule
+		var tmplMods []tmplModule
 		var err error
 		switch mod := mod.(type) {
 		case intMainModule:
-			err, tmplMod = convertMainModuleToTemplate(mod)
+			err, tmplMods = convertMainModuleToTemplate(mod)
 		case intHandshakeChannel:
-			err, tmplMod = convertHandshakeChannelToTemplate(mod)
+			err, tmplMods = convertHandshakeChannelToTemplate(mod)
 		case intBufferedChannel:
-			err, tmplMod = convertBufferedChannelToTemplate(mod)
+			err, tmplMods = convertBufferedChannelToTemplate(mod)
 		case intProcModule:
-			err, tmplMod = convertProcModuleToTemplate(mod)
+			err, tmplMods = convertProcModuleToTemplate(mod)
 		}
 		if err != nil {
 			return err, nil
 		}
-		tmplMods = append(tmplMods, tmplMod)
+		retTmplMods = append(retTmplMods, tmplMods...)
 	}
-	// tmpl.Name = module.Name
-	// tmpl.Args = append([]string{"running_pid", "pid"}, module.Args...)
-	// tmpl.Vars = []tmplVar{
-	// 	{"state", "{" + strings.Join(extractStates(module), ", ") + "}"},
-	// }
-	// for _, absvar := range module.Vars {
-	// 	tmpl.Vars = append(tmpl.Vars, tmplVar{absvar.Name, absvar.Type})
-	// }
-	// assignCond := make(map[string]map[string]string)
-	// for state, transes := range module.Trans {
-	// 	for _, trans := range transes {
-	// 		extractAssignCondition(state, trans, assignCond)
-	// 	}
-	// }
-	// for variable, cases := range assignCond {
-	// 	var defaultValue string
-	// 	if variable == "next(state)" {
-	// 		defaultValue = "state"
-	// 	} else if defaultValue, hasValue := module.Defaults[variable]; !hasValue {
-	// 		return tmplNuSMVModule{}, fmt.Errorf("There is no default value for %s", variable)
-	// 	}
-	// }
-	return nil, tmplMods
+	return nil, retTmplMods
 }
 
-func convertMainModuleToTemplate(mod intMainModule) (error, tmplModule) {
+func convertMainModuleToTemplate(mod intMainModule) (error, []tmplModule) {
 	vars := []tmplVar{}
 	for _, intvar := range mod.Vars {
 		vars = append(vars, tmplVar{intvar.Name, intvar.Type})
@@ -63,15 +43,17 @@ func convertMainModuleToTemplate(mod intMainModule) (error, tmplModule) {
 	for _, intassign := range mod.Defs {
 		defs = append(defs, tmplAssign{intassign.LHS, intassign.RHS})
 	}
-	tmplMod := tmplModule{
-		Name:    "main",
-		Vars:    vars,
-		Assigns: assigns,
-		Defs:    defs,
+	return nil, []tmplModule{
+		{
+			Name:    "main",
+			Vars:    vars,
+			Assigns: assigns,
+			Defs:    defs,
+		},
 	}
-	return nil, tmplMod
 }
-func convertHandshakeChannelToTemplate(mod intHandshakeChannel) (error, tmplModule) {
+func convertHandshakeChannelToTemplate(mod intHandshakeChannel) (error, []tmplModule) {
+	// Fields for the channel module.
 	args := []string{"running_pid", "filleds", "receiveds"}
 	for i, _ := range mod.ValueType {
 		args = append(args, fmt.Sprintf("values_%d", i))
@@ -99,45 +81,162 @@ func convertHandshakeChannelToTemplate(mod intHandshakeChannel) (error, tmplModu
 			fmt.Sprintf("values_%d[running_pid]", i),
 		})
 	}
-	return nil, tmplModule{
-		Name:    mod.Name,
-		Args:    args,
-		Vars:    vars,
-		Assigns: assigns,
+	// Fields for the channel proxy module
+	proxyVars := []tmplVar{
+		{"next_filled", "boolean"},
+		{"next_received", "boolean"},
+	}
+	for i, elem := range mod.ValueType {
+		proxyVars = append(proxyVars, tmplVar{
+			fmt.Sprintf("next_value_%d", i),
+			elem,
+		})
+	}
+	proxyDefs := []tmplAssign{
+		{"filled", "ch.filled"},
+		{"received", "ch.received"},
+	}
+	for i, _ := range mod.ValueType {
+		proxyDefs = append(proxyDefs, tmplAssign{
+			fmt.Sprintf("value_%d", i),
+			fmt.Sprintf("ch.value_%d", i),
+		})
+	}
+	return nil, []tmplModule{
+		{
+			Name:    mod.Name,
+			Args:    args,
+			Vars:    vars,
+			Assigns: assigns,
+		},
+		{
+			Name: mod.Name + "Proxy",
+			Args: []string{"ch"},
+			Vars: proxyVars,
+			Defs: proxyDefs,
+		},
 	}
 }
-func convertBufferedChannelToTemplate(mod intModule) (error, tmplModule) {
+func convertBufferedChannelToTemplate(mod intModule) (error, []tmplModule) {
 	panic("Not implemented")
 }
-func convertProcModuleToTemplate(mod intModule) (error, tmplModule) {
-	panic("Not implemented")
+func convertProcModuleToTemplate(mod intProcModule) (error, []tmplModule) {
+	vars := []tmplVar{
+		{"state", "{" + argJoin(collectStates(mod)) + "}"},
+	}
+	for _, intvar := range mod.Vars {
+		vars = append(vars, tmplVar{intvar.Name, intvar.Type})
+	}
+	assigns := []tmplAssign{
+		{"init(state)", string(mod.InitState)},
+		{"next(state)", instantiateCaseTemplate(caseTmplValue{
+			Cases:   buildStateTransition(mod),
+			Default: "state;",
+		})},
+	}
+	assigns = append(assigns, buildAssignments(mod)...)
+	return nil, []tmplModule{
+		{
+			Name:    mod.Name,
+			Args:    mod.Args,
+			Vars:    vars,
+			Assigns: assigns,
+		},
+	}
 }
 
 // ========================================
 
-type assignCond struct {
-	state     string
-	condition string
-	value     string
+func collectStates(mod intProcModule) []string {
+	m := make(map[string]bool)
+	for state, intTrans := range mod.Trans {
+		m[string(state)] = true
+		for _, tr := range intTrans {
+			if len(tr.Actions) != 1 {
+				// TODO
+				panic("multiple actions not supported")
+			}
+			for nextState, _ := range tr.Actions {
+				m[string(nextState)] = true
+			}
+		}
+	}
+	states := []string{}
+	for state, _ := range m {
+		states = append(states, state)
+	}
+	sort.Strings(states)
+	return states
 }
 
-func extractStates(module intProcModule) (states []string) {
-	states_map := make(map[intState]bool)
-	states_map[module.InitState] = true
-	for s, transes := range module.Trans {
-		states_map[s] = true
-		for _, trans := range transes {
-			for t, _ := range trans.Actions {
-				states_map[t] = true
+type condMap map[string][]string
+
+func buildStateTransition(mod intProcModule) []caseTmplCase {
+	transs := make(map[intState]condMap)
+	for state, intTrans := range mod.Trans {
+		tmplTrans := make(map[string][]string)
+		for _, tr := range intTrans {
+			cond := tr.Condition
+			if cond == "" {
+				cond = fmt.Sprintf("running_pid = pid & state = %s", state)
+			} else {
+				cond = fmt.Sprintf("running_pid = pid & state = %s & %s", state, cond)
+			}
+			for nextState, _ := range tr.Actions {
+				tmplTrans[cond] = append(tmplTrans[cond], string(nextState))
+			}
+		}
+		transs[state] = tmplTrans
+	}
+
+	cases := []caseTmplCase{}
+	for _, condmap := range transs {
+		for cond, nextStates := range condmap {
+			if len(nextStates) == 1 {
+				cases = append(cases, caseTmplCase{cond, nextStates[0] + ";"})
+			} else {
+				cases = append(cases, caseTmplCase{
+					cond, "{" + argJoin(nextStates) + "};",
+				})
+			}
+		}
+	}
+	return cases
+}
+
+func buildAssignments(mod intProcModule) []tmplAssign {
+	assignss := make(map[string][]caseTmplCase)
+	for state, intTrans := range mod.Trans {
+		for _, tr := range intTrans {
+			cond := tr.Condition
+			if cond == "" {
+				cond = fmt.Sprintf("running_pid = pid & state = %s", state)
+			} else {
+				cond = fmt.Sprintf("running_pid = pid & state = %s & %s", state, cond)
+			}
+
+			for _, assigns := range tr.Actions {
+				for _, assign := range assigns {
+					assignss[assign.LHS] = append(
+						assignss[assign.LHS],
+						caseTmplCase{cond, assign.RHS + ";"},
+					)
+				}
 			}
 		}
 	}
 
-	for state, _ := range states_map {
-		states = append(states, string(state))
+	retAssigns := []tmplAssign{}
+	for lhs, assigns := range assignss {
+		retAssigns = append(retAssigns, tmplAssign{
+			LHS: lhs,
+			RHS: instantiateCaseTemplate(caseTmplValue{
+				Cases:   assigns,
+				Default: mod.Defaults[lhs] + ";",
+			}),
+		})
 	}
-	sort.StringSlice(states).Sort()
-	return
+	return retAssigns
 }
 
 // ========================================
@@ -149,4 +248,34 @@ func zeroValueInNuSMV(ty string) string {
 	default:
 		panic("Not implemented")
 	}
+}
+
+const caseTemplate = `case{{range .Cases}}
+  {{.Condition}} : {{.Value}}{{end}}
+  TRUE : {{.Default}}
+esac`
+
+type caseTmplCase struct {
+	Condition string
+	Value     string
+}
+
+type caseTmplValue struct {
+	Cases   []caseTmplCase
+	Default string
+}
+
+func instantiateCaseTemplate(val caseTmplValue) string {
+	tmpl, err := template.New("NuSMVCase").Parse(caseTemplate)
+	if err != nil {
+		panic(err)
+	}
+
+	buf := new(bytes.Buffer)
+	err = tmpl.Execute(buf, val)
+	if err != nil {
+		panic(err)
+	}
+
+	return buf.String()
 }
