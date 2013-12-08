@@ -161,45 +161,33 @@
 //
 // NuSMV Module
 //
-//   MODULE main()
-//     VAR
-//       running_pid : {0};
-//       ch : HandshakeChannel0(running_pid, ch_filled, ch_received, ch_value);
-//       proc1 : ProcA(running_pid, 0, ch_pid0);
-//       ch_pid0 : HandshakeChannel0Proxy(ch);
-//     ASSIGN
-//       running_pid := {0};
-//     DEFINE
-//       ch_filled := [ch_pid0.next_filled]
-//       ch_received := [ch_pid0.next_received]
-//       ch_value := [ch_pid0.next_value]
-//
-//   MODULE HandshakeChannel0(running_pid, filleds, receiveds, values)
+//   MODULE HandshakeChannel0(running_pid, filleds, receiveds, values_0)
 //     VAR
 //       filled : boolean;
 //       received : boolean;
-//       value : boolean;
+//       value_0 : boolean;
 //     ASSIGN
 //       init(filled) := FALSE;
 //       next(filled) := filleds[running_pid];
 //       init(received) := FALSE;
 //       next(received) := receiveds[running_pid];
-//       init(value) := FALSE;
-//       next(value) := values[running_pid];
+//       init(value_0) := FALSE;
+//       next(value_0) := values_0[running_pid];
 //
 //   MODULE HandshakeChannel0Proxy(ch)
 //     VAR
 //       next_filled : boolean;
 //       next_received : boolean;
-//       next_value : boolean;
+//       next_value_0 : boolean;
 //     DEFINE
 //       filled := ch.filled;
 //       received := ch.received;
-//       value := ch.value;
+//       value_0 := ch.value_0;
 //
-//   MODULE ProcA_proc1(running_pid, pid, ch0)
+//   MODULE __pid0_ProcA(running_pid, pid, ch0)
 //     VAR
 //       state : {state0, state1, state2};
+//       b : 0..8;
 //     ASSIGN
 //       init(state) := state0;
 //       next(state) :=
@@ -218,9 +206,22 @@
 //           running_pid = pid & state = state1 & !ch0.filled : FALSE;
 //           TRUE : ch0.received;
 //         esac;
-//       ch0.next_value :=
+//       ch0.next_value_0 :=
 //         case
 //           running_pid = pid & state = state1 & !ch0.filled : TRUE;
-//           TRUE : ch0.value;
+//           TRUE : ch0.value_0;
 //         esac;
+//
+//   MODULE main()
+//     VAR
+//       ch : HandshakeChannel0(running_pid, ch_filled, ch_received, ch_value_0);
+//       __pid0_ch : HandshakeChannel0Proxy(ch);
+//       proc1 : __pid0_ProcA(running_pid, 0, __pid0_ch);
+//       running_pid : {0};
+//     ASSIGN
+//       running_pid := {0};
+//     DEFINE
+//       ch_filled := [__pid0_ch.next_filled];
+//       ch_received := [__pid0_ch.next_received];
+//       ch_value_0 := [__pid0_ch.next_value_0];
 package conversion
