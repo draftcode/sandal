@@ -37,6 +37,9 @@ func typeOfExpression(x Expression, env *typeEnv) Type {
 }
 
 func typeOfIdentifierExpression(x IdentifierExpression, env *typeEnv) Type {
+	if x.Name == "true" || x.Name == "false" {
+		return NamedType{Name: "bool"}
+	}
 	return env.lookup(x.Name)
 }
 
@@ -141,6 +144,9 @@ func typeCheckExpression(x Expression, env *typeEnv) error {
 }
 
 func typeCheckIdentifierExpression(x IdentifierExpression, env *typeEnv) error {
+	if x.Name == "true" || x.Name == "false" {
+		return nil
+	}
 	if env.lookup(x.Name) == nil {
 		return fmt.Errorf("Undefined variable %s", x.Name)
 	}

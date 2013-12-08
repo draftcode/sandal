@@ -20,16 +20,16 @@ func typeCheckDefinitions(defs []Definition, env *typeEnv) error {
 			}
 		case ModuleDefinition:
 			params := make([]Type, len(def.Parameters))
-			for _, p := range def.Parameters {
-				params = append(params, p.Type)
+			for i, p := range def.Parameters {
+				params[i] = p.Type
 			}
 			env.add(def.Name, CallableType{Parameters: params})
 		case ConstantDefinition:
 			env.add(def.Name, def.Type)
 		case ProcDefinition:
 			params := make([]Type, len(def.Parameters))
-			for _, p := range def.Parameters {
-				params = append(params, p.Type)
+			for i, p := range def.Parameters {
+				params[i] = p.Type
 			}
 			env.add(def.Name, CallableType{Parameters: params})
 		case InitBlock:
@@ -69,6 +69,9 @@ func typeCheckDataDefinition(def DataDefinition, env *typeEnv) error {
 
 func typeCheckModuleDefinition(def ModuleDefinition, env *typeEnv) error {
 	env = newTypeEnvFromUpper(env)
+	for _, param := range def.Parameters {
+		env.add(param.Name, param.Type)
+	}
 	for _, def := range def.Definitions {
 		if err := typeCheckDefinition(def, env); err != nil {
 			return err
@@ -91,6 +94,9 @@ func typeCheckConstantDefinition(def ConstantDefinition, env *typeEnv) error {
 
 func typeCheckProcDefinition(def ProcDefinition, env *typeEnv) error {
 	procEnv := newTypeEnvFromUpper(env)
+	for _, param := range def.Parameters {
+		env.add(param.Name, param.Type)
+	}
 	for _, stmt := range def.Statements {
 		if err := typeCheckStatement(stmt, procEnv); err != nil {
 			return err
@@ -141,7 +147,7 @@ func typeCheckInitBlock(b InitBlock, env *typeEnv) error {
 			calleeType := env.lookup(initVar.ProcDefName)
 			if t, isCallableType := calleeType.(CallableType); isCallableType {
 				if len(t.Parameters) != len(initVar.Args) {
-					return fmt.Errorf("Argument count mismatch")
+					return fmt.Errorf("Argument count mismatch: %d to %d", len(initVar.Args), len(t.Parameters))
 				}
 				for i := 0; i < len(t.Parameters); i++ {
 					if err := typeCheckExpression(initVar.Args[i], env); err != nil {
