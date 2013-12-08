@@ -130,14 +130,14 @@ func (x *intStatementConverter) convertSendStatement(stmt SendStatement) {
 	x.currentState = nextState
 
 }
-func (x *intStatementConverter) convertForStatement(stmt ForStatement)                   {}
-func (x *intStatementConverter) convertForInStatement(stmt ForInStatement)               {}
-func (x *intStatementConverter) convertForInRangeStatement(stmt ForInRangeStatement)     {}
-func (x *intStatementConverter) convertBreakStatement(stmt BreakStatement)               {}
-func (x *intStatementConverter) convertGotoStatement(stmt GotoStatement)                 {}
-func (x *intStatementConverter) convertSkipStatement(stmt SkipStatement)                 {}
-func (x *intStatementConverter) convertExprStatement(stmt ExprStatement)                 {}
-func (x *intStatementConverter) convertNullStatement(stmt NullStatement)                 {}
+func (x *intStatementConverter) convertForStatement(stmt ForStatement)               {}
+func (x *intStatementConverter) convertForInStatement(stmt ForInStatement)           {}
+func (x *intStatementConverter) convertForInRangeStatement(stmt ForInRangeStatement) {}
+func (x *intStatementConverter) convertBreakStatement(stmt BreakStatement)           {}
+func (x *intStatementConverter) convertGotoStatement(stmt GotoStatement)             {}
+func (x *intStatementConverter) convertSkipStatement(stmt SkipStatement)             {}
+func (x *intStatementConverter) convertExprStatement(stmt ExprStatement)             {}
+func (x *intStatementConverter) convertNullStatement(stmt NullStatement)             {}
 
 // ========================================
 

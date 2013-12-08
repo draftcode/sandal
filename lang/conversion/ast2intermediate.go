@@ -301,9 +301,9 @@ func (x *intModConverter) buildChannelVal(name string, ty Type) (error, intInter
 			ValueType: types,
 		}
 		val = intInternalHandshakeChannelVal{
-			Name: name,
+			Name:       name,
 			ModuleName: chModName,
-			ArgLen: argLen,
+			ArgLen:     argLen,
 		}
 	case BufferedChannelType:
 		types := []string{}
@@ -317,9 +317,9 @@ func (x *intModConverter) buildChannelVal(name string, ty Type) (error, intInter
 			ValueType: types,
 		}
 		val = intInternalBufferedChannelVal{
-			Name: name,
+			Name:       name,
 			ModuleName: chModName,
-			ArgLen: argLen,
+			ArgLen:     argLen,
 		}
 	}
 	x.modules = append(x.modules, mod)

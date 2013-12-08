@@ -74,13 +74,13 @@
 //
 // Template module
 //
-//   tmplNuSMVModule{
+//   tmplModule{
 //   	Name: "main",
 //   	Args: []string{},
 //   	Vars: []tmplVar{
 //   		{"running_pid", "{0}"},
-//   		{"ch": HandshakeChannel0(running_pid, ch_filled, ch_received, ch_value},
-//   		{"proc1": "ProcA(running_pid, 0, ch_pid0)"},
+//   		{"ch", "HandshakeChannel0(running_pid, ch_filled, ch_received, ch_value)"},
+//   		{"proc1", "ProcA(running_pid, 0, ch_pid0)"},
 //   		{"ch_pid0", "HandshakeChannel0Proxy(ch)"},
 //   	},
 //   	Assigns: []tmplAssign{
@@ -94,7 +94,7 @@
 //   }
 //   tmplNuSMVModule{
 //   	Name: "HandshakeChannel0",
-//   	Args: []string{"running_pid, "filleds", "receiveds", "values"},
+//   	Args: []string{"running_pid", "filleds", "receiveds", "values"},
 //   	Vars: []tmplVar{
 //   		{"filled", "boolean"},
 //   		{"received", "boolean"},
