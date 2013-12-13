@@ -3,10 +3,9 @@ data State {
   StateB,
   StateC,
 }
-const A = 34 // untyped
-module Sample(chA channel { bit }, chBs []channel { bit }) {
-  proc D(ch channel { byte }) {
-    var a bit = 1
+module Sample(chA channel { int }, chBs []channel { int }) {
+  proc D(ch channel { int }) {
+    var a int = 1
     if a == 1 {
       a += 1
     } else {
@@ -48,19 +47,19 @@ module Sample(chA channel { bit }, chBs []channel { bit }) {
     }
   }
 
-  proc E(ch channel { byte }) {
+  proc E(ch channel { int }) {
     send(ch, 1)
   }
 
   init {
-    ch : channel { byte },
+    ch : channel { int },
     d : D(ch),
-    E(ch),
+    e : E(ch),
   }
 }
 
 init {
   chA : unstable channel { bit },
   chB : channel { bit },
-  Sample(chA, [chA, chB]),
+  sample : Sample(chA, [chA, chB]),
 }

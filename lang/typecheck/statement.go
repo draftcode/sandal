@@ -100,16 +100,16 @@ func typeCheckAssignmentStatement(x AssignmentStatement, env *typeEnv) error {
 	}
 	if ty := env.lookup(x.Variable); ty != nil {
 		if !typeOfExpression(x.Expr, env).Equal(ty) {
-			return fmt.Errorf("Expect %s to be a type %s", x.Expr, ty)
+			return fmt.Errorf("Expect %s to be a type %s (%s)", x.Expr, ty, x.Expr.Position())
 		}
 	} else {
-		return fmt.Errorf("Undefined variable %s", x.Variable)
+		return fmt.Errorf("Undefined variable %s (%s)", x.Variable, x.Position())
 	}
 	return nil
 }
 func typeCheckOpAssignmentStatement(x OpAssignmentStatement, env *typeEnv) error {
 	return typeCheckExpression(
-		BinOpExpression{IdentifierExpression{x.Variable}, x.Operator, x.Expr},
+		BinOpExpression{IdentifierExpression{Pos{}, x.Variable}, x.Operator, x.Expr},
 		env,
 	)
 }
@@ -142,7 +142,7 @@ func typeCheckForInStatement(x ForInStatement, env *typeEnv) error {
 		blockEnv.add(x.Variable, ty.ElemType)
 		return typeCheckStatements(x.Statements, blockEnv)
 	} else {
-		return fmt.Errorf("Expect %s to be an array", x.Container)
+		return fmt.Errorf("Expect %s to be an array (%s)", x.Container, x.Container.Position())
 	}
 }
 func typeCheckForInRangeStatement(x ForInRangeStatement, env *typeEnv) error {
@@ -153,10 +153,10 @@ func typeCheckForInRangeStatement(x ForInRangeStatement, env *typeEnv) error {
 		return err
 	}
 	if !typeOfExpression(x.FromExpr, env).Equal(NamedType{"int"}) {
-		return fmt.Errorf("Expect %s to be an int", x.FromExpr)
+		return fmt.Errorf("Expect %s to be an int (%s)", x.FromExpr, x.FromExpr.Position())
 	}
 	if !typeOfExpression(x.ToExpr, env).Equal(NamedType{"int"}) {
-		return fmt.Errorf("Expect %s to be an int", x.ToExpr)
+		return fmt.Errorf("Expect %s to be an int (%s)", x.ToExpr, x.ToExpr.Position())
 	}
 	blockEnv := newTypeEnvFromUpper(env)
 	blockEnv.add(x.Variable, NamedType{"int"})

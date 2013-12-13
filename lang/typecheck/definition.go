@@ -86,8 +86,8 @@ func typeCheckConstantDefinition(def ConstantDefinition, env *typeEnv) error {
 	}
 	actual := typeOfExpression(def.Expr, env)
 	if !actual.Equal(def.Type) {
-		return fmt.Errorf("Expect %+#v to have type %+#v but has %+#v",
-			def.Expr, def.Type, actual)
+		return fmt.Errorf("Expect %+#v to have type %+#v but has %+#v (%s)",
+			def.Expr, def.Type, actual, def.Position())
 	}
 	return nil
 }
@@ -116,7 +116,7 @@ func typeCheckInitBlock(b InitBlock, env *typeEnv) error {
 	names := make(map[string]bool)
 	for _, initVar := range b.Vars {
 		if _, defined := names[initVar.VarName()]; defined {
-			return fmt.Errorf("Varname %s is duplicated", initVar.VarName())
+			return fmt.Errorf("Varname %s is duplicated (%s)", initVar.VarName(), initVar.Position())
 		}
 		names[initVar.VarName()] = true
 
@@ -126,7 +126,7 @@ func typeCheckInitBlock(b InitBlock, env *typeEnv) error {
 		case InstanceVar:
 			calleeType := env.lookup(initVar.ProcDefName)
 			if calleeType == nil {
-				return fmt.Errorf("%q should be a callable type", initVar.ProcDefName)
+				return fmt.Errorf("%q should be a callable type (%s)", initVar.ProcDefName, initVar.Position())
 			}
 			env.add(initVar.Name, calleeType)
 		default:
@@ -141,13 +141,13 @@ func typeCheckInitBlock(b InitBlock, env *typeEnv) error {
 			case HandshakeChannelType, BufferedChannelType:
 				// OK
 			default:
-				return fmt.Errorf("%s should be a channel", initVar.Name)
+				return fmt.Errorf("%s should be a channel (%s)", initVar.Name, initVar.Position())
 			}
 		case InstanceVar:
 			calleeType := env.lookup(initVar.ProcDefName)
 			if t, isCallableType := calleeType.(CallableType); isCallableType {
 				if len(t.Parameters) != len(initVar.Args) {
-					return fmt.Errorf("Argument count mismatch: %d to %d", len(initVar.Args), len(t.Parameters))
+					return fmt.Errorf("Argument count mismatch: %d to %d (%s)", len(initVar.Args), len(t.Parameters), initVar.Position())
 				}
 				for i := 0; i < len(t.Parameters); i++ {
 					if err := typeCheckExpression(initVar.Args[i], env); err != nil {
@@ -155,11 +155,11 @@ func typeCheckInitBlock(b InitBlock, env *typeEnv) error {
 					}
 					argType := typeOfExpression(initVar.Args[i], env)
 					if !argType.Equal(t.Parameters[i]) {
-						return fmt.Errorf("Argument type mismatch")
+						return fmt.Errorf("Argument type mismatch: %s to %s (%s)", argType, t.Parameters[i], initVar.Position())
 					}
 				}
 			} else {
-				return fmt.Errorf("%q should be a callable type", initVar.ProcDefName)
+				return fmt.Errorf("%q should be a callable type (%s)", initVar.ProcDefName, initVar.Position())
 			}
 		default:
 			panic("Unknown initvar type")

@@ -1,9 +1,5 @@
 package conversion
 
-import (
-	. "github.com/draftcode/sandal/lang/data"
-)
-
 type intModule interface {
 	intmodule()
 }
@@ -61,62 +57,16 @@ type (
 	}
 )
 
-type (
-	intInternalVal interface {
-		intinternalval()
-	}
-
-	intInternalHandshakeChannelVal struct {
-		Name       string
-		ModuleName string
-		ArgLen     int
-	}
-
-	intInternalBufferedChannelVal struct {
-		Name       string
-		ModuleName string
-		ArgLen     int
-	}
-
-	intInternalProcVal struct {
-		Name       string
-		ModuleName string
-		Def        ProcDefinition
-		Args       []string
-		Pid        int
-	}
-
-	intInternalPrimitiveVar struct {
-		Type Type
-	}
-
-	intInternalProcDef struct {
-		Def ProcDefinition
-	}
-
-	intInternalConstant struct {
-		Type Type
-		Expr Expression
-	}
-)
-
-func (x intInternalHandshakeChannelVal) intinternalval() {}
-func (x intInternalBufferedChannelVal) intinternalval()  {}
-func (x intInternalProcDef) intinternalval()             {}
-func (x intInternalProcVal) intinternalval()             {}
-func (x intInternalPrimitiveVar) intinternalval()        {}
-func (x intInternalConstant) intinternalval()            {}
-
 // ========================================
 
 type varEnv struct {
 	upper   *varEnv
-	mapping map[string]intInternalVal
+	mapping map[string]intInternalObj
 }
 
 func newVarEnv() (ret *varEnv) {
 	ret = new(varEnv)
-	ret.mapping = make(map[string]intInternalVal)
+	ret.mapping = make(map[string]intInternalObj)
 	return
 }
 
@@ -126,11 +76,11 @@ func newVarEnvFromUpper(upper *varEnv) (ret *varEnv) {
 	return
 }
 
-func (env *varEnv) add(name string, intVar intInternalVal) {
+func (env *varEnv) add(name string, intVar intInternalObj) {
 	env.mapping[name] = intVar
 }
 
-func (env *varEnv) lookup(name string) intInternalVal {
+func (env *varEnv) lookup(name string) intInternalObj {
 	if intVar, found := env.mapping[name]; found {
 		return intVar
 	}

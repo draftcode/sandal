@@ -62,21 +62,21 @@ func channelExprCheck(ch ChanExpr, env *typeEnv, recvOrPeek bool) error {
 	case BufferedChannelType:
 		elemTypes = ty.Elems
 	default:
-		return fmt.Errorf("Expect the first argument of %s to be a channel but got %s",
-			ch, typeOfExpression(chExpr, env))
+		return fmt.Errorf("Expect the first argument of %s to be a channel but got %s (%s)",
+			ch, typeOfExpression(chExpr, env), ch.Position())
 	}
 
 	if len(elemTypes) != len(args) {
-		return fmt.Errorf("Expect the arugments of %s to have %d elements",
-			ch, len(elemTypes))
+		return fmt.Errorf("Expect the arugments of %s to have %d elements (%s)",
+			ch, len(elemTypes), ch.Position())
 	}
 	for i := 0; i < len(elemTypes); i++ {
 		if !typeOfExpression(args[i], env).Equal(elemTypes[i]) {
-			return fmt.Errorf("Expect the argument %s to be a %s", args[i], elemTypes[i])
+			return fmt.Errorf("Expect the argument %s to be a %s (%s)", args[i], elemTypes[i], args[i].Position())
 		}
 		if recvOrPeek {
 			if _, isIdentExpr := args[i].(IdentifierExpression); !isIdentExpr {
-				return fmt.Errorf("Expect the argument %s to be an identifier", args[i])
+				return fmt.Errorf("Expect the argument %s to be an identifier (%s)", args[i], args[i].Position())
 			}
 		}
 	}

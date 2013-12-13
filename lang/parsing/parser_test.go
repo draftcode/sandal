@@ -1,6 +1,7 @@
 package parsing
 
 import (
+	"github.com/cookieo9/go-misc/pp"
 	. "github.com/draftcode/sandal/lang/data"
 	"reflect"
 	"testing"
@@ -11,46 +12,48 @@ func parse(t *testing.T, src string, expect interface{}) {
 	s.Init([]rune(src), 0)
 	definitions := Parse(s)
 	if !reflect.DeepEqual(definitions, expect) {
-		t.Errorf("Expect %+#v \n but got %+#v", expect, definitions)
+		t.Errorf("\nExpected %s\nGot      %s", pp.PP(expect), pp.PP(definitions))
 	}
 }
 
 func TestDataDefinition(t *testing.T) {
 	parse(t, "data Maybe { Just, Nothing };",
-		[]Definition{DataDefinition{"Maybe", []string{"Just", "Nothing"}}})
+		[]Definition{DataDefinition{Pos{1, 1}, "Maybe", []string{"Just", "Nothing"}}})
 }
 
 func TestParseModuleDefinition(t *testing.T) {
 	parse(t, "module A(ch channel { bool }, chs []channel { bit }) { init { }; };",
-		[]Definition{ModuleDefinition{"A",
+		[]Definition{ModuleDefinition{Pos{1, 1}, "A",
 			[]Parameter{Parameter{"ch", HandshakeChannelType{false, []Type{NamedType{"bool"}}}},
 				Parameter{"chs", ArrayType{HandshakeChannelType{false, []Type{NamedType{"bit"}}}}}},
-			[]Definition{InitBlock{}}}})
+			[]Definition{InitBlock{Pos: Pos{1, 56}}}}})
 }
 
 func TestParseConstantDefinition(t *testing.T) {
-	parse(t, "const a int = 1;", []Definition{ConstantDefinition{"a", NamedType{"int"}, NumberExpression{"1"}}})
+	parse(t, "const a int = 1;", []Definition{ConstantDefinition{Pos{1, 1}, "a", NamedType{"int"}, NumberExpression{Pos{1, 15}, "1"}}})
 }
 
 func TestParseProcDefinition(t *testing.T) {
 	parse(t, "proc A(ch channel { bool }, chs []channel { bit }) { ; };",
-		[]Definition{ProcDefinition{"A",
+		[]Definition{ProcDefinition{Pos{1, 1}, "A",
 			[]Parameter{Parameter{"ch", HandshakeChannelType{false, []Type{NamedType{"bool"}}}},
 				Parameter{"chs", ArrayType{HandshakeChannelType{false, []Type{NamedType{"bit"}}}}}},
-			[]Statement{NullStatement{}}}})
+			[]Statement{NullStatement{Pos{1, 54}}}}})
 }
 
 func TestParseInitBlock(t *testing.T) {
-	parse(t, "init { };", []Definition{InitBlock{}})
+	parse(t, "init { };", []Definition{InitBlock{Pos: Pos{1, 1}}})
 	parse(t, "init { a : M(b) };",
-		[]Definition{InitBlock{[]InitVar{
-			InstanceVar{"a", "M", []Expression{IdentifierExpression{"b"}}},
+		[]Definition{InitBlock{Pos{1, 1}, []InitVar{
+			InstanceVar{Pos{1, 8}, "a", "M", []Expression{IdentifierExpression{Pos{1, 14}, "b"}}},
 		}}})
 	parse(t, "init { a : channel { bool } };",
-		[]Definition{InitBlock{[]InitVar{
-			ChannelVar{"a", HandshakeChannelType{false, []Type{NamedType{"bool"}}}},
+		[]Definition{InitBlock{Pos{1, 1}, []InitVar{
+			ChannelVar{Pos{1, 8}, "a", HandshakeChannelType{false, []Type{NamedType{"bool"}}}},
 		}}})
 }
+
+const parseBlockOffset = 11
 
 func parseInBlock(t *testing.T, src string, expect interface{}) {
 	s := new(Scanner)
@@ -66,8 +69,7 @@ func parseInBlock(t *testing.T, src string, expect interface{}) {
 			return
 		}
 		if !reflect.DeepEqual(procDef.Statements[0], expect) {
-			t.Errorf("Expect %+#v \n but got %+#v",
-				expect, procDef.Statements[0])
+			t.Errorf("\nExpected %s\nGot      %s", pp.PP(expect), pp.PP(procDef.Statements[0]))
 			return
 		}
 	} else {
@@ -77,75 +79,81 @@ func parseInBlock(t *testing.T, src string, expect interface{}) {
 }
 
 func TestParseStatement(t *testing.T) {
-	parseInBlock(t, "test: ;", LabelledStatement{"test", NullStatement{}})
-	parseInBlock(t, "{ ; };", BlockStatement{[]Statement{NullStatement{}}})
-	parseInBlock(t, "var abc bool;", VarDeclStatement{"abc", NamedType{"bool"}, nil})
-	parseInBlock(t, "var abc bool = false;", VarDeclStatement{"abc", NamedType{"bool"}, IdentifierExpression{"false"}})
-	parseInBlock(t, "if false { ; };", IfStatement{IdentifierExpression{"false"}, []Statement{NullStatement{}}, nil})
-	parseInBlock(t, "if false { ; } else { skip; };", IfStatement{IdentifierExpression{"false"}, []Statement{NullStatement{}}, []Statement{SkipStatement{}}})
+	parseInBlock(t, "test: ;", LabelledStatement{Pos{1, 1+parseBlockOffset}, "test", NullStatement{Pos{1, 7+parseBlockOffset}}})
+	parseInBlock(t, "{ ; };", BlockStatement{Pos{1, 1+parseBlockOffset}, []Statement{NullStatement{Pos{1, 3+parseBlockOffset}}}})
+	parseInBlock(t, "var abc bool;", VarDeclStatement{Pos{1, 1+parseBlockOffset}, "abc", NamedType{"bool"}, nil})
+	parseInBlock(t, "var abc bool = false;", VarDeclStatement{Pos{1, 1+parseBlockOffset}, "abc", NamedType{"bool"}, FalseExpression{Pos{1, 16+parseBlockOffset}}})
+	parseInBlock(t, "if false { ; };", IfStatement{Pos{1, 1+parseBlockOffset}, FalseExpression{Pos{1, 4+parseBlockOffset}}, []Statement{NullStatement{Pos{1, 12+parseBlockOffset}}}, nil})
+	parseInBlock(t, "if false { ; } else { skip; };", IfStatement{Pos{1, 1+parseBlockOffset}, FalseExpression{Pos{1, 4+parseBlockOffset}}, []Statement{NullStatement{Pos{1, 12+parseBlockOffset}}}, []Statement{SkipStatement{Pos{1, 23+parseBlockOffset}}}})
 
-	bExp := IdentifierExpression{"b"}
-	parseInBlock(t, "a=b;", AssignmentStatement{"a", bExp})
-	parseInBlock(t, "a+=b;", OpAssignmentStatement{"a", "+", bExp})
-	parseInBlock(t, "a-=b;", OpAssignmentStatement{"a", "-", bExp})
-	parseInBlock(t, "a*=b;", OpAssignmentStatement{"a", "*", bExp})
-	parseInBlock(t, "a/=b;", OpAssignmentStatement{"a", "/", bExp})
-	parseInBlock(t, "a%=b;", OpAssignmentStatement{"a", "%", bExp})
-	parseInBlock(t, "a&=b;", OpAssignmentStatement{"a", "&", bExp})
-	parseInBlock(t, "a|=b;", OpAssignmentStatement{"a", "|", bExp})
-	parseInBlock(t, "a^=b;", OpAssignmentStatement{"a", "^", bExp})
-	parseInBlock(t, "a<<=b;", OpAssignmentStatement{"a", "<<", bExp})
-	parseInBlock(t, "a>>=b;", OpAssignmentStatement{"a", ">>", bExp})
+	parseInBlock(t, "a=b;", AssignmentStatement{Pos{1, 1+parseBlockOffset}, "a", IdentifierExpression{Pos{1, 3+parseBlockOffset}, "b"}})
+	parseInBlock(t, "a+=b;", OpAssignmentStatement{Pos{1, 1+parseBlockOffset}, "a", "+", IdentifierExpression{Pos{1, 4+parseBlockOffset}, "b"}})
+	parseInBlock(t, "a-=b;", OpAssignmentStatement{Pos{1, 1+parseBlockOffset}, "a", "-", IdentifierExpression{Pos{1, 4+parseBlockOffset}, "b"}})
+	parseInBlock(t, "a*=b;", OpAssignmentStatement{Pos{1, 1+parseBlockOffset}, "a", "*", IdentifierExpression{Pos{1, 4+parseBlockOffset}, "b"}})
+	parseInBlock(t, "a/=b;", OpAssignmentStatement{Pos{1, 1+parseBlockOffset}, "a", "/", IdentifierExpression{Pos{1, 4+parseBlockOffset}, "b"}})
+	parseInBlock(t, "a%=b;", OpAssignmentStatement{Pos{1, 1+parseBlockOffset}, "a", "%", IdentifierExpression{Pos{1, 4+parseBlockOffset}, "b"}})
+	parseInBlock(t, "a&=b;", OpAssignmentStatement{Pos{1, 1+parseBlockOffset}, "a", "&", IdentifierExpression{Pos{1, 4+parseBlockOffset}, "b"}})
+	parseInBlock(t, "a|=b;", OpAssignmentStatement{Pos{1, 1+parseBlockOffset}, "a", "|", IdentifierExpression{Pos{1, 4+parseBlockOffset}, "b"}})
+	parseInBlock(t, "a^=b;", OpAssignmentStatement{Pos{1, 1+parseBlockOffset}, "a", "^", IdentifierExpression{Pos{1, 4+parseBlockOffset}, "b"}})
+	parseInBlock(t, "a<<=b;", OpAssignmentStatement{Pos{1, 1+parseBlockOffset}, "a", "<<", IdentifierExpression{Pos{1, 5+parseBlockOffset}, "b"}})
+	parseInBlock(t, "a>>=b;", OpAssignmentStatement{Pos{1, 1+parseBlockOffset}, "a", ">>", IdentifierExpression{Pos{1, 5+parseBlockOffset}, "b"}})
 
-	parseInBlock(t, "choice { ; }, { skip; };", ChoiceStatement{[]BlockStatement{BlockStatement{[]Statement{NullStatement{}}}, BlockStatement{[]Statement{SkipStatement{}}}}})
-	parseInBlock(t, "recv(ch, 1, 2);", RecvStatement{IdentifierExpression{"ch"}, []Expression{NumberExpression{"1"}, NumberExpression{"2"}}})
-	parseInBlock(t, "peek(ch);", PeekStatement{IdentifierExpression{"ch"}, []Expression{}})
-	parseInBlock(t, "send(ch, 1, 2);", SendStatement{IdentifierExpression{"ch"}, []Expression{NumberExpression{"1"}, NumberExpression{"2"}}})
-	parseInBlock(t, "for { ; };", ForStatement{[]Statement{NullStatement{}}})
-	parseInBlock(t, "for ch in chs { ; };", ForInStatement{"ch", IdentifierExpression{"chs"}, []Statement{NullStatement{}}})
-	parseInBlock(t, "for i in range 1 to 5 { ; };", ForInRangeStatement{"i", NumberExpression{"1"}, NumberExpression{"5"}, []Statement{NullStatement{}}})
-	parseInBlock(t, "break;", BreakStatement{})
-	parseInBlock(t, "goto here;", GotoStatement{"here"})
-	parseInBlock(t, "skip;", SkipStatement{})
-	parseInBlock(t, ";", NullStatement{})
-	parseInBlock(t, "1;", ExprStatement{NumberExpression{"1"}})
-	parseInBlock(t, "const a int = 1;", ConstantDefinition{"a", NamedType{"int"}, NumberExpression{"1"}})
+	parseInBlock(t, "choice { ; }, { skip; };", ChoiceStatement{Pos{1, 1+parseBlockOffset}, []BlockStatement{BlockStatement{Pos{1, 8+parseBlockOffset}, []Statement{NullStatement{Pos{1, 10+parseBlockOffset}}}}, BlockStatement{Pos{1, 15+parseBlockOffset}, []Statement{SkipStatement{Pos{1, 17+parseBlockOffset}}}}}})
+	parseInBlock(t, "recv(ch, 1, 2);", RecvStatement{Pos{1, 1+parseBlockOffset}, IdentifierExpression{Pos{1, 6+parseBlockOffset}, "ch"}, []Expression{NumberExpression{Pos{1, 10+parseBlockOffset}, "1"}, NumberExpression{Pos{1, 13+parseBlockOffset}, "2"}}})
+	parseInBlock(t, "peek(ch);", PeekStatement{Pos{1, 1+parseBlockOffset}, IdentifierExpression{Pos{1, 6+parseBlockOffset}, "ch"}, []Expression{}})
+	parseInBlock(t, "send(ch, 1, 2);", SendStatement{Pos{1, 1+parseBlockOffset}, IdentifierExpression{Pos{1, 6+parseBlockOffset}, "ch"}, []Expression{NumberExpression{Pos{1, 10+parseBlockOffset}, "1"}, NumberExpression{Pos{1, 13+parseBlockOffset}, "2"}}})
+	parseInBlock(t, "for { ; };", ForStatement{Pos{1, 1+parseBlockOffset}, []Statement{NullStatement{Pos{1, 7+parseBlockOffset}}}})
+	parseInBlock(t, "for ch in chs { ; };", ForInStatement{Pos{1, 1+parseBlockOffset}, "ch", IdentifierExpression{Pos{1, 11+parseBlockOffset}, "chs"}, []Statement{NullStatement{Pos{1, 17+parseBlockOffset}}}})
+	parseInBlock(t, "for i in range 1 to 5 { ; };", ForInRangeStatement{Pos{1, 1+parseBlockOffset}, "i", NumberExpression{Pos{1, 16+parseBlockOffset}, "1"}, NumberExpression{Pos{1, 21+parseBlockOffset}, "5"}, []Statement{NullStatement{Pos{1, 25+parseBlockOffset}}}})
+	parseInBlock(t, "break;", BreakStatement{Pos{1, 1+parseBlockOffset}})
+	parseInBlock(t, "goto here;", GotoStatement{Pos{1, 1+parseBlockOffset}, "here"})
+	parseInBlock(t, "skip;", SkipStatement{Pos{1, 1+parseBlockOffset}})
+	parseInBlock(t, ";", NullStatement{Pos{1, 1+parseBlockOffset}})
+	parseInBlock(t, "1;", ExprStatement{NumberExpression{Pos{1, 1+parseBlockOffset}, "1"}})
+	parseInBlock(t, "const a int = 1;", ConstantDefinition{Pos{1, 1+parseBlockOffset}, "a", NamedType{"int"}, NumberExpression{Pos{1, 15+parseBlockOffset}, "1"}})
 }
 
 func TestParseExpression(t *testing.T) {
-	parseInBlock(t, "abc;", ExprStatement{IdentifierExpression{"abc"}})
-	parseInBlock(t, "123;", ExprStatement{NumberExpression{"123"}})
-	parseInBlock(t, "!abc;", ExprStatement{NotExpression{IdentifierExpression{"abc"}}})
-	parseInBlock(t, "-abc;", ExprStatement{UnarySubExpression{IdentifierExpression{"abc"}}})
-	parseInBlock(t, "(abc);", ExprStatement{ParenExpression{IdentifierExpression{"abc"}}})
+	parseInBlock(t, "abc;", ExprStatement{IdentifierExpression{Pos{1, 1+parseBlockOffset}, "abc"}})
+	parseInBlock(t, "123;", ExprStatement{NumberExpression{Pos{1, 1+parseBlockOffset}, "123"}})
+	parseInBlock(t, "true;", ExprStatement{TrueExpression{Pos{1, 1+parseBlockOffset}}})
+	parseInBlock(t, "false;", ExprStatement{FalseExpression{Pos{1, 1+parseBlockOffset}}})
+	parseInBlock(t, "!abc;", ExprStatement{NotExpression{Pos{1, 1+parseBlockOffset}, IdentifierExpression{Pos{1, 2+parseBlockOffset}, "abc"}}})
+	parseInBlock(t, "-abc;", ExprStatement{UnarySubExpression{Pos{1, 1+parseBlockOffset}, IdentifierExpression{Pos{1, 2+parseBlockOffset}, "abc"}}})
+	parseInBlock(t, "(abc);", ExprStatement{ParenExpression{Pos{1, 1+parseBlockOffset}, IdentifierExpression{Pos{1, 2+parseBlockOffset}, "abc"}}})
 
-	aExp := IdentifierExpression{"a"}
-	bExp := IdentifierExpression{"b"}
-	parseInBlock(t, "a+b;", ExprStatement{BinOpExpression{aExp, "+", bExp}})
-	parseInBlock(t, "a-b;", ExprStatement{BinOpExpression{aExp, "-", bExp}})
-	parseInBlock(t, "a*b;", ExprStatement{BinOpExpression{aExp, "*", bExp}})
-	parseInBlock(t, "a/b;", ExprStatement{BinOpExpression{aExp, "/", bExp}})
-	parseInBlock(t, "a%b;", ExprStatement{BinOpExpression{aExp, "%", bExp}})
-	parseInBlock(t, "a&b;", ExprStatement{BinOpExpression{aExp, "&", bExp}})
-	parseInBlock(t, "a|b;", ExprStatement{BinOpExpression{aExp, "|", bExp}})
-	parseInBlock(t, "a^b;", ExprStatement{BinOpExpression{aExp, "^", bExp}})
+	aExp := IdentifierExpression{Pos{1, 1+parseBlockOffset}, "a"}
+	bExp := IdentifierExpression{Pos{1, 4+parseBlockOffset}, "b"}
+	parseInBlock(t, "a+ b;", ExprStatement{BinOpExpression{aExp, "+", bExp}})
+	parseInBlock(t, "a- b;", ExprStatement{BinOpExpression{aExp, "-", bExp}})
+	parseInBlock(t, "a* b;", ExprStatement{BinOpExpression{aExp, "*", bExp}})
+	parseInBlock(t, "a/ b;", ExprStatement{BinOpExpression{aExp, "/", bExp}})
+	parseInBlock(t, "a% b;", ExprStatement{BinOpExpression{aExp, "%", bExp}})
+	parseInBlock(t, "a& b;", ExprStatement{BinOpExpression{aExp, "&", bExp}})
+	parseInBlock(t, "a| b;", ExprStatement{BinOpExpression{aExp, "|", bExp}})
+	parseInBlock(t, "a^ b;", ExprStatement{BinOpExpression{aExp, "^", bExp}})
 	parseInBlock(t, "a<<b;", ExprStatement{BinOpExpression{aExp, "<<", bExp}})
 	parseInBlock(t, "a>>b;", ExprStatement{BinOpExpression{aExp, ">>", bExp}})
 	parseInBlock(t, "a&&b;", ExprStatement{BinOpExpression{aExp, "&&", bExp}})
 	parseInBlock(t, "a||b;", ExprStatement{BinOpExpression{aExp, "||", bExp}})
 	parseInBlock(t, "a==b;", ExprStatement{BinOpExpression{aExp, "==", bExp}})
-	parseInBlock(t, "a<b;", ExprStatement{BinOpExpression{aExp, "<", bExp}})
-	parseInBlock(t, "a>b;", ExprStatement{BinOpExpression{aExp, ">", bExp}})
+	parseInBlock(t, "a< b;", ExprStatement{BinOpExpression{aExp, "<", bExp}})
+	parseInBlock(t, "a> b;", ExprStatement{BinOpExpression{aExp, ">", bExp}})
 	parseInBlock(t, "a!=b;", ExprStatement{BinOpExpression{aExp, "!=", bExp}})
 	parseInBlock(t, "a<=b;", ExprStatement{BinOpExpression{aExp, "<=", bExp}})
 	parseInBlock(t, "a>=b;", ExprStatement{BinOpExpression{aExp, ">=", bExp}})
 
-	parseInBlock(t, "timeout_recv(ch);", ExprStatement{TimeoutRecvExpression{IdentifierExpression{"ch"}, []Expression{}}})
-	parseInBlock(t, "timeout_peek(ch);", ExprStatement{TimeoutPeekExpression{IdentifierExpression{"ch"}, []Expression{}}})
-	parseInBlock(t, "nonblock_recv(ch);", ExprStatement{NonblockRecvExpression{IdentifierExpression{"ch"}, []Expression{}}})
-	parseInBlock(t, "nonblock_peek(ch);", ExprStatement{NonblockPeekExpression{IdentifierExpression{"ch"}, []Expression{}}})
-	parseInBlock(t, "[a, b];", ExprStatement{ArrayExpression{[]Expression{aExp, bExp}}})
+	parseInBlock(t, "timeout_recv(ch);", ExprStatement{TimeoutRecvExpression{Pos{1, 1+parseBlockOffset}, IdentifierExpression{Pos{1, 14+parseBlockOffset}, "ch"}, []Expression{}}})
+	parseInBlock(t, "timeout_peek(ch);", ExprStatement{TimeoutPeekExpression{Pos{1, 1+parseBlockOffset}, IdentifierExpression{Pos{1, 14+parseBlockOffset}, "ch"}, []Expression{}}})
+	parseInBlock(t, "nonblock_recv(ch);", ExprStatement{NonblockRecvExpression{Pos{1, 1+parseBlockOffset}, IdentifierExpression{Pos{1, 15+parseBlockOffset}, "ch"}, []Expression{}}})
+	parseInBlock(t, "nonblock_peek(ch);", ExprStatement{NonblockPeekExpression{Pos{1, 1+parseBlockOffset}, IdentifierExpression{Pos{1, 15+parseBlockOffset}, "ch"}, []Expression{}}})
+	parseInBlock(t, "[a, b];", ExprStatement{ArrayExpression{Pos{1, 1+parseBlockOffset}, []Expression{
+		IdentifierExpression{Pos{1, 2+parseBlockOffset}, "a"},
+		IdentifierExpression{Pos{1, 5+parseBlockOffset}, "b"},
+	}}})
 }
+
+const parseTypeOffset = 17
 
 func parseType(t *testing.T, src string, expect interface{}) {
 	s := new(Scanner)
@@ -162,7 +170,7 @@ func parseType(t *testing.T, src string, expect interface{}) {
 		}
 		if stmt, isVarDecl := procDef.Statements[0].(VarDeclStatement); isVarDecl {
 			if !reflect.DeepEqual(stmt.Type, expect) {
-				t.Errorf("Expect %+#v \n but got %+#v", expect, stmt.Type)
+				t.Errorf("\nExpected %s\nGot      %s", pp.PP(expect), pp.PP(stmt.Type))
 				return
 			}
 		} else {
@@ -183,9 +191,9 @@ func TestParseType(t *testing.T) {
 	parseType(t, "channel [] { bool }",
 		BufferedChannelType{false, nil, []Type{NamedType{"bool"}}})
 	parseType(t, "channel [1+2] { bool }",
-		BufferedChannelType{false, BinOpExpression{NumberExpression{"1"}, "+", NumberExpression{"2"}}, []Type{NamedType{"bool"}}})
+		BufferedChannelType{false, BinOpExpression{NumberExpression{Pos{1, 10+parseTypeOffset}, "1"}, "+", NumberExpression{Pos{1, 12+parseTypeOffset}, "2"}}, []Type{NamedType{"bool"}}})
 	parseType(t, "unstable channel [] { bool }",
 		BufferedChannelType{true, nil, []Type{NamedType{"bool"}}})
 	parseType(t, "unstable channel [1+2] { bool }",
-		BufferedChannelType{true, BinOpExpression{NumberExpression{"1"}, "+", NumberExpression{"2"}}, []Type{NamedType{"bool"}}})
+		BufferedChannelType{true, BinOpExpression{NumberExpression{Pos{1, 19+parseTypeOffset}, "1"}, "+", NumberExpression{Pos{1, 21+parseTypeOffset}, "2"}}, []Type{NamedType{"bool"}}})
 }

@@ -1,38 +1,57 @@
 package data
 
+import (
+	"fmt"
+)
+
 type (
+	Pos struct {
+		Line   int
+		Column int
+	}
+
 	Definition interface {
+		Position() Pos
 		definition()
 	}
 
 	Statement interface {
+		Position() Pos
 		statement()
 		String() string
 	}
 
 	Expression interface {
+		Position() Pos
 		expression()
 		String() string
 	}
 
 	// For type-checking
 	ChanExpr interface {
+		Position() Pos
 		ChannelExpr() Expression
 		ArgExprs() []Expression
 		String() string
 	}
 )
 
+func (x Pos) String() string {
+	return fmt.Sprintf("Line: %d, Column %d", x.Line, x.Column)
+}
+
 // ========================================
 // Definitions
 
 type (
 	DataDefinition struct {
+		Pos   Pos
 		Name  string
 		Elems []string
 	}
 
 	ModuleDefinition struct {
+		Pos         Pos
 		Name        string
 		Parameters  []Parameter
 		Definitions []Definition
@@ -40,18 +59,21 @@ type (
 
 	// ConstantDefinition is a definition but also is a statement.
 	ConstantDefinition struct {
+		Pos  Pos
 		Name string
 		Type Type
 		Expr Expression
 	}
 
 	ProcDefinition struct {
+		Pos        Pos
 		Name       string
 		Parameters []Parameter
 		Statements []Statement
 	}
 
 	InitBlock struct {
+		Pos  Pos
 		Vars []InitVar
 	}
 )
@@ -63,72 +85,91 @@ func (x ConstantDefinition) statement()  {}
 func (x ProcDefinition) definition()     {}
 func (x InitBlock) definition()          {}
 
+func (x DataDefinition) Position() Pos     { return x.Pos }
+func (x ModuleDefinition) Position() Pos   { return x.Pos }
+func (x ConstantDefinition) Position() Pos { return x.Pos }
+func (x ProcDefinition) Position() Pos     { return x.Pos }
+func (x InitBlock) Position() Pos          { return x.Pos }
+
 // ========================================
 // Statements
 
 type (
 	LabelledStatement struct {
+		Pos       Pos
 		Label     string
 		Statement Statement
 	}
 
 	BlockStatement struct {
+		Pos        Pos
 		Statements []Statement
 	}
 
 	VarDeclStatement struct {
+		Pos         Pos
 		Name        string
 		Type        Type
 		Initializer Expression
 	}
 
 	IfStatement struct {
+		Pos         Pos
 		Condition   Expression
 		TrueBranch  []Statement
 		FalseBranch []Statement
 	}
 
 	AssignmentStatement struct {
+		Pos      Pos
 		Variable string
 		Expr     Expression
 	}
 
 	OpAssignmentStatement struct {
+		Pos      Pos
 		Variable string
 		Operator string
 		Expr     Expression
 	}
 
 	ChoiceStatement struct {
+		Pos    Pos
 		Blocks []BlockStatement
 	}
 
 	RecvStatement struct {
+		Pos     Pos
 		Channel Expression
 		Args    []Expression
 	}
 
 	PeekStatement struct {
+		Pos     Pos
 		Channel Expression
 		Args    []Expression
 	}
 
 	SendStatement struct {
+		Pos     Pos
 		Channel Expression
 		Args    []Expression
 	}
 
 	ForStatement struct {
+		Pos        Pos
 		Statements []Statement
 	}
 
 	ForInStatement struct {
+		Pos        Pos
 		Variable   string
 		Container  Expression
 		Statements []Statement
 	}
 
 	ForInRangeStatement struct {
+		Pos        Pos
 		Variable   string
 		FromExpr   Expression
 		ToExpr     Expression
@@ -136,13 +177,16 @@ type (
 	}
 
 	BreakStatement struct {
+		Pos Pos
 	}
 
 	GotoStatement struct {
+		Pos   Pos
 		Label string
 	}
 
 	SkipStatement struct {
+		Pos Pos
 	}
 
 	ExprStatement struct {
@@ -150,6 +194,7 @@ type (
 	}
 
 	NullStatement struct {
+		Pos Pos
 	}
 )
 
@@ -172,6 +217,25 @@ func (x SkipStatement) statement()         {}
 func (x ExprStatement) statement()         {}
 func (x NullStatement) statement()         {}
 
+func (x LabelledStatement) Position() Pos     { return x.Pos }
+func (x BlockStatement) Position() Pos        { return x.Pos }
+func (x VarDeclStatement) Position() Pos      { return x.Pos }
+func (x IfStatement) Position() Pos           { return x.Pos }
+func (x AssignmentStatement) Position() Pos   { return x.Pos }
+func (x OpAssignmentStatement) Position() Pos { return x.Pos }
+func (x ChoiceStatement) Position() Pos       { return x.Pos }
+func (x RecvStatement) Position() Pos         { return x.Pos }
+func (x PeekStatement) Position() Pos         { return x.Pos }
+func (x SendStatement) Position() Pos         { return x.Pos }
+func (x ForStatement) Position() Pos          { return x.Pos }
+func (x ForInStatement) Position() Pos        { return x.Pos }
+func (x ForInRangeStatement) Position() Pos   { return x.Pos }
+func (x BreakStatement) Position() Pos        { return x.Pos }
+func (x GotoStatement) Position() Pos         { return x.Pos }
+func (x SkipStatement) Position() Pos         { return x.Pos }
+func (x ExprStatement) Position() Pos         { return x.Expr.Position() }
+func (x NullStatement) Position() Pos         { return x.Pos }
+
 func (x RecvStatement) ChannelExpr() Expression { return x.Channel }
 func (x PeekStatement) ChannelExpr() Expression { return x.Channel }
 func (x SendStatement) ChannelExpr() Expression { return x.Channel }
@@ -184,22 +248,35 @@ func (x SendStatement) ArgExprs() []Expression  { return x.Args }
 
 type (
 	IdentifierExpression struct {
+		Pos  Pos
 		Name string
 	}
 
 	NumberExpression struct {
+		Pos Pos
 		Lit string
 	}
 
+	TrueExpression struct {
+		Pos Pos
+	}
+
+	FalseExpression struct {
+		Pos Pos
+	}
+
 	NotExpression struct {
+		Pos     Pos
 		SubExpr Expression
 	}
 
 	UnarySubExpression struct {
+		Pos     Pos
 		SubExpr Expression
 	}
 
 	ParenExpression struct {
+		Pos     Pos
 		SubExpr Expression
 	}
 
@@ -210,26 +287,31 @@ type (
 	}
 
 	TimeoutRecvExpression struct {
+		Pos     Pos
 		Channel Expression
 		Args    []Expression
 	}
 
 	TimeoutPeekExpression struct {
+		Pos     Pos
 		Channel Expression
 		Args    []Expression
 	}
 
 	NonblockRecvExpression struct {
+		Pos     Pos
 		Channel Expression
 		Args    []Expression
 	}
 
 	NonblockPeekExpression struct {
+		Pos     Pos
 		Channel Expression
 		Args    []Expression
 	}
 
 	ArrayExpression struct {
+		Pos   Pos
 		Elems []Expression
 	}
 )
@@ -245,6 +327,8 @@ func (x NonblockPeekExpression) ArgExprs() []Expression  { return x.Args }
 
 func (x IdentifierExpression) expression()   {}
 func (x NumberExpression) expression()       {}
+func (x TrueExpression) expression()         {}
+func (x FalseExpression) expression()        {}
 func (x NotExpression) expression()          {}
 func (x UnarySubExpression) expression()     {}
 func (x ParenExpression) expression()        {}
@@ -254,6 +338,20 @@ func (x TimeoutPeekExpression) expression()  {}
 func (x NonblockRecvExpression) expression() {}
 func (x NonblockPeekExpression) expression() {}
 func (x ArrayExpression) expression()        {}
+
+func (x IdentifierExpression) Position() Pos   { return x.Pos }
+func (x NumberExpression) Position() Pos       { return x.Pos }
+func (x TrueExpression) Position() Pos         { return x.Pos }
+func (x FalseExpression) Position() Pos        { return x.Pos }
+func (x NotExpression) Position() Pos          { return x.Pos }
+func (x UnarySubExpression) Position() Pos     { return x.Pos }
+func (x ParenExpression) Position() Pos        { return x.Pos }
+func (x BinOpExpression) Position() Pos        { return x.LHS.Position() }
+func (x TimeoutRecvExpression) Position() Pos  { return x.Pos }
+func (x TimeoutPeekExpression) Position() Pos  { return x.Pos }
+func (x NonblockRecvExpression) Position() Pos { return x.Pos }
+func (x NonblockPeekExpression) Position() Pos { return x.Pos }
+func (x ArrayExpression) Position() Pos        { return x.Pos }
 
 // ========================================
 // Misc
@@ -265,16 +363,19 @@ type (
 	}
 
 	InitVar interface {
+		Position() Pos
 		initvar()
 		VarName() string
 	}
 
 	ChannelVar struct {
+		Pos  Pos
 		Name string
 		Type Type
 	}
 
 	InstanceVar struct {
+		Pos         Pos
 		Name        string
 		ProcDefName string
 		Args        []Expression
@@ -312,6 +413,8 @@ type (
 
 func (x ChannelVar) initvar()         {}
 func (x InstanceVar) initvar()        {}
+func (x ChannelVar) Position() Pos    { return x.Pos }
+func (x InstanceVar) Position() Pos   { return x.Pos }
 func (x ChannelVar) VarName() string  { return x.Name }
 func (x InstanceVar) VarName() string { return x.Name }
 

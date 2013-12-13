@@ -135,6 +135,12 @@ func (x IdentifierExpression) String() string {
 func (x NumberExpression) String() string {
 	return x.Lit
 }
+func (x TrueExpression) String() string {
+	return "true"
+}
+func (x FalseExpression) String() string {
+	return "false"
+}
 func (x NotExpression) String() string {
 	return "!" + x.SubExpr.String()
 }

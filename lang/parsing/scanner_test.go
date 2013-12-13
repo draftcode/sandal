@@ -105,6 +105,8 @@ func TestScanKeyword(t *testing.T) {
 	testScanner(t, "goto", GOTO, "goto")
 	testScanner(t, "unstable", UNSTABLE, "unstable")
 	testScanner(t, "skip", SKIP, "skip")
+	testScanner(t, "true", TRUE, "true")
+	testScanner(t, "false", FALSE, "false")
 }
 
 func TestScanComment(t *testing.T) {

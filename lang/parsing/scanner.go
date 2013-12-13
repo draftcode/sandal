@@ -2,6 +2,7 @@ package parsing
 
 import (
 	"unicode"
+	. "github.com/draftcode/sandal/lang/data"
 )
 
 const (
@@ -35,12 +36,8 @@ var keywords = map[string]int{
 	"goto":          GOTO,
 	"unstable":      UNSTABLE,
 	"skip":          SKIP,
-}
-
-// Position indicates a position of a first character of a token in a file.
-type Position struct {
-	Line   int
-	Column int
+	"true":          TRUE,
+	"false":         FALSE,
 }
 
 type Mode uint
@@ -67,10 +64,10 @@ func (s *Scanner) Init(src []rune, mode Mode) {
 
 // Scan returns token and literal and its position. Return UNKNOWN if unknown
 // token received. Return EOF after all characters consumed.
-func (s *Scanner) Scan() (tok int, lit string, pos Position) {
+func (s *Scanner) Scan() (tok int, lit string, pos Pos) {
 	if s.skipWhiteSpace() && (s.mode&dontInsertSemis) == 0 {
 		switch s.lastToken {
-		case IDENTIFIER, NUMBER, BREAK, ')', ']', '}':
+		case IDENTIFIER, NUMBER, BREAK, SKIP, ')', ']', '}':
 			s.lastToken = int(';')
 			tok = int(';')
 			lit = "\n"
@@ -301,8 +298,8 @@ func (s *Scanner) next() {
 	}
 }
 
-func (s *Scanner) position() Position {
-	return Position{Line: s.line + 1, Column: s.offset - s.lineHead + 1}
+func (s *Scanner) position() Pos{
+	return Pos{Line: s.line + 1, Column: s.offset - s.lineHead + 1}
 }
 
 func (s *Scanner) skipWhiteSpace() (includeReturn bool) {

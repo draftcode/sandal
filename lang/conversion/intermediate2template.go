@@ -72,10 +72,13 @@ func convertHandshakeChannelToTemplate(mod intHandshakeChannel) (error, []tmplMo
 		{"next(received)", "receiveds[running_pid]"},
 	}
 	for i, elem := range mod.ValueType {
-		assigns = append(assigns, tmplAssign{
-			fmt.Sprintf("init(value_%d)", i),
-			zeroValueInNuSMV(elem),
-		})
+		zeroValue := zeroValueInNuSMV(elem)
+		if zeroValue != "" {
+			assigns = append(assigns, tmplAssign{
+				fmt.Sprintf("init(value_%d)", i),
+				zeroValue,
+			})
+		}
 		assigns = append(assigns, tmplAssign{
 			fmt.Sprintf("next(value_%d)", i),
 			fmt.Sprintf("values_%d[running_pid]", i),
@@ -246,7 +249,7 @@ func zeroValueInNuSMV(ty string) string {
 	case "boolean":
 		return "FALSE"
 	default:
-		panic("Not implemented")
+		return ""
 	}
 }
 

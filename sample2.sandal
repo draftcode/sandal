@@ -1,0 +1,9 @@
+proc ProcA(ch0 channel {bool}) {
+  var b int
+  send(ch0, true)
+}
+
+init {
+  ch:    channel {bool},
+  proc1: ProcA(ch),
+}

@@ -14,6 +14,8 @@ func typeOfExpression(x Expression, env *typeEnv) Type {
 		return typeOfIdentifierExpression(x, env)
 	case NumberExpression:
 		return typeOfNumberExpression(x, env)
+	case TrueExpression, FalseExpression:
+		return NamedType{"bool"}
 	case NotExpression:
 		return typeOfNotExpression(x, env)
 	case UnarySubExpression:
@@ -32,8 +34,9 @@ func typeOfExpression(x Expression, env *typeEnv) Type {
 		return typeOfNonblockPeekExpression(x, env)
 	case ArrayExpression:
 		return typeOfArrayExpression(x, env)
+	default:
+		panic("Unknown Expression")
 	}
-	panic("Unknown Expression")
 }
 
 func typeOfIdentifierExpression(x IdentifierExpression, env *typeEnv) Type {
@@ -109,7 +112,7 @@ func typeOfArrayExpression(x ArrayExpression, env *typeEnv) Type {
 		panic("An array should have at least one element")
 	}
 	// Every element of an array has the same type.
-	return typeOfExpression(x.Elems[0], env)
+	return ArrayType{ElemType: typeOfExpression(x.Elems[0], env)}
 }
 
 // ========================================
@@ -119,8 +122,8 @@ func typeCheckExpression(x Expression, env *typeEnv) error {
 	switch x := x.(type) {
 	case IdentifierExpression:
 		return typeCheckIdentifierExpression(x, env)
-	case NumberExpression:
-		return typeCheckNumberExpression(x, env)
+	case NumberExpression, TrueExpression, FalseExpression:
+		return nil
 	case NotExpression:
 		return typeCheckNotExpression(x, env)
 	case UnarySubExpression:
@@ -139,8 +142,9 @@ func typeCheckExpression(x Expression, env *typeEnv) error {
 		return typeCheckNonblockPeekExpression(x, env)
 	case ArrayExpression:
 		return typeCheckArrayExpression(x, env)
+	default:
+		panic("Unknown Expression")
 	}
-	panic("Unknown Expression")
 }
 
 func typeCheckIdentifierExpression(x IdentifierExpression, env *typeEnv) error {
@@ -148,13 +152,8 @@ func typeCheckIdentifierExpression(x IdentifierExpression, env *typeEnv) error {
 		return nil
 	}
 	if env.lookup(x.Name) == nil {
-		return fmt.Errorf("Undefined variable %s", x.Name)
+		return fmt.Errorf("Undefined variable %s (%s)", x.Name, x.Position())
 	}
-	return nil
-}
-
-func typeCheckNumberExpression(x NumberExpression, env *typeEnv) error {
-	// Number expressions are always valid.
 	return nil
 }
 
@@ -163,8 +162,8 @@ func typeCheckNotExpression(x NotExpression, env *typeEnv) error {
 		return err
 	}
 	if !typeOfExpression(x.SubExpr, env).Equal(NamedType{"bool"}) {
-		return fmt.Errorf("Expect %s to have type bool, but got %s",
-			x.SubExpr, typeOfExpression(x.SubExpr, env))
+		return fmt.Errorf("Expect %s to have type bool, but got %s (%s)",
+			x.SubExpr, typeOfExpression(x.SubExpr, env), x.Position())
 	}
 	return nil
 }
@@ -174,8 +173,8 @@ func typeCheckUnarySubExpression(x UnarySubExpression, env *typeEnv) error {
 		return err
 	}
 	if !typeOfExpression(x.SubExpr, env).Equal(NamedType{"int"}) {
-		return fmt.Errorf("Expect %s to have type int, but got %s",
-			x.SubExpr, typeOfExpression(x.SubExpr, env))
+		return fmt.Errorf("Expect %s to have type int, but got %s (%s)",
+			x.SubExpr, typeOfExpression(x.SubExpr, env), x.Position())
 	}
 	return nil
 }
@@ -203,7 +202,7 @@ var operatorOperandType = map[string]Type{
 	"==": nil,
 	"<":  NamedType{"int"},
 	">":  NamedType{"int"},
-	"!=": NamedType{"int"},
+	"!=": nil,
 	"<=": NamedType{"int"},
 	">=": NamedType{"int"},
 }
@@ -219,20 +218,20 @@ func typeCheckBinOpExpression(x BinOpExpression, env *typeEnv) error {
 		if ty != nil {
 			lhsType := typeOfExpression(x.LHS, env)
 			if !lhsType.Equal(ty) {
-				return fmt.Errorf("Expect %s to have type %s, but got %s",
-					x.LHS, ty, lhsType)
+				return fmt.Errorf("Expect %s to have type %s, but got %s (%s)",
+					x.LHS, ty, lhsType, x.Position())
 			}
 			rhsType := typeOfExpression(x.RHS, env)
 			if !rhsType.Equal(ty) {
-				return fmt.Errorf("Expect %s to have type %s, but got %s",
-					x.RHS, ty, rhsType)
+				return fmt.Errorf("Expect %s to have type %s, but got %s (%s)",
+					x.RHS, ty, rhsType, x.Position())
 			}
 		} else {
 			lhsType := typeOfExpression(x.LHS, env)
 			rhsType := typeOfExpression(x.RHS, env)
 			if !lhsType.Equal(rhsType) {
-				return fmt.Errorf("Expect %s and %s to have the same type but got %s and %s",
-					x.LHS, x.RHS, lhsType, rhsType)
+				return fmt.Errorf("Expect %s and %s to have the same type but got %s and %s (%s)",
+					x.LHS, x.RHS, lhsType, rhsType, x.Position())
 			}
 		}
 	} else {
@@ -264,7 +263,7 @@ func typeCheckArrayExpression(x ArrayExpression, env *typeEnv) error {
 			return err
 		}
 		if !typeOfExpression(elem, env).Equal(ty) {
-			return fmt.Errorf("Expect %s to be a %s", elem, ty)
+			return fmt.Errorf("Expect %s to be a %s (%s)", elem, ty, elem.Position())
 		}
 	}
 	return nil

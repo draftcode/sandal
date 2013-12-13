@@ -5,50 +5,11 @@ import (
 	. "github.com/draftcode/sandal/lang/data"
 )
 
-func (x *intModConverter) convertStatements(statements []Statement) ([]intVar, intState, map[intState][]intTransition) {
-	converter := newIntStatementConverter(x.env)
+func (x *intModConverter) convertStatements(statements []Statement, defaults map[string]string) ([]intVar, intState, map[intState][]intTransition) {
+	converter := newIntStatementConverter(x.env, defaults)
 
 	for _, stmt := range statements {
-		switch stmt := stmt.(type) {
-		case ConstantDefinition:
-			converter.convertConstantDefinition(stmt)
-		case LabelledStatement:
-			converter.convertLabelledStatement(stmt)
-		case BlockStatement:
-			converter.convertBlockStatement(stmt)
-		case VarDeclStatement:
-			converter.convertVarDeclStatement(stmt)
-		case IfStatement:
-			converter.convertIfStatement(stmt)
-		case AssignmentStatement:
-			converter.convertAssignmentStatement(stmt)
-		case OpAssignmentStatement:
-			converter.convertOpAssignmentStatement(stmt)
-		case ChoiceStatement:
-			converter.convertChoiceStatement(stmt)
-		case RecvStatement:
-			converter.convertRecvStatement(stmt)
-		case PeekStatement:
-			converter.convertPeekStatement(stmt)
-		case SendStatement:
-			converter.convertSendStatement(stmt)
-		case ForStatement:
-			converter.convertForStatement(stmt)
-		case ForInStatement:
-			converter.convertForInStatement(stmt)
-		case ForInRangeStatement:
-			converter.convertForInRangeStatement(stmt)
-		case BreakStatement:
-			converter.convertBreakStatement(stmt)
-		case GotoStatement:
-			converter.convertGotoStatement(stmt)
-		case SkipStatement:
-			converter.convertSkipStatement(stmt)
-		case ExprStatement:
-			converter.convertExprStatement(stmt)
-		case NullStatement:
-			converter.convertNullStatement(stmt)
-		}
+		converter.convertStatement(stmt)
 	}
 
 	return converter.vars, "state0", converter.trans
@@ -60,15 +21,18 @@ func (x *intModConverter) convertStatements(statements []Statement) ([]intVar, i
 type intStatementConverter struct {
 	env          *varEnv
 	vars         []intVar
+	defaults     map[string]string
 	trans        map[intState][]intTransition
 	currentState intState
 	nextStateNum int
 	labelToState map[string]intState
+	breakToState intState
 }
 
-func newIntStatementConverter(upper *varEnv) *intStatementConverter {
+func newIntStatementConverter(upper *varEnv, defaults map[string]string) *intStatementConverter {
 	converter := new(intStatementConverter)
 	converter.env = newVarEnvFromUpper(upper)
+	converter.defaults = defaults
 	converter.trans = make(map[intState][]intTransition)
 	converter.currentState = "state0"
 	converter.nextStateNum = 1
@@ -76,68 +40,203 @@ func newIntStatementConverter(upper *varEnv) *intStatementConverter {
 	return converter
 }
 
+func (x *intStatementConverter) convertStatement(stmt Statement) {
+	switch stmt := stmt.(type) {
+	case ConstantDefinition:
+		x.convertConstantDefinition(stmt)
+	case LabelledStatement:
+		x.convertLabelledStatement(stmt)
+	case BlockStatement:
+		x.convertBlockStatement(stmt)
+	case VarDeclStatement:
+		x.convertVarDeclStatement(stmt)
+	case IfStatement:
+		x.convertIfStatement(stmt)
+	case AssignmentStatement:
+		x.convertAssignmentStatement(stmt)
+	case OpAssignmentStatement:
+		x.convertOpAssignmentStatement(stmt)
+	case ChoiceStatement:
+		x.convertChoiceStatement(stmt)
+	case RecvStatement:
+		x.convertRecvStatement(stmt)
+	case PeekStatement:
+		x.convertPeekStatement(stmt)
+	case SendStatement:
+		x.convertSendStatement(stmt)
+	case ForStatement:
+		x.convertForStatement(stmt)
+	case ForInStatement:
+		x.convertForInStatement(stmt)
+	case ForInRangeStatement:
+		x.convertForInRangeStatement(stmt)
+	case BreakStatement:
+		x.convertBreakStatement(stmt)
+	case GotoStatement:
+		x.convertGotoStatement(stmt)
+	case SkipStatement:
+		x.convertSkipStatement(stmt)
+	case ExprStatement:
+		x.convertExprStatement(stmt)
+	case NullStatement:
+		x.convertNullStatement(stmt)
+	}
+}
+
+func (x *intStatementConverter) hasRealName(realName string) bool {
+	for _, intvar := range x.vars {
+		if intvar.Name == realName {
+			return true
+		}
+	}
+	return false
+}
+
+func (x *intStatementConverter) genRealName(name string) string {
+	realName := name
+	if x.hasRealName(realName) {
+		i := 2
+		realName = fmt.Sprintf("%s_%d", name, i)
+		for x.hasRealName(realName) {
+			i += 1
+			realName = fmt.Sprintf("%s_%d", name, i)
+		}
+	}
+	return realName
+}
+
 // ========================================
 
-func (x *intStatementConverter) convertConstantDefinition(stmt ConstantDefinition) {}
-func (x *intStatementConverter) convertLabelledStatement(stmt LabelledStatement)   {}
-func (x *intStatementConverter) convertBlockStatement(stmt BlockStatement)         {}
-func (x *intStatementConverter) convertVarDeclStatement(stmt VarDeclStatement) {
+func (x *intStatementConverter) convertConstantDefinition(stmt ConstantDefinition) error {
+	panic("not implemented")
+}
+func (x *intStatementConverter) convertLabelledStatement(stmt LabelledStatement) error {
+	panic("not implemented")
+}
+func (x *intStatementConverter) convertBlockStatement(stmt BlockStatement) error {
+	panic("not implemented")
+}
+func (x *intStatementConverter) convertVarDeclStatement(stmt VarDeclStatement) error {
 	nextState := x.genNextState()
-	x.vars = append(x.vars, intVar{stmt.Name, convertTypeToString(stmt.Type)})
+
+	realName := x.genRealName(stmt.Name)
+	nextRealName := fmt.Sprintf("next(%s)", realName)
+	var condition string = ""
 	actions := make(map[intState][]intAssign)
 	if stmt.Initializer != nil {
-		actions[nextState] = []intAssign{
-			{LHS: stmt.Name, RHS: x.convertExpression(stmt.Initializer)},
-		}
+		intExprObj := expressionToInternalObj(stmt.Initializer, x.env)
+		condition = intExprObj.Condition()
+		actions[nextState] = intExprObj.Assignments(nextRealName)
 	} else {
 		actions[nextState] = []intAssign{}
 	}
 	x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
-		Condition: "",
+		Condition: condition,
 		Actions:   actions,
 	})
+	x.vars = append(x.vars, intVar{realName, convertTypeToString(stmt.Type)})
+	x.env.add(stmt.Name, intInternalPrimitiveVar{realName, stmt.Type})
+	x.defaults[nextRealName] = realName
 	x.currentState = nextState
+	return nil
 }
-func (x *intStatementConverter) convertIfStatement(stmt IfStatement)                     {}
-func (x *intStatementConverter) convertAssignmentStatement(stmt AssignmentStatement)     {}
-func (x *intStatementConverter) convertOpAssignmentStatement(stmt OpAssignmentStatement) {}
-func (x *intStatementConverter) convertChoiceStatement(stmt ChoiceStatement)             {}
-func (x *intStatementConverter) convertRecvStatement(stmt RecvStatement)                 {}
-func (x *intStatementConverter) convertPeekStatement(stmt PeekStatement)                 {}
-func (x *intStatementConverter) convertSendStatement(stmt SendStatement) {
-	args := []string{}
-	for _, arg := range stmt.Args {
-		args = append(args, x.convertExpression(arg))
-	}
-
+func (x *intStatementConverter) convertIfStatement(stmt IfStatement) error {
+	panic("not implemented")
+}
+func (x *intStatementConverter) convertAssignmentStatement(stmt AssignmentStatement) error {
+	panic("not implemented")
+}
+func (x *intStatementConverter) convertOpAssignmentStatement(stmt OpAssignmentStatement) error {
+	panic("not implemented")
+}
+func (x *intStatementConverter) convertChoiceStatement(stmt ChoiceStatement) error {
+	panic("not implemented")
+}
+func (x *intStatementConverter) convertRecvStatement(stmt RecvStatement) error {
+	panic("not implemented")
+}
+func (x *intStatementConverter) convertPeekStatement(stmt PeekStatement) error {
+	panic("not implemented")
+}
+func (x *intStatementConverter) convertSendStatement(stmt SendStatement) error {
 	nextState := x.genNextState()
-	ch := x.convertExpression(stmt.Channel)
-	actions := make(map[intState][]intAssign)
-	actions[nextState] = []intAssign{
-		{LHS: ch + ".next_filled", RHS: "TRUE"},
-		{LHS: ch + ".next_received", RHS: "FALSE"},
-	}
-	for i, arg := range args {
-		actions[nextState] = append(actions[nextState], intAssign{
-			LHS: fmt.Sprintf("%s.next_value_%d", ch, i),
-			RHS: arg,
-		})
-	}
-	x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
-		Condition: "!" + ch + ".filled", // TODO: naive
-		Actions:   actions,
-	})
-	x.currentState = nextState
 
+	ch, args := convertChannelExpr(stmt, x.env)
+	chType := ch.GetType()
+
+	actions := make(map[intState][]intAssign)
+	switch chType.(type) {
+	case HandshakeChannelType:
+		actions[nextState] = []intAssign{
+			{LHS: fmt.Sprintf("%s.next_filled", ch), RHS: "TRUE"},
+			{LHS: fmt.Sprintf("%s.next_received", ch), RHS: "FALSE"},
+		}
+		for i, arg := range args {
+			actions[nextState] = append(actions[nextState], intAssign{
+				LHS: fmt.Sprintf("%s.next_value_%d", ch, i),
+				RHS: arg.String(),
+			})
+		}
+		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
+			Condition: fmt.Sprintf("!(%s.filled)", ch),
+			Actions:   actions,
+		})
+	case BufferedChannelType:
+		panic("Not Implemented")
+	default:
+		panic("unknown channel type")
+	}
+	x.currentState = nextState
+	return nil
 }
-func (x *intStatementConverter) convertForStatement(stmt ForStatement)               {}
-func (x *intStatementConverter) convertForInStatement(stmt ForInStatement)           {}
-func (x *intStatementConverter) convertForInRangeStatement(stmt ForInRangeStatement) {}
-func (x *intStatementConverter) convertBreakStatement(stmt BreakStatement)           {}
-func (x *intStatementConverter) convertGotoStatement(stmt GotoStatement)             {}
-func (x *intStatementConverter) convertSkipStatement(stmt SkipStatement)             {}
-func (x *intStatementConverter) convertExprStatement(stmt ExprStatement)             {}
-func (x *intStatementConverter) convertNullStatement(stmt NullStatement)             {}
+func (x *intStatementConverter) convertForStatement(stmt ForStatement) error { panic("not implemented") }
+func (x *intStatementConverter) convertForInStatement(stmt ForInStatement) error {
+	switch container := expressionToInternalObj(stmt.Container, x.env).(type) {
+	case intInternalArrayVar:
+		savedBreakState := x.breakToState
+		x.breakToState = x.genNextState()
+		for i, elem := range container.RealLiteral.Elems {
+			x.pushEnv()
+			x.env.add(stmt.Variable, intInternalPrimitiveVar{
+				fmt.Sprintf("__elem%d_%s", i, container.RealName),
+				elem.GetType(),
+			})
+			for _, stmt := range stmt.Statements {
+				x.convertStatement(stmt)
+			}
+			x.popEnv()
+		}
+		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
+			Actions: map[intState][]intAssign{
+				x.breakToState: nil,
+			},
+		})
+		x.currentState = x.breakToState
+		x.breakToState = savedBreakState
+	default:
+		// TODO
+		panic("not implemented")
+	}
+	return nil
+}
+func (x *intStatementConverter) convertForInRangeStatement(stmt ForInRangeStatement) error {
+	panic("not implemented")
+}
+func (x *intStatementConverter) convertBreakStatement(stmt BreakStatement) error {
+	panic("not implemented")
+}
+func (x *intStatementConverter) convertGotoStatement(stmt GotoStatement) error {
+	panic("not implemented")
+}
+func (x *intStatementConverter) convertSkipStatement(stmt SkipStatement) error {
+	panic("not implemented")
+}
+func (x *intStatementConverter) convertExprStatement(stmt ExprStatement) error {
+	panic("not implemented")
+}
+func (x *intStatementConverter) convertNullStatement(stmt NullStatement) error {
+	panic("not implemented")
+}
 
 // ========================================
 

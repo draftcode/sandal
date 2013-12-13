@@ -8,22 +8,22 @@ import (
 func TestConstantDefinitionTypeCheck(t *testing.T) {
 	intType := NamedType{"int"}
 	boolType := NamedType{"bool"}
-	numberExpr := NumberExpression{"1"}
+	numberExpr := NumberExpression{Pos{}, "1"}
 
-	expectValid(t, ConstantDefinition{"a", intType, numberExpr}, newTypeEnv())
-	expectInvalid(t, ConstantDefinition{"a", boolType, numberExpr}, newTypeEnv())
+	expectValid(t, ConstantDefinition{Pos{}, "a", intType, numberExpr}, newTypeEnv())
+	expectInvalid(t, ConstantDefinition{Pos{}, "a", boolType, numberExpr}, newTypeEnv())
 }
 
 func TestInitBlockTypeCheck(t *testing.T) {
-	expectValid(t, InitBlock{[]InitVar{
-		ChannelVar{"ch", HandshakeChannelType{false, []Type{NamedType{"int"}}}},
+	expectValid(t, InitBlock{Pos{}, []InitVar{
+		ChannelVar{Pos{}, "ch", HandshakeChannelType{false, []Type{NamedType{"int"}}}},
 	}}, newTypeEnv())
-	expectInvalid(t, InitBlock{[]InitVar{
-		ChannelVar{"ch", HandshakeChannelType{false, []Type{NamedType{"int"}}}},
-		ChannelVar{"ch", HandshakeChannelType{false, []Type{NamedType{"int"}}}},
+	expectInvalid(t, InitBlock{Pos{}, []InitVar{
+		ChannelVar{Pos{}, "ch", HandshakeChannelType{false, []Type{NamedType{"int"}}}},
+		ChannelVar{Pos{}, "ch", HandshakeChannelType{false, []Type{NamedType{"int"}}}},
 	}}, newTypeEnv())
-	expectInvalid(t, InitBlock{[]InitVar{
-		ChannelVar{"a", NamedType{"int"}},
+	expectInvalid(t, InitBlock{Pos{}, []InitVar{
+		ChannelVar{Pos{}, "a", NamedType{"int"}},
 	}}, newTypeEnv())
 
 	{
@@ -31,32 +31,32 @@ func TestInitBlockTypeCheck(t *testing.T) {
 		typeEnv.add("A", CallableType{[]Type{NamedType{"int"}}})
 		typeEnv.add("a", NamedType{"int"})
 		typeEnv.add("b", NamedType{"bool"})
-		expectValid(t, InitBlock{[]InitVar{
-			InstanceVar{"proc1", "A", []Expression{IdentifierExpression{"a"}}},
+		expectValid(t, InitBlock{Pos{}, []InitVar{
+			InstanceVar{Pos{}, "proc1", "A", []Expression{IdentifierExpression{Pos{}, "a"}}},
 		}}, typeEnv)
-		expectInvalid(t, InitBlock{[]InitVar{
-			InstanceVar{"proc1", "a", []Expression{IdentifierExpression{"a"}}},
+		expectInvalid(t, InitBlock{Pos{}, []InitVar{
+			InstanceVar{Pos{}, "proc1", "a", []Expression{IdentifierExpression{Pos{}, "a"}}},
 		}}, typeEnv)
-		expectInvalid(t, InitBlock{[]InitVar{
-			InstanceVar{"proc1", "A", []Expression{IdentifierExpression{"a"}, IdentifierExpression{"a"}}},
+		expectInvalid(t, InitBlock{Pos{}, []InitVar{
+			InstanceVar{Pos{}, "proc1", "A", []Expression{IdentifierExpression{Pos{}, "a"}, IdentifierExpression{Pos{}, "a"}}},
 		}}, typeEnv)
-		expectInvalid(t, InitBlock{[]InitVar{
-			InstanceVar{"proc1", "A", []Expression{IdentifierExpression{"b"}}},
+		expectInvalid(t, InitBlock{Pos{}, []InitVar{
+			InstanceVar{Pos{}, "proc1", "A", []Expression{IdentifierExpression{Pos{}, "b"}}},
 		}}, typeEnv)
-		expectInvalid(t, InitBlock{[]InitVar{
-			InstanceVar{"proc1", "A", []Expression{IdentifierExpression{"c"}}},
+		expectInvalid(t, InitBlock{Pos{}, []InitVar{
+			InstanceVar{Pos{}, "proc1", "A", []Expression{IdentifierExpression{Pos{}, "c"}}},
 		}}, typeEnv)
-		expectInvalid(t, InitBlock{[]InitVar{
-			InstanceVar{"proc1", "A", []Expression{IdentifierExpression{"a"}}},
+		expectInvalid(t, InitBlock{Pos{}, []InitVar{
+			InstanceVar{Pos{}, "proc1", "A", []Expression{IdentifierExpression{Pos{}, "a"}}},
 		}}, newTypeEnv())
 	}
 
 	{
 		typeEnv := newTypeEnv()
 		typeEnv.add("A", CallableType{[]Type{HandshakeChannelType{false, []Type{NamedType{"int"}}}}})
-		expectValid(t, InitBlock{[]InitVar{
-			InstanceVar{"proc1", "A", []Expression{IdentifierExpression{"ch"}}},
-			ChannelVar{"ch", HandshakeChannelType{false, []Type{NamedType{"int"}}}},
+		expectValid(t, InitBlock{Pos{}, []InitVar{
+			InstanceVar{Pos{}, "proc1", "A", []Expression{IdentifierExpression{Pos{}, "ch"}}},
+			ChannelVar{Pos{}, "ch", HandshakeChannelType{false, []Type{NamedType{"int"}}}},
 		}}, typeEnv)
 	}
 }

@@ -25,9 +25,9 @@ func TestConvertASTToIntModule(t *testing.T) {
 					Type: NamedType{"int"},
 				},
 				SendStatement{
-					Channel: IdentifierExpression{"ch0"},
+					Channel: IdentifierExpression{Pos{}, "ch0"},
 					Args: []Expression{
-						IdentifierExpression{"true"},
+						TrueExpression{Pos{}},
 					},
 				},
 			},
@@ -45,7 +45,7 @@ func TestConvertASTToIntModule(t *testing.T) {
 					Name:        "proc1",
 					ProcDefName: "ProcA",
 					Args: []Expression{
-						IdentifierExpression{"ch"},
+						IdentifierExpression{Pos{}, "ch"},
 					},
 				},
 			},
@@ -89,6 +89,7 @@ func TestConvertASTToIntModule(t *testing.T) {
 				"ch0.next_filled":   "ch0.filled",
 				"ch0.next_received": "ch0.received",
 				"ch0.next_value_0":  "ch0.value_0",
+				"next(b)": "b",
 			},
 			Defs: []intAssign{},
 		},

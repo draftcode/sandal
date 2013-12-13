@@ -90,9 +90,9 @@ func TestConvertASTToNuSMV(t *testing.T) {
 					Type: NamedType{"int"},
 				},
 				SendStatement{
-					Channel: IdentifierExpression{"ch0"},
+					Channel: IdentifierExpression{Pos{}, "ch0"},
 					Args: []Expression{
-						IdentifierExpression{"true"},
+						TrueExpression{Pos{}},
 					},
 				},
 			},
@@ -110,7 +110,7 @@ func TestConvertASTToNuSMV(t *testing.T) {
 					Name:        "proc1",
 					ProcDefName: "ProcA",
 					Args: []Expression{
-						IdentifierExpression{"ch"},
+						IdentifierExpression{Pos{}, "ch"},
 					},
 				},
 			},

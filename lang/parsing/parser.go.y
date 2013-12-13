@@ -10,7 +10,7 @@ import (
 type token struct {
 	tok int
 	lit string
-	pos Position
+	pos data.Pos
 }
 %}
 
@@ -118,6 +118,9 @@ type token struct {
 %token<tok> GOTO
 %token<tok> UNSTABLE
 %token<tok> SKIP
+%token<tok> TRUE
+%token<tok> FALSE
+%token<tok> '{' '}' '(' ')' '[' ']' ',' ':' ';'
 
 %left LOR
 %left LAND
@@ -153,13 +156,13 @@ toplevel_body
 data_def
 	: DATA IDENTIFIER '{' idents_one '}' ';'
 	{
-		$$ = data.DataDefinition{Name: $2.lit, Elems: $4}
+		$$ = data.DataDefinition{Pos: $1.pos, Name: $2.lit, Elems: $4}
 	}
 
 module_def
 	: MODULE IDENTIFIER '(' parameters_zero ')' '{' module_body_zero '}' ';'
 	{
-		$$ = data.ModuleDefinition{Name: $2.lit, Parameters: $4, Definitions: $7}
+		$$ = data.ModuleDefinition{Pos: $1.pos, Name: $2.lit, Parameters: $4, Definitions: $7}
 	}
 
 module_body_zero
@@ -180,19 +183,19 @@ module_body
 const_def
 	: CONST IDENTIFIER type ASSIGN expr ';' /* This should be a const expression. */
 	{
-		$$ = data.ConstantDefinition{Name: $2.lit, Type: $3, Expr: $5}
+		$$ = data.ConstantDefinition{Pos: $1.pos, Name: $2.lit, Type: $3, Expr: $5}
 	}
 
 proc_def
 	: PROC IDENTIFIER '(' parameters_zero ')' '{' statements_zero '}' ';'
 	{
-		$$ = data.ProcDefinition{Name: $2.lit, Parameters: $4, Statements: $7}
+		$$ = data.ProcDefinition{Pos: $1.pos, Name: $2.lit, Parameters: $4, Statements: $7}
 	}
 
 init_block
 	: INIT '{' initvars_zero '}' ';'
 	{
-		$$ = data.InitBlock{Vars: $3}
+		$$ = data.InitBlock{Pos: $1.pos, Vars: $3}
 	}
 
 initvars_zero
@@ -221,11 +224,11 @@ initvars_one
 
 initvar	: IDENTIFIER ':' type
 	{
-		$$ = data.ChannelVar{Name: $1.lit, Type: $3}
+		$$ = data.ChannelVar{Pos: $1.pos, Name: $1.lit, Type: $3}
 	}
 	| IDENTIFIER ':' IDENTIFIER '(' arguments_one ')'
 	{
-		$$ = data.InstanceVar{Name: $1.lit, ProcDefName: $3.lit, Args: $5}
+		$$ = data.InstanceVar{Pos: $1.pos, Name: $1.lit, ProcDefName: $3.lit, Args: $5}
 	}
 
 statements_zero
@@ -241,111 +244,111 @@ statements_zero
 statement
 	: IDENTIFIER ':' statement /* no semicolon */
 	{
-		$$ = data.LabelledStatement{Label: $1.lit, Statement: $3}
+		$$ = data.LabelledStatement{Pos: $1.pos, Label: $1.lit, Statement: $3}
 	}
 	| '{' statements_zero '}' ';'
 	{
-		$$ = data.BlockStatement{Statements: $2}
+		$$ = data.BlockStatement{Pos: $1.pos, Statements: $2}
 	}
 	| VAR IDENTIFIER type ';'
 	{
-		$$ = data.VarDeclStatement{Name: $2.lit, Type: $3}
+		$$ = data.VarDeclStatement{Pos: $1.pos, Name: $2.lit, Type: $3}
 	}
 	| VAR IDENTIFIER type ASSIGN expr ';'
 	{
-		$$ = data.VarDeclStatement{Name: $2.lit, Type: $3, Initializer: $5}
+		$$ = data.VarDeclStatement{Pos: $1.pos, Name: $2.lit, Type: $3, Initializer: $5}
 	}
 	| IF expr '{' statements_zero '}' ';'
 	{
-		$$ = data.IfStatement{Condition: $2, TrueBranch: $4}
+		$$ = data.IfStatement{Pos: $1.pos, Condition: $2, TrueBranch: $4}
 	}
 	| IF expr '{' statements_zero '}' ELSE '{' statements_zero '}' ';'
 	{
-		$$ = data.IfStatement{Condition: $2, TrueBranch: $4, FalseBranch: $8}
+		$$ = data.IfStatement{Pos: $1.pos, Condition: $2, TrueBranch: $4, FalseBranch: $8}
 	}
 	| IDENTIFIER ASSIGN expr ';'
 	{
-		$$ = data.AssignmentStatement{Variable: $1.lit, Expr: $3}
+		$$ = data.AssignmentStatement{Pos: $1.pos, Variable: $1.lit, Expr: $3}
 	}
 	| IDENTIFIER ADD_ASSIGN expr ';'
 	{
-		$$ = data.OpAssignmentStatement{Variable: $1.lit, Operator: "+", Expr: $3}
+		$$ = data.OpAssignmentStatement{Pos: $1.pos, Variable: $1.lit, Operator: "+", Expr: $3}
 	}
 	| IDENTIFIER SUB_ASSIGN expr ';'
 	{
-		$$ = data.OpAssignmentStatement{Variable: $1.lit, Operator: "-", Expr: $3}
+		$$ = data.OpAssignmentStatement{Pos: $1.pos, Variable: $1.lit, Operator: "-", Expr: $3}
 	}
 	| IDENTIFIER MUL_ASSIGN expr ';'
 	{
-		$$ = data.OpAssignmentStatement{Variable: $1.lit, Operator: "*", Expr: $3}
+		$$ = data.OpAssignmentStatement{Pos: $1.pos, Variable: $1.lit, Operator: "*", Expr: $3}
 	}
 	| IDENTIFIER QUO_ASSIGN expr ';'
 	{
-		$$ = data.OpAssignmentStatement{Variable: $1.lit, Operator: "/", Expr: $3}
+		$$ = data.OpAssignmentStatement{Pos: $1.pos, Variable: $1.lit, Operator: "/", Expr: $3}
 	}
 	| IDENTIFIER REM_ASSIGN expr ';'
 	{
-		$$ = data.OpAssignmentStatement{Variable: $1.lit, Operator: "%", Expr: $3}
+		$$ = data.OpAssignmentStatement{Pos: $1.pos, Variable: $1.lit, Operator: "%", Expr: $3}
 	}
 	| IDENTIFIER AND_ASSIGN expr ';'
 	{
-		$$ = data.OpAssignmentStatement{Variable: $1.lit, Operator: "&", Expr: $3}
+		$$ = data.OpAssignmentStatement{Pos: $1.pos, Variable: $1.lit, Operator: "&", Expr: $3}
 	}
 	| IDENTIFIER OR_ASSIGN expr ';'
 	{
-		$$ = data.OpAssignmentStatement{Variable: $1.lit, Operator: "|", Expr: $3}
+		$$ = data.OpAssignmentStatement{Pos: $1.pos, Variable: $1.lit, Operator: "|", Expr: $3}
 	}
 	| IDENTIFIER XOR_ASSIGN expr ';'
 	{
-		$$ = data.OpAssignmentStatement{Variable: $1.lit, Operator: "^", Expr: $3}
+		$$ = data.OpAssignmentStatement{Pos: $1.pos, Variable: $1.lit, Operator: "^", Expr: $3}
 	}
 	| IDENTIFIER SHL_ASSIGN expr ';'
 	{
-		$$ = data.OpAssignmentStatement{Variable: $1.lit, Operator: "<<", Expr: $3}
+		$$ = data.OpAssignmentStatement{Pos: $1.pos, Variable: $1.lit, Operator: "<<", Expr: $3}
 	}
 	| IDENTIFIER SHR_ASSIGN expr ';'
 	{
-		$$ = data.OpAssignmentStatement{Variable: $1.lit, Operator: ">>", Expr: $3}
+		$$ = data.OpAssignmentStatement{Pos: $1.pos, Variable: $1.lit, Operator: ">>", Expr: $3}
 	}
 	| CHOICE blocks_one ';'
 	{
-		$$ = data.ChoiceStatement{Blocks: $2}
+		$$ = data.ChoiceStatement{Pos: $1.pos, Blocks: $2}
 	}
 	| RECV '(' arguments_one ')' ';'
 	{
-		$$ = data.RecvStatement{Channel: $3[0], Args: $3[1:]}
+		$$ = data.RecvStatement{Pos: $1.pos, Channel: $3[0], Args: $3[1:]}
 	}
 	| PEEK '(' arguments_one ')' ';'
 	{
-		$$ = data.PeekStatement{Channel: $3[0], Args: $3[1:]}
+		$$ = data.PeekStatement{Pos: $1.pos, Channel: $3[0], Args: $3[1:]}
 	}
 	| SEND '(' arguments_one ')' ';'
 	{
-		$$ = data.SendStatement{Channel: $3[0], Args: $3[1:]}
+		$$ = data.SendStatement{Pos: $1.pos, Channel: $3[0], Args: $3[1:]}
 	}
 	| FOR '{' statements_zero '}' ';'
 	{
-		$$ = data.ForStatement{Statements: $3}
+		$$ = data.ForStatement{Pos: $1.pos, Statements: $3}
 	}
 	| FOR IDENTIFIER IN expr '{' statements_zero '}' ';'
 	{
-		$$ = data.ForInStatement{Variable: $2.lit, Container: $4, Statements: $6}
+		$$ = data.ForInStatement{Pos: $1.pos, Variable: $2.lit, Container: $4, Statements: $6}
 	}
 	| FOR IDENTIFIER IN RANGE expr TO expr '{' statements_zero '}' ';'
 	{
-		$$ = data.ForInRangeStatement{Variable: $2.lit, FromExpr: $5, ToExpr: $7, Statements: $9}
+		$$ = data.ForInRangeStatement{Pos: $1.pos, Variable: $2.lit, FromExpr: $5, ToExpr: $7, Statements: $9}
 	}
 	| BREAK ';'
 	{
-		$$ = data.BreakStatement{}
+		$$ = data.BreakStatement{Pos: $1.pos}
 	}
 	| GOTO IDENTIFIER ';'
 	{
-		$$ = data.GotoStatement{Label: $2.lit}
+		$$ = data.GotoStatement{Pos: $1.pos, Label: $2.lit}
 	}
 	| SKIP ';'
 	{
-		$$ = data.SkipStatement{}
+		$$ = data.SkipStatement{Pos: $1.pos}
 	}
 	| expr ';'
 	{
@@ -353,7 +356,7 @@ statement
 	}
 	| ';'
 	{
-		$$ = data.NullStatement{}
+		$$ = data.NullStatement{Pos: $1.pos}
 	}
 	| const_def
 	{
@@ -362,23 +365,31 @@ statement
 
 expr	: IDENTIFIER
 	{
-		$$ = data.IdentifierExpression{Name: $1.lit}
+		$$ = data.IdentifierExpression{Pos: $1.pos, Name: $1.lit}
 	}
 	| NUMBER
 	{
-		$$ = data.NumberExpression{Lit: $1.lit}
+		$$ = data.NumberExpression{Pos: $1.pos, Lit: $1.lit}
+	}
+	| TRUE
+	{
+		$$ = data.TrueExpression{Pos: $1.pos}
+	}
+	| FALSE
+	{
+		$$ = data.FalseExpression{Pos: $1.pos}
 	}
 	| NOT expr      %prec UNARY
 	{
-		$$ = data.NotExpression{SubExpr: $2}
+		$$ = data.NotExpression{Pos: $1.pos, SubExpr: $2}
 	}
 	| SUB expr      %prec UNARY
 	{
-		$$ = data.UnarySubExpression{SubExpr: $2}
+		$$ = data.UnarySubExpression{Pos: $1.pos, SubExpr: $2}
 	}
 	| '(' expr ')'
 	{
-		$$ = data.ParenExpression{SubExpr: $2}
+		$$ = data.ParenExpression{Pos: $1.pos, SubExpr: $2}
 	}
 	| expr ADD expr
 	{
@@ -454,23 +465,23 @@ expr	: IDENTIFIER
 	}
 	| TIMEOUT_RECV '(' arguments_one ')'
 	{
-		$$ = data.TimeoutRecvExpression{Channel: $3[0], Args: $3[1:]}
+		$$ = data.TimeoutRecvExpression{Pos: $1.pos, Channel: $3[0], Args: $3[1:]}
 	}
 	| TIMEOUT_PEEK '(' arguments_one ')'
 	{
-		$$ = data.TimeoutPeekExpression{Channel: $3[0], Args: $3[1:]}
+		$$ = data.TimeoutPeekExpression{Pos: $1.pos, Channel: $3[0], Args: $3[1:]}
 	}
 	| NONBLOCK_RECV '(' arguments_one ')'
 	{
-		$$ = data.NonblockRecvExpression{Channel: $3[0], Args: $3[1:]}
+		$$ = data.NonblockRecvExpression{Pos: $1.pos, Channel: $3[0], Args: $3[1:]}
 	}
 	| NONBLOCK_PEEK '(' arguments_one ')'
 	{
-		$$ = data.NonblockPeekExpression{Channel: $3[0], Args: $3[1:]}
+		$$ = data.NonblockPeekExpression{Pos: $1.pos, Channel: $3[0], Args: $3[1:]}
 	}
 	| '[' arguments_one ']'
 	{
-		$$ = data.ArrayExpression{Elems: $2}
+		$$ = data.ArrayExpression{Pos: $1.pos, Elems: $2}
 	}
 
 /* ======================================== */
@@ -583,15 +594,15 @@ type	: IDENTIFIER
 blocks_one
 	: '{' statements_zero '}'
 	{
-		$$ = []data.BlockStatement{data.BlockStatement{Statements: $2}}
+		$$ = []data.BlockStatement{data.BlockStatement{Pos: $1.pos, Statements: $2}}
 	}
 	| '{' statements_zero '}' ','
 	{
-		$$ = []data.BlockStatement{data.BlockStatement{Statements: $2}}
+		$$ = []data.BlockStatement{data.BlockStatement{Pos: $1.pos, Statements: $2}}
 	}
 	| '{' statements_zero '}' ',' blocks_one
 	{
-		$$ = append([]data.BlockStatement{data.BlockStatement{Statements: $2}}, $5...)
+		$$ = append([]data.BlockStatement{data.BlockStatement{Pos: $1.pos, Statements: $2}}, $5...)
 	}
 
 %%
@@ -600,7 +611,7 @@ type lexerWrapper struct {
 	s           *Scanner
 	definitions []data.Definition
 	recentLit   string
-	recentPos   Position
+	recentPos   data.Pos
 }
 
 func (l *lexerWrapper) Lex(lval *yySymType) int {
