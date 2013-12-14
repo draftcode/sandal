@@ -9,7 +9,7 @@ proc Arbiter(chRecvs []channel { Response }, chSends []channel { Response }) {
   for ch in chSends {
     send(ch, Ready)
   }
-  var all_ready bool = true;
+  var all_ready bool = true
   for ch in chRecvs {
     var resp Response
     recv(ch, resp)

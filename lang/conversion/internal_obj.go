@@ -20,6 +20,10 @@ type (
 		Expr Expression
 	}
 
+	intInternalDataTypeDef struct {
+		Elems []string
+	}
+
 	intInternalProcDef struct {
 		Def ProcDefinition
 	}
@@ -34,6 +38,7 @@ type (
 )
 
 func (x intInternalConstantDef) intinternalobj() {}
+func (x intInternalDataTypeDef) intinternalobj() {}
 func (x intInternalProcDef) intinternalobj()     {}
 func (x intInternalProcVar) intinternalobj()     {}
 
@@ -121,12 +126,14 @@ type (
 		ModuleName string
 		RealName   string
 		Type       HandshakeChannelType
+		Pids       map[int]bool
 	}
 
 	intInternalBufferedChannelVar struct {
 		ModuleName string
 		RealName   string
 		Type       BufferedChannelType
+		Pids       map[int]bool
 	}
 )
 
@@ -210,6 +217,27 @@ func (x intInternalBufferedChannelVar) Steps() int {
 // String
 // Used for converting internal objects to NuSMV expression.
 
+var operatorConversionTable = map[string]string{
+	"+":  "+",
+	"-":  "-",
+	"*":  "*",
+	"/":  "/",
+	"%":  "mod",
+	"&":  "&",
+	"|":  "|",
+	"^":  "xor",
+	"<<": "<<",
+	">>": ">>",
+	"&&": "&",
+	"||": "|",
+	"==": "=",
+	"<":  "<",
+	">":  ">",
+	"!=": "!=",
+	"<=": "<=",
+	">=": ">=",
+}
+
 func (x intInternalPrimitiveVar) String() string             { return x.RealName }
 func (x intInternalHandshakeChannelProxyVar) String() string { return x.RealName }
 func (x intInternalBufferedChannelProxyVar) String() string  { return x.RealName }
@@ -218,7 +246,10 @@ func (x intInternalLiteral) String() string                  { return x.Lit }
 func (x intInternalNot) String() string                      { return "!" + x.Sub.String() }
 func (x intInternalUnarySub) String() string                 { return "-" + x.Sub.String() }
 func (x intInternalParen) String() string                    { return "(" + x.Sub.String() + ")" }
-func (x intInternalBinOp) String() string                    { return x.LHS.String() + x.Op + x.RHS.String() }
+func (x intInternalBinOp) String() string {
+	// TODO: this cannot encode nonblock_recv(...) && nonblock_recv(...)
+	return x.LHS.String() + operatorConversionTable[x.Op] + x.RHS.String()
+}
 func (x intInternalTimeoutRecv) String() string {
 	panic("timeout_recv cannot directly be expressed in NuSMV")
 }
@@ -309,7 +340,8 @@ func (x intInternalUnarySub) Assignments(varName string) []intAssign {
 }
 func (x intInternalParen) Assignments(varName string) []intAssign { return x.Sub.Assignments(varName) }
 func (x intInternalBinOp) Assignments(varName string) []intAssign {
-	return append(x.LHS.Assignments(varName), x.RHS.Assignments(varName)...)
+	// TODO: this cannot encode nonblock_recv(...) && nonblock_recv(...)
+	return []intAssign{{varName, x.String()}}
 }
 func (x intInternalTimeoutRecv) Assignments(varName string) []intAssign  { panic("Not Implemented") }
 func (x intInternalTimeoutPeek) Assignments(varName string) []intAssign  { panic("Not Implemented") }
@@ -370,12 +402,14 @@ func (x intInternalBufferedChannelVar) GetType() Type       { return x.Type }
 // Channel Proxy Conversion
 
 func (x intInternalHandshakeChannelVar) Proxy(pid int) intInternalHandshakeChannelProxyVar {
+	x.Pids[pid] = true
 	return intInternalHandshakeChannelProxyVar{
 		RealName:   fmt.Sprintf("__pid%d_%s", pid, x.RealName),
 		ChannelVar: x,
 	}
 }
 func (x intInternalBufferedChannelVar) Proxy(pid int) intInternalBufferedChannelProxyVar {
+	x.Pids[pid] = true
 	return intInternalBufferedChannelProxyVar{
 		RealName:   fmt.Sprintf("__pid%d_%s", pid, x.RealName),
 		ChannelVar: x,

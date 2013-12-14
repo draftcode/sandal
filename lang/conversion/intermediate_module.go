@@ -47,8 +47,8 @@ type (
 	}
 
 	intTransition struct {
-		Condition string
-		Actions   map[intState][]intAssign
+		Condition  string
+		Actions    map[intState][]intAssign
 	}
 
 	intAssign struct {

@@ -12,7 +12,15 @@ func convertASTToIntModule(defs []Definition) (error, []intModule) {
 	for _, def := range defs {
 		switch def := def.(type) {
 		case DataDefinition:
-			// TODO
+			for _, elem := range def.Elems {
+				converter.env.add(elem, intInternalLiteral{
+					Lit: elem,
+					Type: NamedType{def.Name},
+				})
+			}
+			converter.env.add(def.Name, intInternalDataTypeDef{
+				Elems: def.Elems,
+			})
 		case ModuleDefinition:
 			// TODO
 		case ConstantDefinition:
@@ -99,9 +107,11 @@ func (x *intModConverter) buildMainModule() error {
 	if len(x.procs) == 0 {
 		return fmt.Errorf("No running procs")
 	}
-	pids := make([]string, len(x.procs))
+	pids := make([]int, len(x.procs))
+	pidStrs := make([]string, len(x.procs))
 	for i, proc := range x.procs {
-		pids[i] = strconv.Itoa(proc.Pid)
+		pids[i] = proc.Pid
+		pidStrs[i] = strconv.Itoa(proc.Pid)
 	}
 
 	module := intMainModule{}
@@ -118,9 +128,9 @@ func (x *intModConverter) buildMainModule() error {
 				Type: fmt.Sprintf("%s(%s)", chVar.ModuleName, argJoin(args)),
 			})
 			// TODO: each proxy should set default
-			for _, pid := range pids {
+			for pid, _ := range chVar.Pids {
 				module.Vars = append(module.Vars, intVar{
-					Name: fmt.Sprintf("__pid%s_%s", pid, chVar.RealName),
+					Name: fmt.Sprintf("__pid%d_%s", pid, chVar.RealName),
 					Type: fmt.Sprintf("%sProxy(%s)", chVar.ModuleName, chVar.RealName),
 				})
 			}
@@ -144,10 +154,10 @@ func (x *intModConverter) buildMainModule() error {
 			Type: fmt.Sprintf("%s(%s)", procVal.ModuleName, argJoin(args)),
 		})
 	}
-	module.Vars = append(module.Vars, intVar{"running_pid", "{" + argJoin(pids) + "}"})
+	module.Vars = append(module.Vars, intVar{"running_pid", "{" + argJoin(pidStrs) + "}"})
 
 	// Assigns
-	module.Assigns = append(module.Assigns, intAssign{"running_pid", "{" + argJoin(pids) + "}"})
+	module.Assigns = append(module.Assigns, intAssign{"running_pid", "{" + argJoin(pidStrs) + "}"})
 
 	// Defs
 	for _, chVar := range x.channels {
@@ -157,10 +167,18 @@ func (x *intModConverter) buildMainModule() error {
 			nextReceived := []string{}
 			nextValues := make([][]string, len(chVar.Type.Elems))
 			for _, pid := range pids {
-				nextFilled = append(nextFilled, fmt.Sprintf("__pid%s_%s.next_filled", pid, chVar.RealName))
-				nextReceived = append(nextReceived, fmt.Sprintf("__pid%s_%s.next_received", pid, chVar.RealName))
-				for i := 0; i < len(chVar.Type.Elems); i++ {
-					nextValues[i] = append(nextValues[i], fmt.Sprintf("__pid%s_%s.next_value_%d", pid, chVar.RealName, i))
+				if chVar.Pids[pid] {
+					nextFilled = append(nextFilled, fmt.Sprintf("__pid%d_%s.next_filled", pid, chVar.RealName))
+					nextReceived = append(nextReceived, fmt.Sprintf("__pid%d_%s.next_received", pid, chVar.RealName))
+					for i := 0; i < len(chVar.Type.Elems); i++ {
+						nextValues[i] = append(nextValues[i], fmt.Sprintf("__pid%d_%s.next_value_%d", pid, chVar.RealName, i))
+					}
+				} else {
+					nextFilled = append(nextFilled, fmt.Sprintf("%s.filled", chVar.RealName))
+					nextReceived = append(nextReceived, fmt.Sprintf("%s.received", chVar.RealName))
+					for i := 0; i < len(chVar.Type.Elems); i++ {
+						nextValues[i] = append(nextValues[i], fmt.Sprintf("%s.value_%d", chVar.RealName, i))
+					}
 				}
 			}
 			module.Defs = append(module.Defs, intAssign{chVar.RealName + "_filled", "[" + argJoin(nextFilled) + "]"})
@@ -188,7 +206,7 @@ func (x *intModConverter) buildChannelVar(name string, ty Type) (error, intInter
 	case HandshakeChannelType:
 		types := []string{}
 		for _, elem := range ty.Elems {
-			types = append(types, convertTypeToString(elem))
+			types = append(types, convertTypeToString(elem, x.env))
 		}
 		moduleName := fmt.Sprintf("HandshakeChannel%d", chNumber)
 		mod = intHandshakeChannel{
@@ -199,11 +217,12 @@ func (x *intModConverter) buildChannelVar(name string, ty Type) (error, intInter
 			ModuleName: moduleName,
 			RealName:   name,
 			Type:       ty,
+			Pids:       make(map[int]bool),
 		}
 	case BufferedChannelType:
 		types := []string{}
 		for _, elem := range ty.Elems {
-			types = append(types, convertTypeToString(elem))
+			types = append(types, convertTypeToString(elem, x.env))
 		}
 		moduleName := fmt.Sprintf("BufferedChannel%d", chNumber)
 		mod = intBufferedChannel{
@@ -215,6 +234,7 @@ func (x *intModConverter) buildChannelVar(name string, ty Type) (error, intInter
 			ModuleName: moduleName,
 			RealName:   name,
 			Type:       ty,
+			Pids:       make(map[int]bool),
 		}
 	default:
 		panic("Unknown channel type")
@@ -259,6 +279,14 @@ func (x *intModConverter) instantiateProcDef(def intInternalProcDef, moduleName 
 	x.pushEnv()
 	defer x.popEnv()
 
+	addHandshakeChannelDefaults := func(paramName string, numElems int, defaults map[string]string) {
+		defaults[paramName+".next_filled"] = paramName + ".filled"
+		defaults[paramName+".next_received"] = paramName + ".received"
+		for i := 0; i < numElems; i++ {
+			defaults[fmt.Sprintf("%s.next_value_%d", paramName, i)] = fmt.Sprintf("%s.value_%d", paramName, i)
+		}
+	}
+
 	params := []string{"running_pid", "pid"}
 	defaults := make(map[string]string)
 	for idx, arg := range args {
@@ -266,16 +294,19 @@ func (x *intModConverter) instantiateProcDef(def intInternalProcDef, moduleName 
 		switch arg := arg.(type) {
 		case intInternalArrayLiteral:
 			for i := 0; i < len(arg.Elems); i++ {
-				params = append(params, fmt.Sprintf("__elem%d_%s", i, param.Name))
+				paramName := fmt.Sprintf("__elem%d_%s", i, param.Name)
+				params = append(params, paramName)
+				switch elem := arg.Elems[i].(type) {
+				case intInternalHandshakeChannelProxyVar:
+					addHandshakeChannelDefaults(paramName, len(elem.ChannelVar.Type.Elems), defaults)
+				case intInternalBufferedChannelProxyVar:
+					panic("not implemented")
+				}
 			}
 			x.env.add(param.Name, intInternalArrayVar{param.Name, arg})
 		case intInternalHandshakeChannelProxyVar:
 			params = append(params, param.Name)
-			defaults[param.Name+".next_filled"] = param.Name + ".filled"
-			defaults[param.Name+".next_received"] = param.Name + ".received"
-			for i := 0; i < len(arg.ChannelVar.Type.Elems); i++ {
-				defaults[fmt.Sprintf("%s.next_value_%d", param.Name, i)] = fmt.Sprintf("%s.value_%d", param.Name, i)
-			}
+			addHandshakeChannelDefaults(param.Name, len(arg.ChannelVar.Type.Elems), defaults)
 			x.env.add(param.Name, intInternalPrimitiveVar{param.Name, param.Type})
 		case intInternalBufferedChannelProxyVar:
 			panic("not implemented")
@@ -298,7 +329,7 @@ func (x *intModConverter) instantiateProcDef(def intInternalProcDef, moduleName 
 	})
 }
 
-func convertTypeToString(ty Type) string {
+func convertTypeToString(ty Type, env *varEnv) string {
 	// TODO
 	switch ty := ty.(type) {
 	case NamedType:
@@ -308,7 +339,13 @@ func convertTypeToString(ty Type) string {
 		case "int":
 			return "0..8"
 		default:
-			return ty.Name
+			switch intObj := env.lookup(ty.Name).(type) {
+			case intInternalDataTypeDef:
+				return "{" + argJoin(intObj.Elems) + "}"
+			default:
+				_ = intObj
+				panic("unknown type")
+			}
 		}
 	default:
 		return ty.String()

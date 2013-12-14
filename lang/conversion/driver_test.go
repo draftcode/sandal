@@ -31,31 +31,34 @@ MODULE HandshakeChannel0Proxy(ch)
 
 MODULE __pid0_ProcA(running_pid, pid, ch0)
   VAR
-    state : {state0, state1, state2};
+    state : {state0, state1, state2, state3};
     b : 0..8;
   ASSIGN
     init(state) := state0;
     next(state) :=
       case
         running_pid = pid & state = state0 : state1;
-        running_pid = pid & state = state1 & !ch0.filled : state2;
+        running_pid = pid & state = state1 & !(ch0.filled) : state2;
+        running_pid = pid & state = state2 & (ch0.filled) & (ch0.received) : state3;
         TRUE : state;
       esac;
     ch0.next_filled :=
       case
-        running_pid = pid & state = state1 & !ch0.filled : TRUE;
+        running_pid = pid & state = state1 & !(ch0.filled) : TRUE;
+        running_pid = pid & state = state2 & (ch0.filled) & (ch0.received) : FALSE;
         TRUE : ch0.filled;
       esac;
     ch0.next_received :=
       case
-        running_pid = pid & state = state1 & !ch0.filled : FALSE;
+        running_pid = pid & state = state1 & !(ch0.filled) : FALSE;
         TRUE : ch0.received;
       esac;
     ch0.next_value_0 :=
       case
-        running_pid = pid & state = state1 & !ch0.filled : TRUE;
+        running_pid = pid & state = state1 & !(ch0.filled) : TRUE;
         TRUE : ch0.value_0;
       esac;
+    next(b) := b;
 
 MODULE main()
   VAR

@@ -74,7 +74,7 @@ func TestConvertASTToIntModule(t *testing.T) {
 				},
 				"state1": []intTransition{
 					{
-						Condition: "!ch0.filled",
+						Condition: "!(ch0.filled)",
 						Actions: map[intState][]intAssign{
 							"state2": []intAssign{
 								{"ch0.next_filled", "TRUE"},
@@ -84,12 +84,22 @@ func TestConvertASTToIntModule(t *testing.T) {
 						},
 					},
 				},
+				"state2": []intTransition{
+					{
+						Condition: "(ch0.filled) & (ch0.received)",
+						Actions: map[intState][]intAssign{
+							"state3": []intAssign{
+								{"ch0.next_filled", "FALSE"},
+							},
+						},
+					},
+				},
 			},
 			Defaults: map[string]string{
 				"ch0.next_filled":   "ch0.filled",
 				"ch0.next_received": "ch0.received",
 				"ch0.next_value_0":  "ch0.value_0",
-				"next(b)": "b",
+				"next(b)":           "b",
 			},
 			Defs: []intAssign{},
 		},

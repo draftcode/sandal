@@ -155,12 +155,14 @@ func collectStates(mod intProcModule) []string {
 	for state, intTrans := range mod.Trans {
 		m[string(state)] = true
 		for _, tr := range intTrans {
-			if len(tr.Actions) != 1 {
+			if len(tr.Actions) > 1 {
 				// TODO
 				panic("multiple actions not supported")
 			}
 			for nextState, _ := range tr.Actions {
-				m[string(nextState)] = true
+				if nextState != "" {
+					m[string(nextState)] = true
+				}
 			}
 		}
 	}
@@ -186,7 +188,9 @@ func buildStateTransition(mod intProcModule) []caseTmplCase {
 				cond = fmt.Sprintf("running_pid = pid & state = %s & %s", state, cond)
 			}
 			for nextState, _ := range tr.Actions {
-				tmplTrans[cond] = append(tmplTrans[cond], string(nextState))
+				if nextState != "" {
+					tmplTrans[cond] = append(tmplTrans[cond], string(nextState))
+				}
 			}
 		}
 		transs[state] = tmplTrans
@@ -230,14 +234,27 @@ func buildAssignments(mod intProcModule) []tmplAssign {
 	}
 
 	retAssigns := []tmplAssign{}
+	defaultAssigned := make(map[string]bool)
 	for lhs, assigns := range assignss {
+		defaultValue := mod.Defaults[lhs]
+		if defaultValue == "" {
+			panic("No default value")
+		}
+		defaultAssigned[lhs] = true
 		retAssigns = append(retAssigns, tmplAssign{
 			LHS: lhs,
 			RHS: instantiateCaseTemplate(caseTmplValue{
 				Cases:   assigns,
-				Default: mod.Defaults[lhs] + ";",
+				Default: defaultValue + ";",
 			}),
 		})
+	}
+	for lhs, defaultValue := range mod.Defaults {
+		if !defaultAssigned[lhs] {
+			retAssigns = append(retAssigns, tmplAssign{
+				LHS: lhs, RHS: defaultValue,
+			})
+		}
 	}
 	return retAssigns
 }

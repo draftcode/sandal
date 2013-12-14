@@ -1,8 +1,8 @@
 package parsing
 
 import (
-	"unicode"
 	. "github.com/draftcode/sandal/lang/data"
+	"unicode"
 )
 
 const (
@@ -48,12 +48,13 @@ const (
 
 // Scanner is a lexer on Sandal language.
 type Scanner struct {
-	src       []rune
-	offset    int
-	lineHead  int
-	line      int
-	mode      Mode
-	lastToken int
+	src         []rune
+	offset      int
+	lineHead    int
+	line        int
+	mode        Mode
+	insertSemis bool
+	lastToken   int
 }
 
 // Init initializes the scanner. mode is for internal use, expect it to be zero.
@@ -66,18 +67,20 @@ func (s *Scanner) Init(src []rune, mode Mode) {
 // token received. Return EOF after all characters consumed.
 func (s *Scanner) Scan() (tok int, lit string, pos Pos) {
 	if s.skipWhiteSpace() && (s.mode&dontInsertSemis) == 0 {
-		switch s.lastToken {
-		case IDENTIFIER, NUMBER, BREAK, SKIP, ')', ']', '}':
+		if s.insertSemis {
 			s.lastToken = int(';')
+			s.insertSemis = false
 			tok = int(';')
 			lit = "\n"
 			return
 		}
 	}
+	nextInsertSemis := false
 	savedOffset := s.offset // Used in COMMENT
 	pos = s.position()
 	switch ch := s.peek(); {
 	case isLetter(ch):
+		nextInsertSemis = true
 		lit = s.scanIdentifier()
 		if keyword, ok := keywords[lit]; ok {
 			tok = keyword
@@ -85,13 +88,17 @@ func (s *Scanner) Scan() (tok int, lit string, pos Pos) {
 			tok = IDENTIFIER
 		}
 	case isDigit(ch):
+		nextInsertSemis = true
 		tok, lit = NUMBER, s.scanNumber()
 	default:
 		s.next()
 		switch ch {
 		case -1:
 			tok = EOF
-		case '{', '}', '(', ')', '[', ']', ',', ':', ';':
+		case '}', ')', ']':
+			nextInsertSemis = true;
+			fallthrough
+		case '{', '(', '[', ',', ':', ';':
 			tok = int(ch)
 			lit = string(ch)
 		case '+':
@@ -132,12 +139,11 @@ func (s *Scanner) Scan() (tok int, lit string, pos Pos) {
 				lit = "/="
 			case '/':
 				// Insert semicolon before comment.
-				switch s.lastToken {
-				case IDENTIFIER, NUMBER, BREAK, ')', ']', '}':
+				if s.insertSemis {
 					s.offset = savedOffset
 					tok = int(';')
 					lit = "\n"
-				default:
+				} else {
 					s.next()
 					tok = COMMENT
 					lit = "//" + s.scanLineComment()
@@ -259,6 +265,7 @@ func (s *Scanner) Scan() (tok int, lit string, pos Pos) {
 		}
 	}
 	s.lastToken = tok
+	s.insertSemis = nextInsertSemis
 	return
 }
 
@@ -298,7 +305,7 @@ func (s *Scanner) next() {
 	}
 }
 
-func (s *Scanner) position() Pos{
+func (s *Scanner) position() Pos {
 	return Pos{Line: s.line + 1, Column: s.offset - s.lineHead + 1}
 }
 
