@@ -1,11 +1,4 @@
-package conversion
 
-import (
-	. "github.com/draftcode/sandal/lang/data"
-	"testing"
-)
-
-const expectedResult = `
 MODULE HandshakeChannel0(running_pid, filleds, receiveds, values_0)
   VAR
     filled : boolean;
@@ -74,58 +67,3 @@ MODULE main()
     ch_filled := [__pid0_ch.next_filled];
     ch_received := [__pid0_ch.next_received];
     ch_value_0 := [__pid0_ch.next_value_0];
-`
-
-func TestConvertASTToNuSMV(t *testing.T) {
-	defs := []Definition{
-		ProcDefinition{
-			Name: "ProcA",
-			Parameters: []Parameter{
-				{
-					Name: "ch0",
-					Type: HandshakeChannelType{
-						IsUnstable: false,
-						Elems:      []Type{NamedType{"bool"}},
-					},
-				},
-			},
-			Statements: []Statement{
-				VarDeclStatement{
-					Name: "b",
-					Type: NamedType{"int"},
-				},
-				SendStatement{
-					Channel: IdentifierExpression{Pos{}, "ch0"},
-					Args: []Expression{
-						TrueExpression{Pos{}},
-					},
-				},
-			},
-		},
-		InitBlock{
-			Vars: []InitVar{
-				ChannelVar{
-					Name: "ch",
-					Type: HandshakeChannelType{
-						IsUnstable: false,
-						Elems:      []Type{NamedType{"bool"}},
-					},
-				},
-				InstanceVar{
-					Name:        "proc1",
-					ProcDefName: "ProcA",
-					Args: []Expression{
-						IdentifierExpression{Pos{}, "ch"},
-					},
-				},
-			},
-		},
-	}
-	err, mod := ConvertASTToNuSMV(defs)
-	if err != nil {
-		t.Fatalf("Unexpected error: %s", err)
-	}
-	if mod != expectedResult {
-		t.Errorf("Unmatched\nExpected %s\nGot      %s", expectedResult, mod)
-	}
-}

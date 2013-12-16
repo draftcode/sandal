@@ -2,28 +2,41 @@ package conversion
 
 import (
 	"bytes"
+	"sort"
 	"strings"
 	"text/template"
 )
 
-type tmplModule struct {
-	Name    string
-	Args    []string
-	Vars    []tmplVar
-	Trans   []string
-	Assigns []tmplAssign
-	Defs    []tmplAssign
-}
+type (
+	tmplModule struct {
+		Name    string
+		Args    []string
+		Vars    []tmplVar
+		Trans   []string
+		Assigns []tmplAssign
+		Defs    []tmplAssign
+	}
 
-type tmplVar struct {
-	Name string
-	Type string
-}
+	tmplVar struct {
+		Name string
+		Type string
+	}
 
-type tmplAssign struct {
-	LHS string
-	RHS string
-}
+	tmplAssign struct {
+		LHS string
+		RHS string
+	}
+
+	tmplVars    []tmplVar
+	tmplAssigns []tmplAssign
+)
+
+func (l tmplVars) Len() int { return len(l) }
+func (l tmplVars) Less(i, j int) bool { return l[i].Name < l[j].Name }
+func (l tmplVars) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
+func (l tmplAssigns) Len() int { return len(l) }
+func (l tmplAssigns) Less(i, j int) bool { return l[i].LHS < l[j].LHS }
+func (l tmplAssigns) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
 
 const moduleTemplate = `
 MODULE {{.Name}}({{args .Args}}){{if .Vars}}
@@ -54,6 +67,10 @@ func instantiateTemplate(module tmplModule) string {
 	if err != nil {
 		panic(err)
 	}
+	sort.Sort(tmplVars(module.Vars))
+	sort.Strings(module.Trans)
+	sort.Sort(tmplAssigns(module.Assigns))
+	sort.Sort(tmplAssigns(module.Defs))
 
 	buf := new(bytes.Buffer)
 	err = tmpl.Execute(buf, module)

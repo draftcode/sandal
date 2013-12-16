@@ -281,21 +281,31 @@ const caseTemplate = `case{{range .Cases}}
   TRUE : {{.Default}}
 esac`
 
-type caseTmplCase struct {
-	Condition string
-	Value     string
-}
+type (
+	caseTmplCase struct {
+		Condition string
+		Value     string
+	}
 
-type caseTmplValue struct {
-	Cases   []caseTmplCase
-	Default string
-}
+	caseTmplValue struct {
+		Cases   []caseTmplCase
+		Default string
+	}
+
+	caseTmplCases []caseTmplCase
+)
+
+func (l caseTmplCases) Len() int { return len(l) }
+func (l caseTmplCases) Less(i, j int) bool { return l[i].Condition < l[j].Condition }
+func (l caseTmplCases) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
 
 func instantiateCaseTemplate(val caseTmplValue) string {
 	tmpl, err := template.New("NuSMVCase").Parse(caseTemplate)
 	if err != nil {
 		panic(err)
 	}
+
+	sort.Sort(caseTmplCases(val.Cases))
 
 	buf := new(bytes.Buffer)
 	err = tmpl.Execute(buf, val)
