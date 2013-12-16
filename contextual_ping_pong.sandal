@@ -1,0 +1,18 @@
+data Message { Ping, Pong, Peng }
+data Context { Context1, Context2 }
+
+proc A(chRecv1 channel { Message }, chRecv2 channel { Message },
+       chSend1 channel { Message }, chSend2 channel { Message },
+       chs [] channel { Context }) {
+  var currentContext Context = Context1
+}
+
+proc B(chRecv channel { Message }, chSend channel { Message },
+       chs [] channel { Context }) {
+  var currentContext Context = Context1
+}
+
+proc C(chRecv channel { Message }, chSend channel { Message },
+       chs [] channel { Context }) {
+  var currentContext Context = Context1
+}

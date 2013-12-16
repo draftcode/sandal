@@ -146,32 +146,34 @@ func TestConvertProcModuleToTemplate(t *testing.T) {
 			Args: []string{"running_pid", "pid", "ch0"},
 			Vars: []tmplVar{
 				{"state", "{state0, state1, state2}"},
+				{"next_state", "{state0, state1, state2}"},
 				{"b", "0..8"},
 			},
 			Assigns: []tmplAssign{
 				{"init(state)", "state0"},
-				{"next(state)", strings.Join([]string{
+				{"next(state)", "next_state"},
+				{"next_state", strings.Join([]string{
 					"case",
-					"  running_pid = pid & state = state0 : state1;",
-					"  running_pid = pid & state = state1 & !ch0.filled : state2;",
+					"  running_pid = pid & state = state0 & ((TRUE)) : {state1};",
+					"  running_pid = pid & state = state1 & ((!ch0.filled)) : {state2};",
 					"  TRUE : state;",
 					"esac",
 				}, "\n")},
 				{"ch0.next_filled", strings.Join([]string{
 					"case",
-					"  running_pid = pid & state = state1 & !ch0.filled : TRUE;",
+					"  running_pid = pid & state = state1 & next_state = state2 : TRUE;",
 					"  TRUE : ch0.filled;",
 					"esac",
 				}, "\n")},
 				{"ch0.next_received", strings.Join([]string{
 					"case",
-					"  running_pid = pid & state = state1 & !ch0.filled : FALSE;",
+					"  running_pid = pid & state = state1 & next_state = state2 : FALSE;",
 					"  TRUE : ch0.received;",
 					"esac",
 				}, "\n")},
 				{"ch0.next_value_0", strings.Join([]string{
 					"case",
-					"  running_pid = pid & state = state1 & !ch0.filled : TRUE;",
+					"  running_pid = pid & state = state1 & next_state = state2 : TRUE;",
 					"  TRUE : ch0.value_0;",
 					"esac",
 				}, "\n")},

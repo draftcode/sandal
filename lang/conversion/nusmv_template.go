@@ -10,6 +10,7 @@ type tmplModule struct {
 	Name    string
 	Args    []string
 	Vars    []tmplVar
+	Trans   []string
 	Assigns []tmplAssign
 	Defs    []tmplAssign
 }
@@ -27,7 +28,8 @@ type tmplAssign struct {
 const moduleTemplate = `
 MODULE {{.Name}}({{args .Args}}){{if .Vars}}
   VAR{{range .Vars}}
-    {{.Name}} : {{.Type}};{{end}}{{end}}{{if .Assigns}}
+    {{.Name}} : {{.Type}};{{end}}{{end}}{{if .Trans}}{{range .Trans}}
+  TRANS {{.}};{{end}}{{end}}{{if .Assigns}}
   ASSIGN{{range .Assigns}}
     {{.LHS}} :={{rhsFormat .RHS}};{{end}}{{end}}{{if .Defs}}
   DEFINE{{range .Defs}}

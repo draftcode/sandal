@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"sort"
+	"strings"
 	"text/template"
 )
 
@@ -126,14 +127,17 @@ func convertBufferedChannelToTemplate(mod intModule) (error, []tmplModule) {
 func convertProcModuleToTemplate(mod intProcModule) (error, []tmplModule) {
 	vars := []tmplVar{
 		{"state", "{" + argJoin(collectStates(mod)) + "}"},
+		{"next_state", "{" + argJoin(collectStates(mod)) + "}"},
 	}
 	for _, intvar := range mod.Vars {
 		vars = append(vars, tmplVar{intvar.Name, intvar.Type})
 	}
+	trans, cases := buildStateTransition(mod)
 	assigns := []tmplAssign{
 		{"init(state)", string(mod.InitState)},
-		{"next(state)", instantiateCaseTemplate(caseTmplValue{
-			Cases:   buildStateTransition(mod),
+		{"next(state)", "next_state"},
+		{"next_state", instantiateCaseTemplate(caseTmplValue{
+			Cases:   cases,
 			Default: "state;",
 		})},
 	}
@@ -143,6 +147,7 @@ func convertProcModuleToTemplate(mod intProcModule) (error, []tmplModule) {
 			Name:    mod.Name,
 			Args:    mod.Args,
 			Vars:    vars,
+			Trans:   trans,
 			Assigns: assigns,
 		},
 	}
@@ -155,10 +160,6 @@ func collectStates(mod intProcModule) []string {
 	for state, intTrans := range mod.Trans {
 		m[string(state)] = true
 		for _, tr := range intTrans {
-			if len(tr.Actions) > 1 {
-				// TODO
-				panic("multiple actions not supported")
-			}
 			for nextState, _ := range tr.Actions {
 				if nextState != "" {
 					m[string(nextState)] = true
@@ -174,55 +175,60 @@ func collectStates(mod intProcModule) []string {
 	return states
 }
 
-type condMap map[string][]string
-
-func buildStateTransition(mod intProcModule) []caseTmplCase {
-	transs := make(map[intState]condMap)
+func buildStateTransition(mod intProcModule) ([]string, []caseTmplCase) {
+	trans := []string{}
+	cases := []caseTmplCase{}
 	for state, intTrans := range mod.Trans {
-		tmplTrans := make(map[string][]string)
+		nextStates := []string{}
+		conds := []string{}
+		nextStateAndCond := make(map[string][]string)
 		for _, tr := range intTrans {
-			cond := tr.Condition
-			if cond == "" {
-				cond = fmt.Sprintf("running_pid = pid & state = %s", state)
-			} else {
-				cond = fmt.Sprintf("running_pid = pid & state = %s & %s", state, cond)
-			}
 			for nextState, _ := range tr.Actions {
 				if nextState != "" {
-					tmplTrans[cond] = append(tmplTrans[cond], string(nextState))
+					cond := tr.Condition
+					if cond == "" {
+						cond = "TRUE"
+					}
+					nextStateAndCond[string(nextState)] = append(
+						nextStateAndCond[string(nextState)],
+						cond,
+					)
+					nextStates = append(nextStates, string(nextState))
+					conds = append(conds, fmt.Sprintf("(%s)", cond))
 				}
 			}
 		}
-		transs[state] = tmplTrans
-	}
 
-	cases := []caseTmplCase{}
-	for _, condmap := range transs {
-		for cond, nextStates := range condmap {
-			if len(nextStates) == 1 {
-				cases = append(cases, caseTmplCase{cond, nextStates[0] + ";"})
-			} else {
-				cases = append(cases, caseTmplCase{
-					cond, "{" + argJoin(nextStates) + "};",
-				})
+		cond := ""
+		if len(nextStateAndCond) > 1 {
+			cond = fmt.Sprintf("running_pid = pid & state = %s", state)
+			for nextState, conds := range nextStateAndCond {
+				cond := strings.Join(uniqAndSort(conds), " | ")
+				trans = append(
+					trans,
+					fmt.Sprintf("state = %s & nextState = %s -> %s", state, nextState, cond),
+				)
 			}
+		} else {
+			cond = strings.Join(uniqAndSort(conds), " | ")
+			cond = fmt.Sprintf("running_pid = pid & state = %s & (%s)", state, cond)
 		}
+		cases = append(cases, caseTmplCase{cond, "{" + argJoin(uniqAndSort(nextStates)) + "};"})
 	}
-	return cases
+	return trans, cases
 }
 
 func buildAssignments(mod intProcModule) []tmplAssign {
 	assignss := make(map[string][]caseTmplCase)
 	for state, intTrans := range mod.Trans {
 		for _, tr := range intTrans {
-			cond := tr.Condition
-			if cond == "" {
-				cond = fmt.Sprintf("running_pid = pid & state = %s", state)
-			} else {
-				cond = fmt.Sprintf("running_pid = pid & state = %s & %s", state, cond)
-			}
-
-			for _, assigns := range tr.Actions {
+			for nextState, assigns := range tr.Actions {
+				cond := ""
+				if nextState == "" {
+					cond = fmt.Sprintf("running_pid = pid & state = %s", state)
+				} else {
+					cond = fmt.Sprintf("running_pid = pid & state = %s & next_state = %s", state, nextState)
+				}
 				for _, assign := range assigns {
 					assignss[assign.LHS] = append(
 						assignss[assign.LHS],
@@ -298,4 +304,19 @@ func instantiateCaseTemplate(val caseTmplValue) string {
 	}
 
 	return buf.String()
+}
+
+// ========================================
+
+func uniqAndSort(strs []string) []string {
+	m := make(map[string]bool)
+	for _, s := range strs {
+		m[s] = true
+	}
+	r := []string{}
+	for s, _ := range m {
+		r = append(r, s)
+	}
+	sort.Strings(r)
+	return r
 }

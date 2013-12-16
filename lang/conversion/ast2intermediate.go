@@ -14,7 +14,7 @@ func convertASTToIntModule(defs []Definition) (error, []intModule) {
 		case DataDefinition:
 			for _, elem := range def.Elems {
 				converter.env.add(elem, intInternalLiteral{
-					Lit: elem,
+					Lit:  elem,
 					Type: NamedType{def.Name},
 				})
 			}
@@ -127,7 +127,6 @@ func (x *intModConverter) buildMainModule() error {
 				Name: chVar.RealName,
 				Type: fmt.Sprintf("%s(%s)", chVar.ModuleName, argJoin(args)),
 			})
-			// TODO: each proxy should set default
 			for pid, _ := range chVar.Pids {
 				module.Vars = append(module.Vars, intVar{
 					Name: fmt.Sprintf("__pid%d_%s", pid, chVar.RealName),
@@ -343,7 +342,6 @@ func convertTypeToString(ty Type, env *varEnv) string {
 			case intInternalDataTypeDef:
 				return "{" + argJoin(intObj.Elems) + "}"
 			default:
-				_ = intObj
 				panic("unknown type")
 			}
 		}
@@ -362,4 +360,3 @@ func (x *intModConverter) calculateConstExpression(expr Expression) int {
 func argJoin(args []string) string {
 	return strings.Join(args, ", ")
 }
-
