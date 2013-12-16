@@ -159,35 +159,19 @@ func (x *intStatementConverter) convertIfStatement(stmt IfStatement) error {
 
 	{
 		intExprObj := expressionToInternalObj(stmt.Condition, x.env)
-		if intExprObj.Steps() > 1 {
+		if intExprObj.Steps() != 0 {
 			panic("Steps constraint violation")
 		}
-		condTempVar := x.genRealName("__if_cond_temp")
-		nextCondTempVar := fmt.Sprintf("next(%s)", condTempVar)
-		x.vars = append(x.vars, intVar{condTempVar, "boolean"})
-		x.defaults[nextCondTempVar] = condTempVar
-
-		exprCondition := intExprObj.Condition()
-		condition := ""
-		if exprCondition != "" {
-			condition = fmt.Sprintf("(%s) & ", exprCondition)
-		}
 		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
-			Condition: condition + nextCondTempVar,
-			Actions:   map[intState][]intAssign{
+			Condition: intExprObj.String(),
+			Actions: map[intState][]intAssign{
 				trueBranchState: nil,
 			},
 		})
 		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
-			Condition: condition + "!" + nextCondTempVar,
-			Actions:   map[intState][]intAssign{
+			Condition: "!(" + intExprObj.String() + ")",
+			Actions: map[intState][]intAssign{
 				falseBranchState: nil,
-			},
-		})
-		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
-			Condition: exprCondition,
-			Actions:   map[intState][]intAssign{
-				"": intExprObj.Assignments(nextCondTempVar),
 			},
 		})
 	}
@@ -228,7 +212,7 @@ func (x *intStatementConverter) convertAssignmentStatement(stmt AssignmentStatem
 	}
 	x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
 		Condition: intExprObj.Condition(),
-		Actions:   map[intState][]intAssign{
+		Actions: map[intState][]intAssign{
 			nextState: intExprObj.Assignments(fmt.Sprintf("next(%s)", stmt.Variable)),
 		},
 	})
@@ -242,7 +226,13 @@ func (x *intStatementConverter) convertChoiceStatement(stmt ChoiceStatement) err
 	nextState := x.genNextState()
 	currentState := x.currentState
 	for _, block := range stmt.Blocks {
-		x.currentState = currentState
+		choicedState := x.genNextState()
+		x.trans[currentState] = append(x.trans[currentState], intTransition{
+			Actions: map[intState][]intAssign{
+				choicedState: nil,
+			},
+		})
+		x.currentState = choicedState
 		x.pushEnv()
 		x.convertStatement(block)
 		x.popEnv()
@@ -315,7 +305,7 @@ func (x *intStatementConverter) convertSendStatement(stmt SendStatement) error {
 		nextState = x.genNextState()
 		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
 			Condition: fmt.Sprintf("(%s.filled) & (%s.received)", ch, ch),
-			Actions:   map[intState][]intAssign{
+			Actions: map[intState][]intAssign{
 				nextState: []intAssign{
 					{LHS: fmt.Sprintf("%s.next_filled", ch), RHS: "FALSE"},
 				},

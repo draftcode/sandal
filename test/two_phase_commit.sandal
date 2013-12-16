@@ -32,10 +32,8 @@ proc Worker(chRecv channel { Response }, chSend channel { Response }) {
   var resp Response
   recv(chRecv, resp)
   choice {
-    skip;
     send(chSend, NotReady)
   }, {
-    skip;
     send(chSend, Ready)
   }
   recv(chRecv, resp)

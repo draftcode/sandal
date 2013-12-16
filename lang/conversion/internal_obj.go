@@ -167,14 +167,7 @@ func (x intInternalLiteral) Steps() int                  { return 0 }
 func (x intInternalNot) Steps() int                      { return x.Sub.Steps() }
 func (x intInternalUnarySub) Steps() int                 { return x.Sub.Steps() }
 func (x intInternalParen) Steps() int                    { return x.Sub.Steps() }
-func (x intInternalBinOp) Steps() int {
-	lhsSteps, rhsSteps := x.LHS.Steps(), x.RHS.Steps()
-	if lhsSteps > rhsSteps {
-		return lhsSteps
-	} else {
-		return rhsSteps
-	}
-}
+func (x intInternalBinOp) Steps() int                    { return x.LHS.Steps() + x.RHS.Steps() }
 func (x intInternalTimeoutRecv) Steps() int {
 	steps := 1 + x.Channel.Steps()
 	for _, arg := range x.Args {

@@ -89,20 +89,17 @@ MODULE HandshakeChannel3Proxy(ch)
 
 MODULE __pid0_Arbiter(running_pid, pid, __elem0_chRecvs, __elem1_chRecvs, __elem0_chSends, __elem1_chSends)
   VAR
-    __if_cond_temp : boolean;
-    __if_cond_temp_2 : boolean;
-    __if_cond_temp_3 : boolean;
     all_ready : boolean;
     next_state : {state0, state1, state10, state11, state12, state13, state14, state15, state16, state17, state18, state19, state2, state20, state21, state22, state23, state24, state25, state26, state27, state28, state29, state3, state30, state31, state32, state4, state5, state6, state7, state8, state9};
     resp : {Ready, NotReady, Commit, Abort};
     resp_2 : {Ready, NotReady, Commit, Abort};
     state : {state0, state1, state10, state11, state12, state13, state14, state15, state16, state17, state18, state19, state2, state20, state21, state22, state23, state24, state25, state26, state27, state28, state29, state3, state30, state31, state32, state4, state5, state6, state7, state8, state9};
-  TRANS state = state15 & nextState = state17 -> next(__if_cond_temp_2);
-  TRANS state = state15 & nextState = state18 -> !next(__if_cond_temp_2);
-  TRANS state = state7 & nextState = state21 -> next(__if_cond_temp_3);
-  TRANS state = state7 & nextState = state22 -> !next(__if_cond_temp_3);
-  TRANS state = state9 & nextState = state11 -> next(__if_cond_temp);
-  TRANS state = state9 & nextState = state12 -> !next(__if_cond_temp);
+  TRANS state = state15 & nextState = state17 -> resp_2!=Ready;
+  TRANS state = state15 & nextState = state18 -> !(resp_2!=Ready);
+  TRANS state = state7 & nextState = state21 -> all_ready;
+  TRANS state = state7 & nextState = state22 -> !(all_ready);
+  TRANS state = state9 & nextState = state11 -> resp!=Ready;
+  TRANS state = state9 & nextState = state12 -> !(resp!=Ready);
   ASSIGN
     __elem0_chRecvs.next_filled := __elem0_chRecvs.filled;
     __elem0_chRecvs.next_received :=
@@ -167,21 +164,6 @@ MODULE __pid0_Arbiter(running_pid, pid, __elem0_chRecvs, __elem1_chRecvs, __elem
         TRUE : __elem1_chSends.value_0;
       esac;
     init(state) := state0;
-    next(__if_cond_temp) :=
-      case
-        running_pid = pid & state = state9 : resp!=Ready;
-        TRUE : __if_cond_temp;
-      esac;
-    next(__if_cond_temp_2) :=
-      case
-        running_pid = pid & state = state15 : resp_2!=Ready;
-        TRUE : __if_cond_temp_2;
-      esac;
-    next(__if_cond_temp_3) :=
-      case
-        running_pid = pid & state = state7 : all_ready;
-        TRUE : __if_cond_temp_3;
-      esac;
     next(all_ready) :=
       case
         running_pid = pid & state = state1 & next_state = state6 : TRUE;
@@ -242,8 +224,8 @@ MODULE __pid1_Worker(running_pid, pid, chRecv, chSend)
     next_state : {state0, state1, state10, state11, state12, state2, state3, state4, state5, state6, state7, state8, state9};
     resp : {Ready, NotReady, Commit, Abort};
     state : {state0, state1, state10, state11, state12, state2, state3, state4, state5, state6, state7, state8, state9};
-  TRANS state = state2 & nextState = state5 -> TRUE;
-  TRANS state = state2 & nextState = state9 -> TRUE;
+  TRANS state = state2 & nextState = state4 -> TRUE;
+  TRANS state = state2 & nextState = state8 -> TRUE;
   ASSIGN
     chRecv.next_filled := chRecv.filled;
     chRecv.next_received :=
@@ -256,21 +238,21 @@ MODULE __pid1_Worker(running_pid, pid, chRecv, chSend)
     chSend.next_filled :=
       case
         running_pid = pid & state = state10 & next_state = state11 : FALSE;
-        running_pid = pid & state = state5 & next_state = state6 : TRUE;
+        running_pid = pid & state = state4 & next_state = state6 : TRUE;
         running_pid = pid & state = state6 & next_state = state7 : FALSE;
-        running_pid = pid & state = state9 & next_state = state10 : TRUE;
+        running_pid = pid & state = state8 & next_state = state10 : TRUE;
         TRUE : chSend.filled;
       esac;
     chSend.next_received :=
       case
-        running_pid = pid & state = state5 & next_state = state6 : FALSE;
-        running_pid = pid & state = state9 & next_state = state10 : FALSE;
+        running_pid = pid & state = state4 & next_state = state6 : FALSE;
+        running_pid = pid & state = state8 & next_state = state10 : FALSE;
         TRUE : chSend.received;
       esac;
     chSend.next_value_0 :=
       case
-        running_pid = pid & state = state5 & next_state = state6 : NotReady;
-        running_pid = pid & state = state9 & next_state = state10 : Ready;
+        running_pid = pid & state = state4 & next_state = state6 : NotReady;
+        running_pid = pid & state = state8 & next_state = state10 : Ready;
         TRUE : chSend.value_0;
       esac;
     init(state) := state0;
@@ -286,15 +268,15 @@ MODULE __pid1_Worker(running_pid, pid, chRecv, chSend)
         running_pid = pid & state = state0 & ((TRUE)) : {state1};
         running_pid = pid & state = state1 & ((chRecv.filled & !chRecv.received)) : {state2};
         running_pid = pid & state = state10 & (((chSend.filled) & (chSend.received))) : {state11};
-        running_pid = pid & state = state11 & ((TRUE)) : {state8};
-        running_pid = pid & state = state2 : {state5, state9};
+        running_pid = pid & state = state11 & ((TRUE)) : {state9};
+        running_pid = pid & state = state2 : {state4, state8};
         running_pid = pid & state = state3 & ((chRecv.filled & !chRecv.received)) : {state12};
-        running_pid = pid & state = state4 & ((TRUE)) : {state3};
-        running_pid = pid & state = state5 & ((!(chSend.filled))) : {state6};
+        running_pid = pid & state = state4 & ((!(chSend.filled))) : {state6};
+        running_pid = pid & state = state5 & ((TRUE)) : {state3};
         running_pid = pid & state = state6 & (((chSend.filled) & (chSend.received))) : {state7};
-        running_pid = pid & state = state7 & ((TRUE)) : {state4};
-        running_pid = pid & state = state8 & ((TRUE)) : {state3};
-        running_pid = pid & state = state9 & ((!(chSend.filled))) : {state10};
+        running_pid = pid & state = state7 & ((TRUE)) : {state5};
+        running_pid = pid & state = state8 & ((!(chSend.filled))) : {state10};
+        running_pid = pid & state = state9 & ((TRUE)) : {state3};
         TRUE : state;
       esac;
 
@@ -303,8 +285,8 @@ MODULE __pid2_Worker(running_pid, pid, chRecv, chSend)
     next_state : {state0, state1, state10, state11, state12, state2, state3, state4, state5, state6, state7, state8, state9};
     resp : {Ready, NotReady, Commit, Abort};
     state : {state0, state1, state10, state11, state12, state2, state3, state4, state5, state6, state7, state8, state9};
-  TRANS state = state2 & nextState = state5 -> TRUE;
-  TRANS state = state2 & nextState = state9 -> TRUE;
+  TRANS state = state2 & nextState = state4 -> TRUE;
+  TRANS state = state2 & nextState = state8 -> TRUE;
   ASSIGN
     chRecv.next_filled := chRecv.filled;
     chRecv.next_received :=
@@ -317,21 +299,21 @@ MODULE __pid2_Worker(running_pid, pid, chRecv, chSend)
     chSend.next_filled :=
       case
         running_pid = pid & state = state10 & next_state = state11 : FALSE;
-        running_pid = pid & state = state5 & next_state = state6 : TRUE;
+        running_pid = pid & state = state4 & next_state = state6 : TRUE;
         running_pid = pid & state = state6 & next_state = state7 : FALSE;
-        running_pid = pid & state = state9 & next_state = state10 : TRUE;
+        running_pid = pid & state = state8 & next_state = state10 : TRUE;
         TRUE : chSend.filled;
       esac;
     chSend.next_received :=
       case
-        running_pid = pid & state = state5 & next_state = state6 : FALSE;
-        running_pid = pid & state = state9 & next_state = state10 : FALSE;
+        running_pid = pid & state = state4 & next_state = state6 : FALSE;
+        running_pid = pid & state = state8 & next_state = state10 : FALSE;
         TRUE : chSend.received;
       esac;
     chSend.next_value_0 :=
       case
-        running_pid = pid & state = state5 & next_state = state6 : NotReady;
-        running_pid = pid & state = state9 & next_state = state10 : Ready;
+        running_pid = pid & state = state4 & next_state = state6 : NotReady;
+        running_pid = pid & state = state8 & next_state = state10 : Ready;
         TRUE : chSend.value_0;
       esac;
     init(state) := state0;
@@ -347,15 +329,15 @@ MODULE __pid2_Worker(running_pid, pid, chRecv, chSend)
         running_pid = pid & state = state0 & ((TRUE)) : {state1};
         running_pid = pid & state = state1 & ((chRecv.filled & !chRecv.received)) : {state2};
         running_pid = pid & state = state10 & (((chSend.filled) & (chSend.received))) : {state11};
-        running_pid = pid & state = state11 & ((TRUE)) : {state8};
-        running_pid = pid & state = state2 : {state5, state9};
+        running_pid = pid & state = state11 & ((TRUE)) : {state9};
+        running_pid = pid & state = state2 : {state4, state8};
         running_pid = pid & state = state3 & ((chRecv.filled & !chRecv.received)) : {state12};
-        running_pid = pid & state = state4 & ((TRUE)) : {state3};
-        running_pid = pid & state = state5 & ((!(chSend.filled))) : {state6};
+        running_pid = pid & state = state4 & ((!(chSend.filled))) : {state6};
+        running_pid = pid & state = state5 & ((TRUE)) : {state3};
         running_pid = pid & state = state6 & (((chSend.filled) & (chSend.received))) : {state7};
-        running_pid = pid & state = state7 & ((TRUE)) : {state4};
-        running_pid = pid & state = state8 & ((TRUE)) : {state3};
-        running_pid = pid & state = state9 & ((!(chSend.filled))) : {state10};
+        running_pid = pid & state = state7 & ((TRUE)) : {state5};
+        running_pid = pid & state = state8 & ((!(chSend.filled))) : {state10};
+        running_pid = pid & state = state9 & ((TRUE)) : {state3};
         TRUE : state;
       esac;
 
