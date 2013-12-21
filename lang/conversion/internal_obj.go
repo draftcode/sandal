@@ -327,11 +327,15 @@ func (x intInternalArrayVar) Assignments(varName string) []intAssign {
 func (x intInternalLiteral) Assignments(varName string) []intAssign {
 	return []intAssign{{varName, x.String()}}
 }
-func (x intInternalNot) Assignments(varName string) []intAssign { return x.Sub.Assignments(varName) }
-func (x intInternalUnarySub) Assignments(varName string) []intAssign {
-	return x.Sub.Assignments(varName)
+func (x intInternalNot) Assignments(varName string) []intAssign {
+	return []intAssign{{varName, x.String()}}
 }
-func (x intInternalParen) Assignments(varName string) []intAssign { return x.Sub.Assignments(varName) }
+func (x intInternalUnarySub) Assignments(varName string) []intAssign {
+	return []intAssign{{varName, x.String()}}
+}
+func (x intInternalParen) Assignments(varName string) []intAssign {
+	return []intAssign{{varName, x.String()}}
+}
 func (x intInternalBinOp) Assignments(varName string) []intAssign {
 	// TODO: this cannot encode nonblock_recv(...) && nonblock_recv(...)
 	return []intAssign{{varName, x.String()}}

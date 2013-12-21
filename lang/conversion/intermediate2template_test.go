@@ -115,20 +115,17 @@ func TestConvertProcModuleToTemplate(t *testing.T) {
 			"state0": []intTransition{
 				{
 					Condition: "",
-					Actions: map[intState][]intAssign{
-						"state1": nil,
-					},
+					NextState: "state1",
 				},
 			},
 			"state1": []intTransition{
 				{
 					Condition: "!ch0.filled",
-					Actions: map[intState][]intAssign{
-						"state2": []intAssign{
-							{"ch0.next_filled", "TRUE"},
-							{"ch0.next_received", "FALSE"},
-							{"ch0.next_value_0", "TRUE"},
-						},
+					NextState: "state2",
+					Actions: []intAssign{
+						{"ch0.next_filled", "TRUE"},
+						{"ch0.next_received", "FALSE"},
+						{"ch0.next_value_0", "TRUE"},
 					},
 				},
 			},

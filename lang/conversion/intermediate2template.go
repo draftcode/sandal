@@ -160,10 +160,8 @@ func collectStates(mod intProcModule) []string {
 	for state, intTrans := range mod.Trans {
 		m[string(state)] = true
 		for _, tr := range intTrans {
-			for nextState, _ := range tr.Actions {
-				if nextState != "" {
-					m[string(nextState)] = true
-				}
+			if tr.NextState != "" {
+				m[string(tr.NextState)] = true
 			}
 		}
 	}
@@ -183,19 +181,17 @@ func buildStateTransition(mod intProcModule) ([]string, []caseTmplCase) {
 		conds := []string{}
 		nextStateAndCond := make(map[string][]string)
 		for _, tr := range intTrans {
-			for nextState, _ := range tr.Actions {
-				if nextState != "" {
-					cond := tr.Condition
-					if cond == "" {
-						cond = "TRUE"
-					}
-					nextStateAndCond[string(nextState)] = append(
-						nextStateAndCond[string(nextState)],
-						cond,
-					)
-					nextStates = append(nextStates, string(nextState))
-					conds = append(conds, fmt.Sprintf("(%s)", cond))
+			if tr.NextState != "" {
+				cond := tr.Condition
+				if cond == "" {
+					cond = "TRUE"
 				}
+				nextStateAndCond[string(tr.NextState)] = append(
+					nextStateAndCond[string(tr.NextState)],
+					cond,
+				)
+				nextStates = append(nextStates, string(tr.NextState))
+				conds = append(conds, fmt.Sprintf("(%s)", cond))
 			}
 		}
 
@@ -222,19 +218,17 @@ func buildAssignments(mod intProcModule) []tmplAssign {
 	assignss := make(map[string][]caseTmplCase)
 	for state, intTrans := range mod.Trans {
 		for _, tr := range intTrans {
-			for nextState, assigns := range tr.Actions {
-				cond := ""
-				if nextState == "" {
-					cond = fmt.Sprintf("running_pid = pid & state = %s", state)
-				} else {
-					cond = fmt.Sprintf("running_pid = pid & state = %s & next_state = %s", state, nextState)
-				}
-				for _, assign := range assigns {
-					assignss[assign.LHS] = append(
-						assignss[assign.LHS],
-						caseTmplCase{cond, assign.RHS + ";"},
-					)
-				}
+			cond := ""
+			if tr.NextState == "" {
+				cond = fmt.Sprintf("running_pid = pid & state = %s", state)
+			} else {
+				cond = fmt.Sprintf("running_pid = pid & state = %s & next_state = %s", state, tr.NextState)
+			}
+			for _, assign := range tr.Actions {
+				assignss[assign.LHS] = append(
+					assignss[assign.LHS],
+					caseTmplCase{cond, assign.RHS + ";"},
+				)
 			}
 		}
 	}

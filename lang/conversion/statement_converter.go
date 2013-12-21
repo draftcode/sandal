@@ -107,13 +107,14 @@ func (x *intStatementConverter) genRealName(name string) string {
 
 // ========================================
 
-func (x *intStatementConverter) convertConstantDefinition(stmt ConstantDefinition) error {
+func (x *intStatementConverter) convertConstantDefinition(stmt ConstantDefinition) {
 	panic("not implemented")
 }
-func (x *intStatementConverter) convertLabelledStatement(stmt LabelledStatement) error {
-	panic("not implemented")
+func (x *intStatementConverter) convertLabelledStatement(stmt LabelledStatement) {
+	x.labelToState[stmt.Label] = x.currentState
+	x.convertStatement(stmt.Statement)
 }
-func (x *intStatementConverter) convertBlockStatement(stmt BlockStatement) error {
+func (x *intStatementConverter) convertBlockStatement(stmt BlockStatement) {
 	nextState := x.genNextState()
 	x.pushEnv()
 	for _, stmt := range stmt.Statements {
@@ -121,38 +122,33 @@ func (x *intStatementConverter) convertBlockStatement(stmt BlockStatement) error
 	}
 	x.popEnv()
 	x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
-		Actions: map[intState][]intAssign{
-			nextState: nil,
-		},
+		NextState: nextState,
 	})
 	x.currentState = nextState
-	return nil
 }
-func (x *intStatementConverter) convertVarDeclStatement(stmt VarDeclStatement) error {
+func (x *intStatementConverter) convertVarDeclStatement(stmt VarDeclStatement) {
 	nextState := x.genNextState()
 
 	realName := x.genRealName(stmt.Name)
 	nextRealName := fmt.Sprintf("next(%s)", realName)
 	var condition string = ""
-	actions := make(map[intState][]intAssign)
+	actions := []intAssign{}
 	if stmt.Initializer != nil {
 		intExprObj := expressionToInternalObj(stmt.Initializer, x.env)
 		condition = intExprObj.Condition()
-		actions[nextState] = intExprObj.Assignments(nextRealName)
-	} else {
-		actions[nextState] = []intAssign{}
+		actions = intExprObj.Assignments(nextRealName)
 	}
 	x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
 		Condition: condition,
+		NextState: nextState,
 		Actions:   actions,
 	})
 	x.vars = append(x.vars, intVar{realName, convertTypeToString(stmt.Type, x.env)})
 	x.env.add(stmt.Name, intInternalPrimitiveVar{realName, stmt.Type})
 	x.defaults[nextRealName] = realName
 	x.currentState = nextState
-	return nil
 }
-func (x *intStatementConverter) convertIfStatement(stmt IfStatement) error {
+func (x *intStatementConverter) convertIfStatement(stmt IfStatement) {
 	nextState := x.genNextState()
 	trueBranchState := x.genNextState()
 	falseBranchState := x.genNextState()
@@ -164,15 +160,11 @@ func (x *intStatementConverter) convertIfStatement(stmt IfStatement) error {
 		}
 		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
 			Condition: intExprObj.String(),
-			Actions: map[intState][]intAssign{
-				trueBranchState: nil,
-			},
+			NextState: trueBranchState,
 		})
 		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
 			Condition: "!(" + intExprObj.String() + ")",
-			Actions: map[intState][]intAssign{
-				falseBranchState: nil,
-			},
+			NextState: falseBranchState,
 		})
 	}
 	{
@@ -183,9 +175,7 @@ func (x *intStatementConverter) convertIfStatement(stmt IfStatement) error {
 		}
 		x.popEnv()
 		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
-			Actions: map[intState][]intAssign{
-				nextState: nil,
-			},
+			NextState: nextState,
 		})
 	}
 	{
@@ -196,15 +186,12 @@ func (x *intStatementConverter) convertIfStatement(stmt IfStatement) error {
 		}
 		x.popEnv()
 		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
-			Actions: map[intState][]intAssign{
-				nextState: nil,
-			},
+			NextState: nextState,
 		})
 	}
 	x.currentState = nextState
-	return nil
 }
-func (x *intStatementConverter) convertAssignmentStatement(stmt AssignmentStatement) error {
+func (x *intStatementConverter) convertAssignmentStatement(stmt AssignmentStatement) {
 	nextState := x.genNextState()
 	intExprObj := expressionToInternalObj(stmt.Expr, x.env)
 	if intExprObj.Steps() > 1 {
@@ -212,59 +199,66 @@ func (x *intStatementConverter) convertAssignmentStatement(stmt AssignmentStatem
 	}
 	x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
 		Condition: intExprObj.Condition(),
-		Actions: map[intState][]intAssign{
-			nextState: intExprObj.Assignments(fmt.Sprintf("next(%s)", stmt.Variable)),
-		},
+		NextState: nextState,
+		Actions: intExprObj.Assignments(fmt.Sprintf("next(%s)", stmt.Variable)),
 	})
 	x.currentState = nextState
-	return nil
 }
-func (x *intStatementConverter) convertOpAssignmentStatement(stmt OpAssignmentStatement) error {
-	panic("not implemented")
+func (x *intStatementConverter) convertOpAssignmentStatement(stmt OpAssignmentStatement) {
+	nextState := x.genNextState()
+	intExprObj := expressionToInternalObj(BinOpExpression{
+		IdentifierExpression{Name: stmt.Variable}, stmt.Operator, stmt.Expr,
+	}, x.env)
+	if intExprObj.Steps() > 1 {
+		panic("Steps constraint violation")
+	}
+	x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
+		Condition: intExprObj.Condition(),
+		NextState: nextState,
+		Actions: intExprObj.Assignments(fmt.Sprintf("next(%s)", stmt.Variable)),
+	})
+	x.currentState = nextState
 }
-func (x *intStatementConverter) convertChoiceStatement(stmt ChoiceStatement) error {
+func (x *intStatementConverter) convertChoiceStatement(stmt ChoiceStatement) {
 	nextState := x.genNextState()
 	currentState := x.currentState
 	for _, block := range stmt.Blocks {
 		choicedState := x.genNextState()
 		x.trans[currentState] = append(x.trans[currentState], intTransition{
-			Actions: map[intState][]intAssign{
-				choicedState: nil,
-			},
+			NextState: choicedState,
 		})
 		x.currentState = choicedState
 		x.pushEnv()
 		x.convertStatement(block)
 		x.popEnv()
 		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
-			Actions: map[intState][]intAssign{
-				nextState: nil,
-			},
+			NextState: nextState,
 		})
 	}
 	x.currentState = nextState
-	return nil
 }
-func (x *intStatementConverter) convertRecvStatement(stmt RecvStatement) error {
+func (x *intStatementConverter) convertRecvStatement(stmt RecvStatement) {
 	nextState := x.genNextState()
 
 	ch, args := convertChannelExpr(stmt, x.env)
 	chType := ch.GetType()
 
-	actions := make(map[intState][]intAssign)
+	actions := []intAssign{}
 	switch chType.(type) {
 	case HandshakeChannelType:
-		actions[nextState] = []intAssign{
-			{LHS: fmt.Sprintf("%s.next_received", ch), RHS: "TRUE"},
-		}
+		actions = append(actions, intAssign{
+			LHS: fmt.Sprintf("%s.next_received", ch),
+			RHS: "TRUE",
+		})
 		for i, arg := range args {
-			actions[nextState] = append(actions[nextState], intAssign{
+			actions = append(actions, intAssign{
 				LHS: fmt.Sprintf("next(%s)", arg),
 				RHS: fmt.Sprintf("%s.value_%d", ch, i),
 			})
 		}
 		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
 			Condition: fmt.Sprintf("%s.filled & !%s.received", ch, ch),
+			NextState: nextState,
 			Actions:   actions,
 		})
 	case BufferedChannelType:
@@ -273,42 +267,45 @@ func (x *intStatementConverter) convertRecvStatement(stmt RecvStatement) error {
 		panic("unknown channel type")
 	}
 	x.currentState = nextState
-	return nil
 }
-func (x *intStatementConverter) convertPeekStatement(stmt PeekStatement) error {
+func (x *intStatementConverter) convertPeekStatement(stmt PeekStatement) {
 	panic("not implemented")
 }
-func (x *intStatementConverter) convertSendStatement(stmt SendStatement) error {
+func (x *intStatementConverter) convertSendStatement(stmt SendStatement) {
 	nextState := x.genNextState()
 
 	ch, args := convertChannelExpr(stmt, x.env)
 	chType := ch.GetType()
 
-	actions := make(map[intState][]intAssign)
+	actions := []intAssign{}
 	switch chType.(type) {
 	case HandshakeChannelType:
-		actions[nextState] = []intAssign{
-			{LHS: fmt.Sprintf("%s.next_filled", ch), RHS: "TRUE"},
-			{LHS: fmt.Sprintf("%s.next_received", ch), RHS: "FALSE"},
-		}
+		actions = append(actions, intAssign{
+			LHS: fmt.Sprintf("%s.next_filled", ch),
+			RHS: "TRUE",
+		})
+		actions = append(actions, intAssign{
+			LHS: fmt.Sprintf("%s.next_received", ch),
+			RHS: "FALSE",
+		})
 		for i, arg := range args {
-			actions[nextState] = append(actions[nextState], intAssign{
+			actions = append(actions, intAssign{
 				LHS: fmt.Sprintf("%s.next_value_%d", ch, i),
 				RHS: arg.String(),
 			})
 		}
 		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
 			Condition: fmt.Sprintf("!(%s.filled)", ch),
+			NextState: nextState,
 			Actions:   actions,
 		})
 		x.currentState = nextState
 		nextState = x.genNextState()
 		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
 			Condition: fmt.Sprintf("(%s.filled) & (%s.received)", ch, ch),
-			Actions: map[intState][]intAssign{
-				nextState: []intAssign{
-					{LHS: fmt.Sprintf("%s.next_filled", ch), RHS: "FALSE"},
-				},
+			NextState: nextState,
+			Actions: []intAssign{
+				{LHS: fmt.Sprintf("%s.next_filled", ch), RHS: "FALSE"},
 			},
 		})
 	case BufferedChannelType:
@@ -317,10 +314,11 @@ func (x *intStatementConverter) convertSendStatement(stmt SendStatement) error {
 		panic("unknown channel type")
 	}
 	x.currentState = nextState
-	return nil
 }
-func (x *intStatementConverter) convertForStatement(stmt ForStatement) error { panic("not implemented") }
-func (x *intStatementConverter) convertForInStatement(stmt ForInStatement) error {
+func (x *intStatementConverter) convertForStatement(stmt ForStatement) {
+	panic("not implemented")
+}
+func (x *intStatementConverter) convertForInStatement(stmt ForInStatement) {
 	switch container := expressionToInternalObj(stmt.Container, x.env).(type) {
 	case intInternalArrayVar:
 		savedBreakState := x.breakToState
@@ -337,9 +335,7 @@ func (x *intStatementConverter) convertForInStatement(stmt ForInStatement) error
 			x.popEnv()
 		}
 		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
-			Actions: map[intState][]intAssign{
-				x.breakToState: nil,
-			},
+			NextState: x.breakToState,
 		})
 		x.currentState = x.breakToState
 		x.breakToState = savedBreakState
@@ -347,32 +343,50 @@ func (x *intStatementConverter) convertForInStatement(stmt ForInStatement) error
 		// TODO
 		panic("not implemented")
 	}
-	return nil
 }
-func (x *intStatementConverter) convertForInRangeStatement(stmt ForInRangeStatement) error {
+func (x *intStatementConverter) convertForInRangeStatement(stmt ForInRangeStatement) {
 	panic("not implemented")
 }
-func (x *intStatementConverter) convertBreakStatement(stmt BreakStatement) error {
+func (x *intStatementConverter) convertBreakStatement(stmt BreakStatement) {
 	panic("not implemented")
 }
-func (x *intStatementConverter) convertGotoStatement(stmt GotoStatement) error {
-	panic("not implemented")
-}
-func (x *intStatementConverter) convertSkipStatement(stmt SkipStatement) error {
+func (x *intStatementConverter) convertGotoStatement(stmt GotoStatement) {
 	nextState := x.genNextState()
+	jumpState := x.labelToState[stmt.Label]
+	if jumpState == "" {
+		panic("Invalid jump label")
+	}
 	x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
-		Actions: map[intState][]intAssign{
-			nextState: nil,
-		},
+		NextState: jumpState,
 	})
 	x.currentState = nextState
-	return nil
 }
-func (x *intStatementConverter) convertExprStatement(stmt ExprStatement) error {
-	panic("not implemented")
+func (x *intStatementConverter) convertSkipStatement(stmt SkipStatement) {
+	nextState := x.genNextState()
+	x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
+		NextState: nextState,
+	})
+	x.currentState = nextState
 }
-func (x *intStatementConverter) convertNullStatement(stmt NullStatement) error {
-	panic("not implemented")
+func (x *intStatementConverter) convertExprStatement(stmt ExprStatement) {
+	nextState := x.genNextState()
+	intExprObj := expressionToInternalObj(stmt.Expr, x.env)
+	if intExprObj.Steps() > 1 {
+		panic("Steps constraint violation")
+	}
+	x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
+		Condition: intExprObj.Condition(),
+		NextState: nextState,
+		Actions: intExprObj.Assignments(""),
+	})
+	x.currentState = nextState
+}
+func (x *intStatementConverter) convertNullStatement(stmt NullStatement) {
+	nextState := x.genNextState()
+	x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
+		NextState: nextState,
+	})
+	x.currentState = nextState
 }
 
 // ========================================

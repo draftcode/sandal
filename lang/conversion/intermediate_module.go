@@ -48,7 +48,8 @@ type (
 
 	intTransition struct {
 		Condition  string
-		Actions    map[intState][]intAssign
+		NextState  intState
+		Actions    []intAssign
 	}
 
 	intAssign struct {
