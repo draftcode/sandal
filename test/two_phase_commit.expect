@@ -94,12 +94,12 @@ MODULE __pid0_Arbiter(running_pid, pid, __elem0_chRecvs, __elem1_chRecvs, __elem
     resp : {Ready, NotReady, Commit, Abort};
     resp_2 : {Ready, NotReady, Commit, Abort};
     state : {state0, state1, state10, state11, state12, state13, state14, state15, state16, state17, state18, state19, state2, state20, state21, state22, state23, state24, state25, state26, state27, state28, state29, state3, state30, state31, state32, state4, state5, state6, state7, state8, state9};
-  TRANS state = state15 & nextState = state17 -> resp_2!=Ready;
-  TRANS state = state15 & nextState = state18 -> !(resp_2!=Ready);
-  TRANS state = state7 & nextState = state21 -> all_ready;
-  TRANS state = state7 & nextState = state22 -> !(all_ready);
-  TRANS state = state9 & nextState = state11 -> resp!=Ready;
-  TRANS state = state9 & nextState = state12 -> !(resp!=Ready);
+  TRANS state = state15 & next_state = state17 -> resp_2!=Ready;
+  TRANS state = state15 & next_state = state18 -> !(resp_2!=Ready);
+  TRANS state = state7 & next_state = state21 -> all_ready;
+  TRANS state = state7 & next_state = state22 -> !(all_ready);
+  TRANS state = state9 & next_state = state11 -> resp!=Ready;
+  TRANS state = state9 & next_state = state12 -> !(resp!=Ready);
   ASSIGN
     __elem0_chRecvs.next_filled := __elem0_chRecvs.filled;
     __elem0_chRecvs.next_received :=
@@ -224,8 +224,8 @@ MODULE __pid1_Worker(running_pid, pid, chRecv, chSend)
     next_state : {state0, state1, state10, state11, state12, state2, state3, state4, state5, state6, state7, state8, state9};
     resp : {Ready, NotReady, Commit, Abort};
     state : {state0, state1, state10, state11, state12, state2, state3, state4, state5, state6, state7, state8, state9};
-  TRANS state = state2 & nextState = state4 -> TRUE;
-  TRANS state = state2 & nextState = state8 -> TRUE;
+  TRANS state = state2 & next_state = state4 -> TRUE;
+  TRANS state = state2 & next_state = state8 -> TRUE;
   ASSIGN
     chRecv.next_filled := chRecv.filled;
     chRecv.next_received :=
@@ -285,8 +285,8 @@ MODULE __pid2_Worker(running_pid, pid, chRecv, chSend)
     next_state : {state0, state1, state10, state11, state12, state2, state3, state4, state5, state6, state7, state8, state9};
     resp : {Ready, NotReady, Commit, Abort};
     state : {state0, state1, state10, state11, state12, state2, state3, state4, state5, state6, state7, state8, state9};
-  TRANS state = state2 & nextState = state4 -> TRUE;
-  TRANS state = state2 & nextState = state8 -> TRUE;
+  TRANS state = state2 & next_state = state4 -> TRUE;
+  TRANS state = state2 & next_state = state8 -> TRUE;
   ASSIGN
     chRecv.next_filled := chRecv.filled;
     chRecv.next_received :=

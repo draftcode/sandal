@@ -206,7 +206,7 @@ func buildStateTransition(mod intProcModule) ([]string, []caseTmplCase) {
 				cond := strings.Join(uniqAndSort(conds), " | ")
 				trans = append(
 					trans,
-					fmt.Sprintf("state = %s & nextState = %s -> %s", state, nextState, cond),
+					fmt.Sprintf("state = %s & next_state = %s -> %s", state, nextState, cond),
 				)
 			}
 		} else {
