@@ -131,18 +131,12 @@ func (x *intStatementConverter) convertVarDeclStatement(stmt VarDeclStatement) {
 
 	realName := x.genRealName(stmt.Name)
 	nextRealName := fmt.Sprintf("next(%s)", realName)
-	var condition string = ""
-	actions := []intAssign{}
 	if stmt.Initializer != nil {
 		intExprObj := expressionToInternalObj(stmt.Initializer, x.env)
-		condition = intExprObj.Condition()
-		actions = intExprObj.Assignments(nextRealName)
+		x.trans[x.currentState] = append(x.trans[x.currentState], intExprObj.Transition(nextState, nextRealName)...)
+	} else {
+		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{NextState: nextState})
 	}
-	x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
-		Condition: condition,
-		NextState: nextState,
-		Actions:   actions,
-	})
 	x.vars = append(x.vars, intVar{realName, convertTypeToString(stmt.Type, x.env)})
 	x.env.add(stmt.Name, intInternalPrimitiveVar{realName, stmt.Type})
 	x.defaults[nextRealName] = realName
@@ -197,11 +191,7 @@ func (x *intStatementConverter) convertAssignmentStatement(stmt AssignmentStatem
 	if intExprObj.Steps() > 1 {
 		panic("Steps constraint violation")
 	}
-	x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
-		Condition: intExprObj.Condition(),
-		NextState: nextState,
-		Actions: intExprObj.Assignments(fmt.Sprintf("next(%s)", stmt.Variable)),
-	})
+	x.trans[x.currentState] = append(x.trans[x.currentState], intExprObj.Transition(nextState, fmt.Sprintf("next(%s)", stmt.Variable))...)
 	x.currentState = nextState
 }
 func (x *intStatementConverter) convertOpAssignmentStatement(stmt OpAssignmentStatement) {
@@ -212,11 +202,7 @@ func (x *intStatementConverter) convertOpAssignmentStatement(stmt OpAssignmentSt
 	if intExprObj.Steps() > 1 {
 		panic("Steps constraint violation")
 	}
-	x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
-		Condition: intExprObj.Condition(),
-		NextState: nextState,
-		Actions: intExprObj.Assignments(fmt.Sprintf("next(%s)", stmt.Variable)),
-	})
+	x.trans[x.currentState] = append(x.trans[x.currentState], intExprObj.Transition(nextState, fmt.Sprintf("next(%s)", stmt.Variable))...)
 	x.currentState = nextState
 }
 func (x *intStatementConverter) convertChoiceStatement(stmt ChoiceStatement) {
@@ -374,11 +360,7 @@ func (x *intStatementConverter) convertExprStatement(stmt ExprStatement) {
 	if intExprObj.Steps() > 1 {
 		panic("Steps constraint violation")
 	}
-	x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
-		Condition: intExprObj.Condition(),
-		NextState: nextState,
-		Actions: intExprObj.Assignments(""),
-	})
+	x.trans[x.currentState] = append(x.trans[x.currentState], intExprObj.Transition(nextState, "")...)
 	x.currentState = nextState
 }
 func (x *intStatementConverter) convertNullStatement(stmt NullStatement) {
