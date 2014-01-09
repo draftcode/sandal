@@ -14,7 +14,6 @@ func TestConvertASTToIntModule(t *testing.T) {
 				{
 					Name: "ch0",
 					Type: HandshakeChannelType{
-						IsUnstable: false,
 						Elems:      []Type{NamedType{"bool"}},
 					},
 				},
@@ -37,7 +36,6 @@ func TestConvertASTToIntModule(t *testing.T) {
 				ChannelVar{
 					Name: "ch",
 					Type: HandshakeChannelType{
-						IsUnstable: false,
 						Elems:      []Type{NamedType{"bool"}},
 					},
 				},
