@@ -30,6 +30,7 @@ func TestScanSymbols(t *testing.T) {
 	testScanner(t, ",", ',', ",")
 	testScanner(t, ":", ':', ":")
 	testScanner(t, ";", ';', ";")
+	testScanner(t, "@", '@', "@")
 
 	testScanner(t, "+", ADD, "+")
 	testScanner(t, "-", SUB, "-")
@@ -103,7 +104,6 @@ func TestScanKeyword(t *testing.T) {
 	testScanner(t, "to", TO, "to")
 	testScanner(t, "init", INIT, "init")
 	testScanner(t, "goto", GOTO, "goto")
-	testScanner(t, "unstable", UNSTABLE, "unstable")
 	testScanner(t, "skip", SKIP, "skip")
 	testScanner(t, "true", TRUE, "true")
 	testScanner(t, "false", FALSE, "false")

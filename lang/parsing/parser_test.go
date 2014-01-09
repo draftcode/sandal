@@ -11,8 +11,10 @@ func parse(t *testing.T, src string, expect interface{}) {
 	s := new(Scanner)
 	s.Init([]rune(src), 0)
 	definitions := Parse(s)
-	if !reflect.DeepEqual(definitions, expect) {
-		t.Errorf("\nExpected %s\nGot      %s", pp.PP(expect), pp.PP(definitions))
+	expectPP := pp.PP(expect)
+	actualPP := pp.PP(definitions)
+	if expectPP != actualPP {
+		t.Errorf("\nExpected %s\nGot      %s", expectPP, actualPP)
 	}
 }
 
@@ -24,8 +26,8 @@ func TestDataDefinition(t *testing.T) {
 func TestParseModuleDefinition(t *testing.T) {
 	parse(t, "module A(ch channel { bool }, chs []channel { bit }) { init { }; };",
 		[]Definition{ModuleDefinition{Pos{1, 1}, "A",
-			[]Parameter{Parameter{"ch", HandshakeChannelType{false, []Type{NamedType{"bool"}}}},
-				Parameter{"chs", ArrayType{HandshakeChannelType{false, []Type{NamedType{"bit"}}}}}},
+			[]Parameter{Parameter{"ch", HandshakeChannelType{[]Type{NamedType{"bool"}}}},
+				Parameter{"chs", ArrayType{HandshakeChannelType{[]Type{NamedType{"bit"}}}}}},
 			[]Definition{InitBlock{Pos: Pos{1, 56}}}}})
 }
 
@@ -36,8 +38,8 @@ func TestParseConstantDefinition(t *testing.T) {
 func TestParseProcDefinition(t *testing.T) {
 	parse(t, "proc A(ch channel { bool }, chs []channel { bit }) { ; };",
 		[]Definition{ProcDefinition{Pos{1, 1}, "A",
-			[]Parameter{Parameter{"ch", HandshakeChannelType{false, []Type{NamedType{"bool"}}}},
-				Parameter{"chs", ArrayType{HandshakeChannelType{false, []Type{NamedType{"bit"}}}}}},
+			[]Parameter{Parameter{"ch", HandshakeChannelType{[]Type{NamedType{"bool"}}}},
+				Parameter{"chs", ArrayType{HandshakeChannelType{[]Type{NamedType{"bit"}}}}}},
 			[]Statement{NullStatement{Pos{1, 54}}}}})
 }
 
@@ -45,11 +47,19 @@ func TestParseInitBlock(t *testing.T) {
 	parse(t, "init { };", []Definition{InitBlock{Pos: Pos{1, 1}}})
 	parse(t, "init { a : M(b) };",
 		[]Definition{InitBlock{Pos{1, 1}, []InitVar{
-			InstanceVar{Pos{1, 8}, "a", "M", []Expression{IdentifierExpression{Pos{1, 14}, "b"}}},
+			InstanceVar{Pos{1, 8}, "a", "M", []Expression{IdentifierExpression{Pos{1, 14}, "b"}}, []string{}},
+		}}})
+	parse(t, "init { a : M(b) @unstable };",
+		[]Definition{InitBlock{Pos{1, 1}, []InitVar{
+			InstanceVar{Pos{1, 8}, "a", "M", []Expression{IdentifierExpression{Pos{1, 14}, "b"}}, []string{"unstable"}},
 		}}})
 	parse(t, "init { a : channel { bool } };",
 		[]Definition{InitBlock{Pos{1, 1}, []InitVar{
-			ChannelVar{Pos{1, 8}, "a", HandshakeChannelType{false, []Type{NamedType{"bool"}}}},
+			ChannelVar{Pos{1, 8}, "a", HandshakeChannelType{[]Type{NamedType{"bool"}}}, []string{}},
+		}}})
+	parse(t, "init { a : channel { bool } @unstable };",
+		[]Definition{InitBlock{Pos{1, 1}, []InitVar{
+			ChannelVar{Pos{1, 8}, "a", HandshakeChannelType{[]Type{NamedType{"bool"}}}, []string{"unstable"}},
 		}}})
 }
 
@@ -186,14 +196,9 @@ func parseType(t *testing.T, src string, expect interface{}) {
 func TestParseType(t *testing.T) {
 	parseType(t, "bool", NamedType{"bool"})
 	parseType(t, "[]bool", ArrayType{NamedType{"bool"}})
-	parseType(t, "channel { bool }", HandshakeChannelType{false, []Type{NamedType{"bool"}}})
-	parseType(t, "unstable channel { bool }", HandshakeChannelType{true, []Type{NamedType{"bool"}}})
+	parseType(t, "channel { bool }", HandshakeChannelType{[]Type{NamedType{"bool"}}})
 	parseType(t, "channel [] { bool }",
-		BufferedChannelType{false, nil, []Type{NamedType{"bool"}}})
+		BufferedChannelType{nil, []Type{NamedType{"bool"}}})
 	parseType(t, "channel [1+2] { bool }",
-		BufferedChannelType{false, BinOpExpression{NumberExpression{Pos{1, 10+parseTypeOffset}, "1"}, "+", NumberExpression{Pos{1, 12+parseTypeOffset}, "2"}}, []Type{NamedType{"bool"}}})
-	parseType(t, "unstable channel [] { bool }",
-		BufferedChannelType{true, nil, []Type{NamedType{"bool"}}})
-	parseType(t, "unstable channel [1+2] { bool }",
-		BufferedChannelType{true, BinOpExpression{NumberExpression{Pos{1, 19+parseTypeOffset}, "1"}, "+", NumberExpression{Pos{1, 21+parseTypeOffset}, "2"}}, []Type{NamedType{"bool"}}})
+		BufferedChannelType{BinOpExpression{NumberExpression{Pos{1, 10+parseTypeOffset}, "1"}, "+", NumberExpression{Pos{1, 12+parseTypeOffset}, "2"}}, []Type{NamedType{"bool"}}})
 }

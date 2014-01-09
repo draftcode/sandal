@@ -34,7 +34,6 @@ var keywords = map[string]int{
 	"to":            TO,
 	"init":          INIT,
 	"goto":          GOTO,
-	"unstable":      UNSTABLE,
 	"skip":          SKIP,
 	"true":          TRUE,
 	"false":         FALSE,
@@ -98,7 +97,7 @@ func (s *Scanner) Scan() (tok int, lit string, pos Pos) {
 		case '}', ')', ']':
 			nextInsertSemis = true;
 			fallthrough
-		case '{', '(', '[', ',', ':', ';':
+		case '{', '(', '[', ',', ':', ';', '@':
 			tok = int(ch)
 			lit = string(ch)
 		case '+':

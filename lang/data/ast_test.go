@@ -55,12 +55,11 @@ func TestArrayTypeEquality(t *testing.T) {
 }
 
 func TestHandshakeChannelTypeEquality(t *testing.T) {
-	chTypeA := HandshakeChannelType{false, []Type{NamedType{"int"}}}
-	chTypeB := HandshakeChannelType{false, []Type{NamedType{"int"}}}
-	chTypeC := HandshakeChannelType{false, []Type{NamedType{"bool"}}}
-	chTypeD := HandshakeChannelType{true, []Type{NamedType{"int"}}}
-	chTypeE := HandshakeChannelType{false, []Type{NamedType{"int"}, NamedType{"int"}}}
-	bufCh := BufferedChannelType{false, nil, []Type{NamedType{"int"}}}
+	chTypeA := HandshakeChannelType{[]Type{NamedType{"int"}}}
+	chTypeB := HandshakeChannelType{[]Type{NamedType{"int"}}}
+	chTypeC := HandshakeChannelType{[]Type{NamedType{"bool"}}}
+	chTypeD := HandshakeChannelType{[]Type{NamedType{"int"}, NamedType{"int"}}}
+	bufCh := BufferedChannelType{nil, []Type{NamedType{"int"}}}
 	if !chTypeA.Equal(chTypeB) {
 		t.Error(`Expect channel {"int"} is equal to channel {"int"}`)
 	}
@@ -70,22 +69,18 @@ func TestHandshakeChannelTypeEquality(t *testing.T) {
 	if chTypeA.Equal(chTypeC) {
 		t.Error(`Expect channel {"int"} is not equal to channel {"bool"}`)
 	}
-	if !chTypeA.Equal(chTypeD) {
-		t.Error(`Expect channel {"int"} is equal to unstable channel {"int"}`)
-	}
-	if chTypeA.Equal(chTypeE) {
+	if chTypeA.Equal(chTypeD) {
 		t.Error(`Expect channel {"int"} is not equal to channel {"int", "int"}`)
 	}
 }
 
 func TestBufferedChannelTypeEquality(t *testing.T) {
-	chTypeA := BufferedChannelType{false, nil, []Type{NamedType{"int"}}}
-	chTypeB := BufferedChannelType{false, nil, []Type{NamedType{"int"}}}
-	chTypeC := BufferedChannelType{false, nil, []Type{NamedType{"bool"}}}
-	chTypeD := BufferedChannelType{true, nil, []Type{NamedType{"int"}}}
-	chTypeE := BufferedChannelType{false, &NumberExpression{Lit: "1"}, []Type{NamedType{"int"}}}
-	chTypeF := BufferedChannelType{false, nil, []Type{NamedType{"int"}, NamedType{"int"}}}
-	handshakeType := HandshakeChannelType{false, []Type{NamedType{"int"}}}
+	chTypeA := BufferedChannelType{nil, []Type{NamedType{"int"}}}
+	chTypeB := BufferedChannelType{nil, []Type{NamedType{"int"}}}
+	chTypeC := BufferedChannelType{nil, []Type{NamedType{"bool"}}}
+	chTypeD := BufferedChannelType{&NumberExpression{Lit: "1"}, []Type{NamedType{"int"}}}
+	chTypeE := BufferedChannelType{nil, []Type{NamedType{"int"}, NamedType{"int"}}}
+	handshakeType := HandshakeChannelType{[]Type{NamedType{"int"}}}
 	if !chTypeA.Equal(chTypeB) {
 		t.Error(`Expect channel [] {"int"} is equal to channel [] {"int"}`)
 	}
@@ -96,12 +91,9 @@ func TestBufferedChannelTypeEquality(t *testing.T) {
 		t.Error(`Expect channel [] {"int"} is not equal to channel [] {"bool"}`)
 	}
 	if !chTypeA.Equal(chTypeD) {
-		t.Error(`Expect channel [] {"int"} is equal to unstable channel [] {"int"}`)
-	}
-	if !chTypeA.Equal(chTypeE) {
 		t.Error(`Expect channel [] {"int"} is equal to channel [1] {"int"}`)
 	}
-	if chTypeA.Equal(chTypeF) {
+	if chTypeA.Equal(chTypeE) {
 		t.Error(`Expect channel [] {"int"} is not equal to channel [] {"int", "int"}`)
 	}
 }

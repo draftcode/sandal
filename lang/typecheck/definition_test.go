@@ -16,14 +16,14 @@ func TestConstantDefinitionTypeCheck(t *testing.T) {
 
 func TestInitBlockTypeCheck(t *testing.T) {
 	expectValid(t, InitBlock{Pos{}, []InitVar{
-		ChannelVar{Pos{}, "ch", HandshakeChannelType{false, []Type{NamedType{"int"}}}},
+		ChannelVar{Pos{}, "ch", HandshakeChannelType{[]Type{NamedType{"int"}}}, nil},
 	}}, newTypeEnv())
 	expectInvalid(t, InitBlock{Pos{}, []InitVar{
-		ChannelVar{Pos{}, "ch", HandshakeChannelType{false, []Type{NamedType{"int"}}}},
-		ChannelVar{Pos{}, "ch", HandshakeChannelType{false, []Type{NamedType{"int"}}}},
+		ChannelVar{Pos{}, "ch", HandshakeChannelType{[]Type{NamedType{"int"}}}, nil},
+		ChannelVar{Pos{}, "ch", HandshakeChannelType{[]Type{NamedType{"int"}}}, nil},
 	}}, newTypeEnv())
 	expectInvalid(t, InitBlock{Pos{}, []InitVar{
-		ChannelVar{Pos{}, "a", NamedType{"int"}},
+		ChannelVar{Pos{}, "a", NamedType{"int"}, nil},
 	}}, newTypeEnv())
 
 	{
@@ -32,31 +32,31 @@ func TestInitBlockTypeCheck(t *testing.T) {
 		typeEnv.add("a", NamedType{"int"})
 		typeEnv.add("b", NamedType{"bool"})
 		expectValid(t, InitBlock{Pos{}, []InitVar{
-			InstanceVar{Pos{}, "proc1", "A", []Expression{IdentifierExpression{Pos{}, "a"}}},
+			InstanceVar{Pos{}, "proc1", "A", []Expression{IdentifierExpression{Pos{}, "a"}}, nil},
 		}}, typeEnv)
 		expectInvalid(t, InitBlock{Pos{}, []InitVar{
-			InstanceVar{Pos{}, "proc1", "a", []Expression{IdentifierExpression{Pos{}, "a"}}},
+			InstanceVar{Pos{}, "proc1", "a", []Expression{IdentifierExpression{Pos{}, "a"}}, nil},
 		}}, typeEnv)
 		expectInvalid(t, InitBlock{Pos{}, []InitVar{
-			InstanceVar{Pos{}, "proc1", "A", []Expression{IdentifierExpression{Pos{}, "a"}, IdentifierExpression{Pos{}, "a"}}},
+			InstanceVar{Pos{}, "proc1", "A", []Expression{IdentifierExpression{Pos{}, "a"}, IdentifierExpression{Pos{}, "a"}}, nil},
 		}}, typeEnv)
 		expectInvalid(t, InitBlock{Pos{}, []InitVar{
-			InstanceVar{Pos{}, "proc1", "A", []Expression{IdentifierExpression{Pos{}, "b"}}},
+			InstanceVar{Pos{}, "proc1", "A", []Expression{IdentifierExpression{Pos{}, "b"}}, nil},
 		}}, typeEnv)
 		expectInvalid(t, InitBlock{Pos{}, []InitVar{
-			InstanceVar{Pos{}, "proc1", "A", []Expression{IdentifierExpression{Pos{}, "c"}}},
+			InstanceVar{Pos{}, "proc1", "A", []Expression{IdentifierExpression{Pos{}, "c"}}, nil},
 		}}, typeEnv)
 		expectInvalid(t, InitBlock{Pos{}, []InitVar{
-			InstanceVar{Pos{}, "proc1", "A", []Expression{IdentifierExpression{Pos{}, "a"}}},
+			InstanceVar{Pos{}, "proc1", "A", []Expression{IdentifierExpression{Pos{}, "a"}}, nil},
 		}}, newTypeEnv())
 	}
 
 	{
 		typeEnv := newTypeEnv()
-		typeEnv.add("A", CallableType{[]Type{HandshakeChannelType{false, []Type{NamedType{"int"}}}}})
+		typeEnv.add("A", CallableType{[]Type{HandshakeChannelType{[]Type{NamedType{"int"}}}}})
 		expectValid(t, InitBlock{Pos{}, []InitVar{
-			InstanceVar{Pos{}, "proc1", "A", []Expression{IdentifierExpression{Pos{}, "ch"}}},
-			ChannelVar{Pos{}, "ch", HandshakeChannelType{false, []Type{NamedType{"int"}}}},
+			InstanceVar{Pos{}, "proc1", "A", []Expression{IdentifierExpression{Pos{}, "ch"}}, nil},
+			ChannelVar{Pos{}, "ch", HandshakeChannelType{[]Type{NamedType{"int"}}}, nil},
 		}}, typeEnv)
 	}
 }

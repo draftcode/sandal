@@ -372,6 +372,7 @@ type (
 		Pos  Pos
 		Name string
 		Type Type
+		Tags []string
 	}
 
 	InstanceVar struct {
@@ -379,6 +380,7 @@ type (
 		Name        string
 		ProcDefName string
 		Args        []Expression
+		Tags        []string
 	}
 
 	Type interface {
@@ -400,12 +402,10 @@ type (
 	}
 
 	HandshakeChannelType struct {
-		IsUnstable bool
-		Elems      []Type
+		Elems []Type
 	}
 
 	BufferedChannelType struct {
-		IsUnstable bool
 		BufferSize Expression
 		Elems      []Type
 	}

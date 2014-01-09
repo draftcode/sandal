@@ -26,6 +26,8 @@ type token struct {
 	typetypes   []data.Type
 	typetype    data.Type
 	identifiers []string
+	tags        []string
+	tag         string
 	blocks      []data.BlockStatement
 	initvars    []data.InitVar
 	initvar     data.InitVar
@@ -50,6 +52,8 @@ type token struct {
 %type<expressions> arguments_one
 %type<typetypes> types_one
 %type<typetype> type
+%type<tags> tags_zero tags_one
+%type<tag> tag
 %type<blocks> blocks_one
 
 %token<tok> IDENTIFIER
@@ -116,7 +120,6 @@ type token struct {
 %token<tok> TO
 %token<tok> INIT
 %token<tok> GOTO
-%token<tok> UNSTABLE
 %token<tok> SKIP
 %token<tok> TRUE
 %token<tok> FALSE
@@ -222,13 +225,13 @@ initvars_one
 		$$ = append([]data.InitVar{$1}, $3...)
 	}
 
-initvar	: IDENTIFIER ':' type
+initvar	: IDENTIFIER ':' type tags_zero
 	{
-		$$ = data.ChannelVar{Pos: $1.pos, Name: $1.lit, Type: $3}
+		$$ = data.ChannelVar{Pos: $1.pos, Name: $1.lit, Type: $3, Tags: $4}
 	}
-	| IDENTIFIER ':' IDENTIFIER '(' arguments_one ')'
+	| IDENTIFIER ':' IDENTIFIER '(' arguments_one ')' tags_zero
 	{
-		$$ = data.InstanceVar{Pos: $1.pos, Name: $1.lit, ProcDefName: $3.lit, Args: $5}
+		$$ = data.InstanceVar{Pos: $1.pos, Name: $1.lit, ProcDefName: $3.lit, Args: $5, Tags: $7}
 	}
 
 statements_zero
@@ -568,27 +571,41 @@ type	: IDENTIFIER
 	}
 	| CHANNEL '{' types_one '}'
 	{
-		$$ = data.HandshakeChannelType{IsUnstable: false, Elems: $3}
-	}
-	| UNSTABLE CHANNEL '{' types_one '}'
-	{
-		$$ = data.HandshakeChannelType{IsUnstable: true, Elems: $4}
+		$$ = data.HandshakeChannelType{Elems: $3}
 	}
 	| CHANNEL '[' ']' '{' types_one '}'
 	{
-		$$ = data.BufferedChannelType{IsUnstable: false, BufferSize: nil, Elems: $5}
+		$$ = data.BufferedChannelType{BufferSize: nil, Elems: $5}
 	}
 	| CHANNEL '[' expr ']' '{' types_one '}'
 	{
-		$$ = data.BufferedChannelType{IsUnstable: false, BufferSize: $3, Elems: $6}
+		$$ = data.BufferedChannelType{BufferSize: $3, Elems: $6}
 	}
-	| UNSTABLE CHANNEL '[' ']' '{' types_one '}'
+
+tags_zero
+	:
 	{
-		$$ = data.BufferedChannelType{IsUnstable: true, BufferSize: nil, Elems: $6}
+		$$ = nil
 	}
-	| UNSTABLE CHANNEL '[' expr ']' '{' types_one '}'
+	| tags_one
 	{
-		$$ = data.BufferedChannelType{IsUnstable: true, BufferSize: $4, Elems: $7}
+		$$ = $1
+	}
+
+tags_one
+	: tag
+	{
+		$$ = []string{$1}
+	}
+	| tag tags_one
+	{
+		$$ = append([]string{$1}, $2...)
+	}
+
+tag
+	: '@' IDENTIFIER
+	{
+		$$ = $2.lit
 	}
 
 blocks_one

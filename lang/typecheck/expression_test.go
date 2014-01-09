@@ -100,13 +100,13 @@ func TestTimeoutRecvExpressionTypecheck(t *testing.T) {
 		expr := TimeoutRecvExpression{Pos{}, chExp, []Expression{IdentifierExpression{Pos{}, "a"}}}
 		{
 			env := newTypeEnv()
-			env.add("ch", HandshakeChannelType{false, []Type{NamedType{"int"}}})
+			env.add("ch", HandshakeChannelType{[]Type{NamedType{"int"}}})
 			env.add("a", NamedType{"int"})
 			expectValid(t, expr, env)
 		}
 		{
 			env := newTypeEnv()
-			env.add("ch", HandshakeChannelType{false, []Type{NamedType{"int"}}})
+			env.add("ch", HandshakeChannelType{[]Type{NamedType{"int"}}})
 			expectInvalid(t, expr, env)
 		}
 		{
@@ -125,7 +125,7 @@ func TestTimeoutRecvExpressionTypecheck(t *testing.T) {
 		expr := TimeoutRecvExpression{Pos{}, chExp, []Expression{NumberExpression{Pos{}, "1"}}}
 		{
 			env := newTypeEnv()
-			env.add("ch", HandshakeChannelType{false, []Type{NamedType{"int"}}})
+			env.add("ch", HandshakeChannelType{[]Type{NamedType{"int"}}})
 			expectInvalid(t, expr, env)
 		}
 	}

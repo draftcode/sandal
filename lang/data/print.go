@@ -213,11 +213,7 @@ func (x HandshakeChannelType) String() string {
 	for _, elem := range x.Elems {
 		elems = append(elems, elem.String())
 	}
-	unstable := ""
-	if x.IsUnstable {
-		unstable = "unstable "
-	}
-	return unstable + "channel {" + strings.Join(elems, ", ") + "}"
+	return "channel {" + strings.Join(elems, ", ") + "}"
 }
 
 func (x BufferedChannelType) String() string {
@@ -231,9 +227,5 @@ func (x BufferedChannelType) String() string {
 		elems = append(elems, elem.String())
 	}
 
-	unstable := ""
-	if x.IsUnstable {
-		unstable = "unstable "
-	}
-	return unstable + "channel [" + bufsize + "] {" + strings.Join(elems, ", ") + "}"
+	return "channel [" + bufsize + "] {" + strings.Join(elems, ", ") + "}"
 }

@@ -66,10 +66,7 @@ func TestTypeStringify(t *testing.T) {
 	expectString(t, NamedType{"int"}, "int")
 	expectString(t, CallableType{[]Type{NamedType{"int"}, NamedType{"bool"}}}, "callable(int, bool)")
 	expectString(t, ArrayType{NamedType{"int"}}, "[]int")
-	expectString(t, HandshakeChannelType{false, []Type{NamedType{"int"}}}, "channel {int}")
-	expectString(t, HandshakeChannelType{true, []Type{NamedType{"int"}}}, "unstable channel {int}")
-	expectString(t, BufferedChannelType{false, IdentifierExpression{Pos{}, "a"}, []Type{NamedType{"int"}}}, "channel [a] {int}")
-	expectString(t, BufferedChannelType{true, IdentifierExpression{Pos{}, "a"}, []Type{NamedType{"int"}}}, "unstable channel [a] {int}")
-	expectString(t, BufferedChannelType{false, nil, []Type{NamedType{"int"}}}, "channel [] {int}")
-	expectString(t, BufferedChannelType{true, nil, []Type{NamedType{"int"}}}, "unstable channel [] {int}")
+	expectString(t, HandshakeChannelType{[]Type{NamedType{"int"}}}, "channel {int}")
+	expectString(t, BufferedChannelType{IdentifierExpression{Pos{}, "a"}, []Type{NamedType{"int"}}}, "channel [a] {int}")
+	expectString(t, BufferedChannelType{nil, []Type{NamedType{"int"}}}, "channel [] {int}")
 }
