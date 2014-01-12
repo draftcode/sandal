@@ -262,7 +262,7 @@ func (x *intModConverter) buildProcVar(initVar InstanceVar) error {
 		args = append(args, changeToProxy(expressionToInternalObj(arg, x.env), x.pid))
 	}
 	moduleName := fmt.Sprintf("__pid%d_%s", x.pid, initVar.ProcDefName)
-	x.instantiateProcDef(intProcDef, moduleName, args)
+	x.instantiateProcDef(intProcDef, moduleName, args, initVar.Tags)
 	procvar := intInternalProcVar{
 		Name:       initVar.Name,
 		ModuleName: moduleName,
@@ -274,7 +274,7 @@ func (x *intModConverter) buildProcVar(initVar InstanceVar) error {
 	return nil
 }
 
-func (x *intModConverter) instantiateProcDef(def intInternalProcDef, moduleName string, args []intInternalExpressionObj) {
+func (x *intModConverter) instantiateProcDef(def intInternalProcDef, moduleName string, args []intInternalExpressionObj, tags []string) {
 	x.pushEnv()
 	defer x.popEnv()
 
@@ -316,7 +316,7 @@ func (x *intModConverter) instantiateProcDef(def intInternalProcDef, moduleName 
 			panic("unexpected")
 		}
 	}
-	vars, initState, trans := x.convertStatements(def.Def.Statements, defaults)
+	vars, initState, trans := x.convertStatements(def.Def.Statements, defaults, tags)
 
 	x.modules = append(x.modules, intProcModule{
 		Name:      moduleName,

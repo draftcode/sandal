@@ -59,7 +59,7 @@ module Sample(chA channel { int }, chBs []channel { int }) {
 }
 
 init {
-  chA : unstable channel { bit },
+  chA : channel { bit },
   chB : channel { bit },
   sample : Sample(chA, [chA, chB]),
 }

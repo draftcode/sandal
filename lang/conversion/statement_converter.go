@@ -5,8 +5,8 @@ import (
 	. "github.com/draftcode/sandal/lang/data"
 )
 
-func (x *intModConverter) convertStatements(statements []Statement, defaults map[string]string) ([]intVar, intState, map[intState][]intTransition) {
-	converter := newIntStatementConverter(x.env, defaults)
+func (x *intModConverter) convertStatements(statements []Statement, defaults map[string]string, tags []string) ([]intVar, intState, map[intState][]intTransition) {
+	converter := newIntStatementConverter(x.env, defaults, tags)
 
 	for _, stmt := range statements {
 		converter.convertStatement(stmt)
@@ -19,28 +19,60 @@ func (x *intModConverter) convertStatements(statements []Statement, defaults map
 // Statement conversion
 
 type intStatementConverter struct {
-	env          *varEnv
-	vars         []intVar
-	defaults     map[string]string
-	trans        map[intState][]intTransition
-	currentState intState
-	nextStateNum int
-	labelToState map[string]intState
-	breakToState intState
+	env           *varEnv
+	vars          []intVar
+	defaults      map[string]string
+	trans         map[intState][]intTransition
+	currentState  intState
+	nextStateNum  int
+	labelToState  map[string]intState
+	breakToState  intState
+	tags          []string
+	unstable      bool
+	unstableState intState
 }
 
-func newIntStatementConverter(upper *varEnv, defaults map[string]string) *intStatementConverter {
-	converter := new(intStatementConverter)
-	converter.env = newVarEnvFromUpper(upper)
-	converter.defaults = defaults
-	converter.trans = make(map[intState][]intTransition)
-	converter.currentState = "state0"
-	converter.nextStateNum = 1
-	converter.labelToState = make(map[string]intState)
-	return converter
+func newIntStatementConverter(upper *varEnv, defaults map[string]string, tags []string) *intStatementConverter {
+	x := new(intStatementConverter)
+	x.env = newVarEnvFromUpper(upper)
+	x.defaults = defaults
+	x.trans = make(map[intState][]intTransition)
+	x.currentState = "state0"
+	x.nextStateNum = 1
+	x.labelToState = make(map[string]intState)
+	x.tags = tags
+
+	if x.hasTag("unstable") || x.hasTag("reboot") {
+		x.unstable = true
+		x.unstableState = x.genNextState()
+
+		if x.hasTag("reboot") {
+			x.trans[x.unstableState] = append(x.trans[x.currentState], intTransition{
+				Condition: "",
+				NextState: "state0",
+			})
+		}
+	}
+	return x
+}
+
+func (x *intStatementConverter) hasTag(tag string) bool {
+	for _, t := range x.tags {
+		if t == tag {
+			return true
+		}
+	}
+	return false
 }
 
 func (x *intStatementConverter) convertStatement(stmt Statement) {
+	if x.unstable {
+		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
+			Condition: "",
+			NextState: x.unstableState,
+		})
+	}
+
 	switch stmt := stmt.(type) {
 	case ConstantDefinition:
 		x.convertConstantDefinition(stmt)
