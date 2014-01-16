@@ -334,7 +334,19 @@ func (x *intStatementConverter) convertSendStatement(stmt SendStatement) {
 	x.currentState = nextState
 }
 func (x *intStatementConverter) convertForStatement(stmt ForStatement) {
-	panic("not implemented")
+	savedCurrentState := x.currentState
+	savedBreakState := x.breakToState
+	x.breakToState = x.genNextState()
+	x.pushEnv()
+	for _, stmt := range stmt.Statements {
+		x.convertStatement(stmt)
+	}
+	x.popEnv()
+	x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
+		NextState: savedCurrentState,
+	})
+	x.currentState = x.breakToState
+	x.breakToState = savedBreakState
 }
 func (x *intStatementConverter) convertForInStatement(stmt ForInStatement) {
 	switch container := expressionToInternalObj(stmt.Container, x.env).(type) {
