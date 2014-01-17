@@ -1,0 +1,50 @@
+data Response {
+  Ready,
+  NotReady,
+  Commit,
+  Abort,
+}
+
+proc Arbiter(chRecvs []channel { Response }, chSends []channel { Response }) {
+  for ch in chSends {
+    send(ch, Ready)
+  }
+  var all_ready bool = true
+  for ch in chRecvs {
+    var resp Response
+    recv(ch, resp)
+    if resp != Ready {
+      all_ready = false
+    }
+  }
+  if all_ready {
+    for ch in chSends {
+      send(ch, Commit)
+    }
+  } else {
+    for ch in chSends {
+      send(ch, Abort)
+    }
+  }
+}
+
+proc Worker(chRecv channel { Response }, chSend channel { Response }) {
+  var resp Response
+  recv(chRecv, resp)
+  choice {
+    send(chSend, NotReady)
+  }, {
+    send(chSend, Ready)
+  }
+  recv(chRecv, resp)
+}
+
+init {
+  chWorker1Send : channel { Response },
+  chWorker1Recv : channel { Response },
+  chWorker2Send : channel { Response },
+  chWorker2Recv : channel { Response },
+  arbiter : Arbiter([chWorker1Send, chWorker2Send], [chWorker1Recv, chWorker2Recv]),
+  worker1 : Worker(chWorker1Recv, chWorker1Send) @unstable,
+  worker2 : Worker(chWorker2Recv, chWorker2Send) @unstable,
+}
