@@ -111,22 +111,20 @@ func TestConvertProcModuleToTemplate(t *testing.T) {
 			{"b", "0..8"},
 		},
 		InitState: intState("state0"),
-		Trans: map[intState][]intTransition{
-			"state0": []intTransition{
-				{
-					Condition: "",
-					NextState: "state1",
-				},
+		Trans: []intTransition{
+			{
+				FromState: "state0",
+				NextState: "state1",
+				Condition: "",
 			},
-			"state1": []intTransition{
-				{
-					Condition: "!ch0.filled",
-					NextState: "state2",
-					Actions: []intAssign{
-						{"ch0.next_filled", "TRUE"},
-						{"ch0.next_received", "FALSE"},
-						{"ch0.next_value_0", "TRUE"},
-					},
+			{
+				FromState: "state1",
+				NextState: "state2",
+				Condition: "!ch0.filled",
+				Actions: []intAssign{
+					{"ch0.next_filled", "TRUE"},
+					{"ch0.next_received", "FALSE"},
+					{"ch0.next_value_0", "TRUE"},
 				},
 			},
 		},
@@ -143,34 +141,44 @@ func TestConvertProcModuleToTemplate(t *testing.T) {
 			Args: []string{"running_pid", "pid", "ch0"},
 			Vars: []tmplVar{
 				{"state", "{state0, state1, state2}"},
-				{"next_state", "{state0, state1, state2}"},
+				{"transition", "{notrans, trans0, trans1}"},
 				{"b", "0..8"},
 			},
+			Trans: []string{
+				"transition = trans0 -> (TRUE)",
+				"transition = trans1 -> (!ch0.filled)",
+			},
 			Assigns: []tmplAssign{
-				{"init(state)", "state0"},
-				{"next(state)", "next_state"},
-				{"next_state", strings.Join([]string{
+				{"transition", strings.Join([]string{
 					"case",
-					"  running_pid = pid & state = state0 & ((TRUE)) : {state1};",
-					"  running_pid = pid & state = state1 & ((!ch0.filled)) : {state2};",
+					"  running_pid = pid & state = state0 & ((TRUE)) : {trans0};",
+					"  running_pid = pid & state = state1 & ((!ch0.filled)) : {trans1};",
+					"  TRUE : notrans;",
+					"esac",
+				}, "\n")},
+				{"init(state)", "state0"},
+				{"next(state)", strings.Join([]string{
+					"case",
+					"  transition = trans0 : state1;",
+					"  transition = trans1 : state2;",
 					"  TRUE : state;",
 					"esac",
 				}, "\n")},
 				{"ch0.next_filled", strings.Join([]string{
 					"case",
-					"  running_pid = pid & state = state1 & next_state = state2 : TRUE;",
+					"  transition = trans1 : TRUE;",
 					"  TRUE : ch0.filled;",
 					"esac",
 				}, "\n")},
 				{"ch0.next_received", strings.Join([]string{
 					"case",
-					"  running_pid = pid & state = state1 & next_state = state2 : FALSE;",
+					"  transition = trans1 : FALSE;",
 					"  TRUE : ch0.received;",
 					"esac",
 				}, "\n")},
 				{"ch0.next_value_0", strings.Join([]string{
 					"case",
-					"  running_pid = pid & state = state1 & next_state = state2 : TRUE;",
+					"  transition = trans1 : TRUE;",
 					"  TRUE : ch0.value_0;",
 					"esac",
 				}, "\n")},

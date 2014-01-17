@@ -1,8 +1,10 @@
 #!/bin/bash
 
-cd $(dirname $(dirname $0))
+TESTSDIR=$(dirname $(realpath $0))
+REPODIR=$(dirname $TESTSDIR)
+cd $REPODIR
 go build
-cd $(dirname $0)
+cd $TESTSDIR
 
 tempfile=`mktemp`
 trap "rm $tempfile" 0

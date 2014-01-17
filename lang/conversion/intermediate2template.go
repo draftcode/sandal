@@ -125,23 +125,15 @@ func convertBufferedChannelToTemplate(mod intModule) (error, []tmplModule) {
 	panic("Not implemented")
 }
 func convertProcModuleToTemplate(mod intProcModule) (error, []tmplModule) {
+	transitions := nameTransitions(mod.Trans)
 	vars := []tmplVar{
 		{"state", "{" + argJoin(collectStates(mod)) + "}"},
-		{"next_state", "{" + argJoin(collectStates(mod)) + "}"},
+		{"transition", "{notrans, " + argJoin(collectTransitions(transitions)) + "}"},
 	}
 	for _, intvar := range mod.Vars {
 		vars = append(vars, tmplVar{intvar.Name, intvar.Type})
 	}
-	trans, cases := buildStateTransition(mod)
-	assigns := []tmplAssign{
-		{"init(state)", string(mod.InitState)},
-		{"next(state)", "next_state"},
-		{"next_state", instantiateCaseTemplate(caseTmplValue{
-			Cases:   cases,
-			Default: "state;",
-		})},
-	}
-	assigns = append(assigns, buildAssignments(mod)...)
+	trans, assigns := convertTransition(mod.InitState, mod.Defaults, transitions)
 	return nil, []tmplModule{
 		{
 			Name:    mod.Name,
@@ -155,15 +147,28 @@ func convertProcModuleToTemplate(mod intProcModule) (error, []tmplModule) {
 
 // ========================================
 
+func nameTransitions(trans []intTransition) map[string]intTransition {
+	ret := make(map[string]intTransition)
+	for num, transition := range trans {
+		ret[fmt.Sprintf("trans%d", num)] = transition
+	}
+	return ret
+}
+
+func collectTransitions(trans map[string]intTransition) (ret []string) {
+	for transName, _ := range trans {
+		ret = append(ret, transName)
+	}
+	sort.Strings(ret)
+	return
+}
+
 func collectStates(mod intProcModule) []string {
 	m := make(map[string]bool)
-	for state, intTrans := range mod.Trans {
-		m[string(state)] = true
-		for _, tr := range intTrans {
-			if tr.NextState != "" {
-				m[string(tr.NextState)] = true
-			}
-		}
+	m[string(mod.InitState)] = true
+	for _, intTrans := range mod.Trans {
+		m[string(intTrans.FromState)] = true
+		m[string(intTrans.NextState)] = true
 	}
 	states := []string{}
 	for state, _ := range m {
@@ -173,90 +178,88 @@ func collectStates(mod intProcModule) []string {
 	return states
 }
 
-func buildStateTransition(mod intProcModule) ([]string, []caseTmplCase) {
-	trans := []string{}
-	cases := []caseTmplCase{}
-	for state, intTrans := range mod.Trans {
-		nextStates := []string{}
-		conds := []string{}
-		nextStateAndCond := make(map[string][]string)
-		for _, tr := range intTrans {
-			if tr.NextState != "" {
-				cond := tr.Condition
-				if cond == "" {
-					cond = "TRUE"
-				}
-				nextStateAndCond[string(tr.NextState)] = append(
-					nextStateAndCond[string(tr.NextState)],
-					cond,
-				)
-				nextStates = append(nextStates, string(tr.NextState))
-				conds = append(conds, fmt.Sprintf("(%s)", cond))
-			}
-		}
-
-		cond := ""
-		if len(nextStateAndCond) > 1 {
-			cond = fmt.Sprintf("running_pid = pid & state = %s", state)
-			for nextState, conds := range nextStateAndCond {
-				cond := strings.Join(uniqAndSort(conds), " | ")
-				trans = append(
-					trans,
-					fmt.Sprintf("state = %s & next_state = %s -> %s", state, nextState, cond),
-				)
-			}
-		} else {
-			cond = strings.Join(uniqAndSort(conds), " | ")
-			cond = fmt.Sprintf("running_pid = pid & state = %s & (%s)", state, cond)
-		}
-		cases = append(cases, caseTmplCase{cond, "{" + argJoin(uniqAndSort(nextStates)) + "};"})
+func convertTransition(initState intState, defaults map[string]string, trans map[string]intTransition) ([]string, []tmplAssign) {
+	assigns := []tmplAssign{
+		{"transition", instantiateCaseTemplate(caseTmplValue{
+			Cases:   buildTransitionAssignment(trans),
+			Default: "notrans;",
+		})},
+		{"init(state)", string(initState)},
+		{"next(state)", instantiateCaseTemplate(caseTmplValue{
+			Cases:   buildNextStateAssignment(trans),
+			Default: "state;",
+		})},
 	}
-	return trans, cases
+	assigns = append(assigns, buildVariableAssignments(defaults, trans)...)
+	return buildTransitionTransitions(trans), assigns
 }
 
-func buildAssignments(mod intProcModule) []tmplAssign {
-	assignss := make(map[string][]caseTmplCase)
-	for state, intTrans := range mod.Trans {
-		for _, tr := range intTrans {
-			cond := ""
-			if tr.NextState == "" {
-				cond = fmt.Sprintf("running_pid = pid & state = %s", state)
+func buildTransitionAssignment(trans map[string]intTransition) (ret []caseTmplCase) {
+	m := make(map[intState][]string) // Transitions keyed with FromState
+	for transName, transition := range trans {
+		m[transition.FromState] = append(m[transition.FromState], transName)
+	}
+	for state, transNames := range m {
+		sort.Strings(transNames)
+		conds := []string{}
+		for _, transName := range transNames {
+			if trans[transName].Condition == "" {
+				conds = append(conds, "(TRUE)")
 			} else {
-				cond = fmt.Sprintf("running_pid = pid & state = %s & next_state = %s", state, tr.NextState)
+				conds = append(conds, "(" + trans[transName].Condition + ")")
 			}
-			for _, assign := range tr.Actions {
-				assignss[assign.LHS] = append(
-					assignss[assign.LHS],
-					caseTmplCase{cond, assign.RHS + ";"},
-				)
-			}
+		}
+		cond := fmt.Sprintf("running_pid = pid & state = %s & (%s)",
+			state, strings.Join(uniqAndSort(conds), " | "))
+		ret = append(ret, caseTmplCase{
+			Condition: cond,
+			Value:     "{" + argJoin(transNames) + "};",
+		})
+	}
+	return
+}
+
+func buildTransitionTransitions(trans map[string]intTransition) (ret []string) {
+	for transName, transition := range trans {
+		cond := "TRUE"
+		if transition.Condition != "" {
+			cond = transition.Condition
+		}
+		ret = append(ret, fmt.Sprintf("transition = %s -> (%s)", transName, cond))
+	}
+	return
+}
+
+func buildNextStateAssignment(trans map[string]intTransition) (ret []caseTmplCase) {
+	for transName, transition := range trans {
+		ret = append(ret, caseTmplCase{
+			Condition: "transition = " + transName,
+			Value:     string(transition.NextState) + ";",
+		})
+	}
+	return
+}
+
+func buildVariableAssignments(defaults map[string]string, trans map[string]intTransition) (ret []tmplAssign) {
+	m := make(map[string][]caseTmplCase) // Assignments keyed with variables
+	for transName, transition := range trans {
+		for _, action := range transition.Actions {
+			m[action.LHS] = append(m[action.LHS], caseTmplCase{
+				Condition: "transition = " + transName,
+				Value:     action.RHS + ";",
+			})
 		}
 	}
 
-	retAssigns := []tmplAssign{}
-	defaultAssigned := make(map[string]bool)
-	for lhs, assigns := range assignss {
-		defaultValue := mod.Defaults[lhs]
-		if defaultValue == "" {
-			panic("No default value")
-		}
-		defaultAssigned[lhs] = true
-		retAssigns = append(retAssigns, tmplAssign{
-			LHS: lhs,
-			RHS: instantiateCaseTemplate(caseTmplValue{
-				Cases:   assigns,
+	for variable, defaultValue := range defaults {
+		ret = append(ret, tmplAssign{
+			variable, instantiateCaseTemplate(caseTmplValue{
+				Cases:   m[variable],
 				Default: defaultValue + ";",
 			}),
 		})
 	}
-	for lhs, defaultValue := range mod.Defaults {
-		if !defaultAssigned[lhs] {
-			retAssigns = append(retAssigns, tmplAssign{
-				LHS: lhs, RHS: defaultValue,
-			})
-		}
-	}
-	return retAssigns
+	return
 }
 
 // ========================================
@@ -289,9 +292,9 @@ type (
 	caseTmplCases []caseTmplCase
 )
 
-func (l caseTmplCases) Len() int { return len(l) }
+func (l caseTmplCases) Len() int           { return len(l) }
 func (l caseTmplCases) Less(i, j int) bool { return l[i].Condition < l[j].Condition }
-func (l caseTmplCases) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
+func (l caseTmplCases) Swap(i, j int)      { l[i], l[j] = l[j], l[i] }
 
 func instantiateCaseTemplate(val caseTmplValue) string {
 	tmpl, err := template.New("NuSMVCase").Parse(caseTemplate)

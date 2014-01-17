@@ -25,34 +25,46 @@ MODULE HandshakeChannel0Proxy(ch)
 MODULE __pid0_ProcA(running_pid, pid, ch0)
   VAR
     b : 0..8;
-    next_state : {state0, state1, state2, state3};
     state : {state0, state1, state2, state3};
+    transition : {notrans, trans0, trans1, trans2};
+  TRANS transition = trans0 -> (TRUE);
+  TRANS transition = trans1 -> (!(ch0.filled));
+  TRANS transition = trans2 -> ((ch0.filled) & (ch0.received));
   ASSIGN
     ch0.next_filled :=
       case
-        running_pid = pid & state = state1 & next_state = state2 : TRUE;
-        running_pid = pid & state = state2 & next_state = state3 : FALSE;
+        transition = trans1 : TRUE;
+        transition = trans2 : FALSE;
         TRUE : ch0.filled;
       esac;
     ch0.next_received :=
       case
-        running_pid = pid & state = state1 & next_state = state2 : FALSE;
+        transition = trans1 : FALSE;
         TRUE : ch0.received;
       esac;
     ch0.next_value_0 :=
       case
-        running_pid = pid & state = state1 & next_state = state2 : TRUE;
+        transition = trans1 : TRUE;
         TRUE : ch0.value_0;
       esac;
     init(state) := state0;
-    next(b) := b;
-    next(state) := next_state;
-    next_state :=
+    next(b) :=
       case
-        running_pid = pid & state = state0 & ((TRUE)) : {state1};
-        running_pid = pid & state = state1 & ((!(ch0.filled))) : {state2};
-        running_pid = pid & state = state2 & (((ch0.filled) & (ch0.received))) : {state3};
+        TRUE : b;
+      esac;
+    next(state) :=
+      case
+        transition = trans0 : state1;
+        transition = trans1 : state2;
+        transition = trans2 : state3;
         TRUE : state;
+      esac;
+    transition :=
+      case
+        running_pid = pid & state = state0 & ((TRUE)) : {trans0};
+        running_pid = pid & state = state1 & ((!(ch0.filled))) : {trans1};
+        running_pid = pid & state = state2 & (((ch0.filled) & (ch0.received))) : {trans2};
+        TRUE : notrans;
       esac;
 
 MODULE main()

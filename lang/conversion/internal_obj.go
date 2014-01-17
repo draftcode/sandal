@@ -49,7 +49,7 @@ type (
 	intInternalExpressionObj interface {
 		intInternalObj
 		Steps() int
-		Transition(nextState intState, varName string) []intTransition
+		Transition(fromState, nextState intState, varName string) []intTransition
 		String() string
 		GetType() Type
 	}
@@ -274,11 +274,12 @@ func (x intInternalArrayLiteral) ArgString() (ret []string) {
 // ========================================
 // Transition
 
-func assignByString(x intInternalExpressionObj, nextState intState, varName string) []intTransition {
+func assignByString(x intInternalExpressionObj, fromState, nextState intState, varName string) []intTransition {
 	if varName == "" {
-		return []intTransition{{NextState: nextState}}
+		return []intTransition{{FromState: fromState, NextState: nextState}}
 	} else {
 		return []intTransition{{
+			FromState: fromState,
 			NextState: nextState,
 			Actions: []intAssign{
 				{LHS: varName, RHS: x.String()},
@@ -287,38 +288,38 @@ func assignByString(x intInternalExpressionObj, nextState intState, varName stri
 	}
 }
 
-func (x intInternalPrimitiveVar) Transition(nextState intState, varName string) []intTransition {
-	return assignByString(x, nextState, varName)
+func (x intInternalPrimitiveVar) Transition(fromState, nextState intState, varName string) []intTransition {
+	return assignByString(x, fromState, nextState, varName)
 }
-func (x intInternalHandshakeChannelProxyVar) Transition(nextState intState, varName string) []intTransition {
-	return assignByString(x, nextState, varName)
+func (x intInternalHandshakeChannelProxyVar) Transition(fromState, nextState intState, varName string) []intTransition {
+	return assignByString(x, fromState, nextState, varName)
 }
-func (x intInternalBufferedChannelProxyVar) Transition(nextState intState, varName string) []intTransition {
-	return assignByString(x, nextState, varName)
+func (x intInternalBufferedChannelProxyVar) Transition(fromState, nextState intState, varName string) []intTransition {
+	return assignByString(x, fromState, nextState, varName)
 }
-func (x intInternalArrayVar) Transition(nextState intState, varName string) []intTransition {
+func (x intInternalArrayVar) Transition(fromState, nextState intState, varName string) []intTransition {
 	panic("ArrayVar cannot directly be expressed in NuSMV")
 }
-func (x intInternalLiteral) Transition(nextState intState, varName string) []intTransition {
-	return assignByString(x, nextState, varName)
+func (x intInternalLiteral) Transition(fromState, nextState intState, varName string) []intTransition {
+	return assignByString(x, fromState, nextState, varName)
 }
-func (x intInternalNot) Transition(nextState intState, varName string) []intTransition {
-	return assignByString(x, nextState, varName)
+func (x intInternalNot) Transition(fromState, nextState intState, varName string) []intTransition {
+	return assignByString(x, fromState, nextState, varName)
 }
-func (x intInternalUnarySub) Transition(nextState intState, varName string) []intTransition {
-	return assignByString(x, nextState, varName)
+func (x intInternalUnarySub) Transition(fromState, nextState intState, varName string) []intTransition {
+	return assignByString(x, fromState, nextState, varName)
 }
-func (x intInternalParen) Transition(nextState intState, varName string) []intTransition {
-	return assignByString(x, nextState, varName)
+func (x intInternalParen) Transition(fromState, nextState intState, varName string) []intTransition {
+	return assignByString(x, fromState, nextState, varName)
 }
-func (x intInternalBinOp) Transition(nextState intState, varName string) []intTransition {
-	return assignByString(x, nextState, varName)
+func (x intInternalBinOp) Transition(fromState, nextState intState, varName string) []intTransition {
+	return assignByString(x, fromState, nextState, varName)
 }
-func (x intInternalTimeoutRecv) Transition(nextState intState, varName string) []intTransition {
+func (x intInternalTimeoutRecv) Transition(fromState, nextState intState, varName string) []intTransition {
 	chType := x.Channel.GetType()
 
-	recvedTrans := intTransition{NextState: nextState}
-	timeoutTrans := intTransition{NextState: nextState}
+	recvedTrans := intTransition{FromState: fromState, NextState: nextState}
+	timeoutTrans := intTransition{FromState: fromState, NextState: nextState}
 	switch chType.(type) {
 	case HandshakeChannelType:
 		recvedTrans.Condition = fmt.Sprintf("%s.filled & !%s.received", x.Channel, x.Channel)
@@ -347,14 +348,14 @@ func (x intInternalTimeoutRecv) Transition(nextState intState, varName string) [
 	}
 	return []intTransition{recvedTrans, timeoutTrans}
 }
-func (x intInternalTimeoutPeek) Transition(nextState intState, varName string) []intTransition {
+func (x intInternalTimeoutPeek) Transition(fromState, nextState intState, varName string) []intTransition {
 	panic("Not Implemented")
 }
-func (x intInternalNonblockRecv) Transition(nextState intState, varName string) []intTransition {
+func (x intInternalNonblockRecv) Transition(fromState, nextState intState, varName string) []intTransition {
 	chType := x.Channel.GetType()
 
-	recvedTrans := intTransition{NextState: nextState}
-	notRecvedTrans := intTransition{NextState: nextState}
+	recvedTrans := intTransition{FromState: fromState, NextState: nextState}
+	notRecvedTrans := intTransition{FromState: fromState, NextState: nextState}
 	switch chType.(type) {
 	case HandshakeChannelType:
 		recvedTrans.Condition = fmt.Sprintf("%s.filled & !%s.received", x.Channel, x.Channel)
@@ -384,16 +385,16 @@ func (x intInternalNonblockRecv) Transition(nextState intState, varName string) 
 	}
 	return []intTransition{recvedTrans, notRecvedTrans}
 }
-func (x intInternalNonblockPeek) Transition(nextState intState, varName string) []intTransition {
+func (x intInternalNonblockPeek) Transition(fromState, nextState intState, varName string) []intTransition {
 	panic("Not Implemented")
 }
-func (x intInternalArrayLiteral) Transition(nextState intState, varName string) []intTransition {
+func (x intInternalArrayLiteral) Transition(fromState, nextState intState, varName string) []intTransition {
 	panic("Array literals cannot directly be expressed in NuSMV")
 }
-func (x intInternalHandshakeChannelVar) Transition(nextState intState, varName string) []intTransition {
+func (x intInternalHandshakeChannelVar) Transition(fromState, nextState intState, varName string) []intTransition {
 	panic("Array literals cannot directly be expressed in NuSMV")
 }
-func (x intInternalBufferedChannelVar) Transition(nextState intState, varName string) []intTransition {
+func (x intInternalBufferedChannelVar) Transition(fromState, nextState intState, varName string) []intTransition {
 	panic("Array literals cannot directly be expressed in NuSMV")
 }
 

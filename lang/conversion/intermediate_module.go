@@ -27,7 +27,7 @@ type (
 		Args      []string
 		Vars      []intVar
 		InitState intState
-		Trans     map[intState][]intTransition
+		Trans     []intTransition
 		Defaults  map[string]string
 		Defs      []intAssign
 	}
@@ -47,8 +47,9 @@ type (
 	}
 
 	intTransition struct {
-		Condition  string
+		FromState  intState
 		NextState  intState
+		Condition  string
 		Actions    []intAssign
 	}
 

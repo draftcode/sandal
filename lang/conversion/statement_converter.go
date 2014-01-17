@@ -5,7 +5,7 @@ import (
 	. "github.com/draftcode/sandal/lang/data"
 )
 
-func (x *intModConverter) convertStatements(statements []Statement, defaults map[string]string, tags []string) ([]intVar, intState, map[intState][]intTransition) {
+func (x *intModConverter) convertStatements(statements []Statement, defaults map[string]string, tags []string) ([]intVar, intState, []intTransition) {
 	converter := newIntStatementConverter(x.env, defaults, tags)
 
 	for _, stmt := range statements {
@@ -22,7 +22,7 @@ type intStatementConverter struct {
 	env           *varEnv
 	vars          []intVar
 	defaults      map[string]string
-	trans         map[intState][]intTransition
+	trans         []intTransition
 	currentState  intState
 	nextStateNum  int
 	labelToState  map[string]intState
@@ -36,7 +36,6 @@ func newIntStatementConverter(upper *varEnv, defaults map[string]string, tags []
 	x := new(intStatementConverter)
 	x.env = newVarEnvFromUpper(upper)
 	x.defaults = defaults
-	x.trans = make(map[intState][]intTransition)
 	x.currentState = "state0"
 	x.nextStateNum = 1
 	x.labelToState = make(map[string]intState)
@@ -47,9 +46,10 @@ func newIntStatementConverter(upper *varEnv, defaults map[string]string, tags []
 		x.unstableState = x.genNextState()
 
 		if x.hasTag("reboot") {
-			x.trans[x.unstableState] = append(x.trans[x.currentState], intTransition{
-				Condition: "",
+			x.trans = append(x.trans, intTransition{
+				FromState: x.unstableState,
 				NextState: "state0",
+				Condition: "",
 			})
 		}
 	}
@@ -67,9 +67,10 @@ func (x *intStatementConverter) hasTag(tag string) bool {
 
 func (x *intStatementConverter) convertStatement(stmt Statement) {
 	if x.unstable {
-		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
-			Condition: "",
+		x.trans = append(x.trans, intTransition{
+			FromState: x.currentState,
 			NextState: x.unstableState,
+			Condition: "",
 		})
 	}
 
@@ -153,7 +154,8 @@ func (x *intStatementConverter) convertBlockStatement(stmt BlockStatement) {
 		x.convertStatement(stmt)
 	}
 	x.popEnv()
-	x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
+	x.trans = append(x.trans, intTransition{
+		FromState: x.currentState,
 		NextState: nextState,
 	})
 	x.currentState = nextState
@@ -165,9 +167,12 @@ func (x *intStatementConverter) convertVarDeclStatement(stmt VarDeclStatement) {
 	nextRealName := fmt.Sprintf("next(%s)", realName)
 	if stmt.Initializer != nil {
 		intExprObj := expressionToInternalObj(stmt.Initializer, x.env)
-		x.trans[x.currentState] = append(x.trans[x.currentState], intExprObj.Transition(nextState, nextRealName)...)
+		x.trans = append(x.trans, intExprObj.Transition(x.currentState, nextState, nextRealName)...)
 	} else {
-		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{NextState: nextState})
+		x.trans = append(x.trans, intTransition{
+			FromState: x.currentState,
+			NextState: nextState,
+		})
 	}
 	x.vars = append(x.vars, intVar{realName, convertTypeToString(stmt.Type, x.env)})
 	x.env.add(stmt.Name, intInternalPrimitiveVar{realName, stmt.Type})
@@ -184,13 +189,15 @@ func (x *intStatementConverter) convertIfStatement(stmt IfStatement) {
 		if intExprObj.Steps() != 0 {
 			panic("Steps constraint violation")
 		}
-		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
-			Condition: intExprObj.String(),
+		x.trans = append(x.trans, intTransition{
+			FromState: x.currentState,
 			NextState: trueBranchState,
+			Condition: intExprObj.String(),
 		})
-		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
-			Condition: "!(" + intExprObj.String() + ")",
+		x.trans = append(x.trans, intTransition{
+			FromState: x.currentState,
 			NextState: falseBranchState,
+			Condition: "!(" + intExprObj.String() + ")",
 		})
 	}
 	{
@@ -200,7 +207,8 @@ func (x *intStatementConverter) convertIfStatement(stmt IfStatement) {
 			x.convertStatement(stmt)
 		}
 		x.popEnv()
-		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
+		x.trans = append(x.trans, intTransition{
+			FromState: x.currentState,
 			NextState: nextState,
 		})
 	}
@@ -211,7 +219,8 @@ func (x *intStatementConverter) convertIfStatement(stmt IfStatement) {
 			x.convertStatement(stmt)
 		}
 		x.popEnv()
-		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
+		x.trans = append(x.trans, intTransition{
+			FromState: x.currentState,
 			NextState: nextState,
 		})
 	}
@@ -223,7 +232,7 @@ func (x *intStatementConverter) convertAssignmentStatement(stmt AssignmentStatem
 	if intExprObj.Steps() > 1 {
 		panic("Steps constraint violation")
 	}
-	x.trans[x.currentState] = append(x.trans[x.currentState], intExprObj.Transition(nextState, fmt.Sprintf("next(%s)", stmt.Variable))...)
+	x.trans = append(x.trans, intExprObj.Transition(x.currentState, nextState, fmt.Sprintf("next(%s)", stmt.Variable))...)
 	x.currentState = nextState
 }
 func (x *intStatementConverter) convertOpAssignmentStatement(stmt OpAssignmentStatement) {
@@ -234,7 +243,7 @@ func (x *intStatementConverter) convertOpAssignmentStatement(stmt OpAssignmentSt
 	if intExprObj.Steps() > 1 {
 		panic("Steps constraint violation")
 	}
-	x.trans[x.currentState] = append(x.trans[x.currentState], intExprObj.Transition(nextState, fmt.Sprintf("next(%s)", stmt.Variable))...)
+	x.trans = append(x.trans, intExprObj.Transition(x.currentState, nextState, fmt.Sprintf("next(%s)", stmt.Variable))...)
 	x.currentState = nextState
 }
 func (x *intStatementConverter) convertChoiceStatement(stmt ChoiceStatement) {
@@ -242,14 +251,16 @@ func (x *intStatementConverter) convertChoiceStatement(stmt ChoiceStatement) {
 	currentState := x.currentState
 	for _, block := range stmt.Blocks {
 		choicedState := x.genNextState()
-		x.trans[currentState] = append(x.trans[currentState], intTransition{
+		x.trans = append(x.trans, intTransition{
+			FromState: currentState,
 			NextState: choicedState,
 		})
 		x.currentState = choicedState
 		x.pushEnv()
 		x.convertStatement(block)
 		x.popEnv()
-		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
+		x.trans = append(x.trans, intTransition{
+			FromState: x.currentState,
 			NextState: nextState,
 		})
 	}
@@ -274,9 +285,10 @@ func (x *intStatementConverter) convertRecvStatement(stmt RecvStatement) {
 				RHS: fmt.Sprintf("%s.value_%d", ch, i),
 			})
 		}
-		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
-			Condition: fmt.Sprintf("%s.filled & !%s.received", ch, ch),
+		x.trans = append(x.trans, intTransition{
+			FromState: x.currentState,
 			NextState: nextState,
+			Condition: fmt.Sprintf("%s.filled & !%s.received", ch, ch),
 			Actions:   actions,
 		})
 	case BufferedChannelType:
@@ -312,16 +324,18 @@ func (x *intStatementConverter) convertSendStatement(stmt SendStatement) {
 				RHS: arg.String(),
 			})
 		}
-		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
-			Condition: fmt.Sprintf("!(%s.filled)", ch),
+		x.trans = append(x.trans, intTransition{
+			FromState: x.currentState,
 			NextState: nextState,
+			Condition: fmt.Sprintf("!(%s.filled)", ch),
 			Actions:   actions,
 		})
 		x.currentState = nextState
 		nextState = x.genNextState()
-		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
-			Condition: fmt.Sprintf("(%s.filled) & (%s.received)", ch, ch),
+		x.trans = append(x.trans, intTransition{
+			FromState: x.currentState,
 			NextState: nextState,
+			Condition: fmt.Sprintf("(%s.filled) & (%s.received)", ch, ch),
 			Actions: []intAssign{
 				{LHS: fmt.Sprintf("%s.next_filled", ch), RHS: "FALSE"},
 			},
@@ -342,7 +356,8 @@ func (x *intStatementConverter) convertForStatement(stmt ForStatement) {
 		x.convertStatement(stmt)
 	}
 	x.popEnv()
-	x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
+	x.trans = append(x.trans, intTransition{
+		FromState: x.currentState,
 		NextState: savedCurrentState,
 	})
 	x.currentState = x.breakToState
@@ -364,7 +379,8 @@ func (x *intStatementConverter) convertForInStatement(stmt ForInStatement) {
 			}
 			x.popEnv()
 		}
-		x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
+		x.trans = append(x.trans, intTransition{
+			FromState: x.currentState,
 			NextState: x.breakToState,
 		})
 		x.currentState = x.breakToState
@@ -378,7 +394,15 @@ func (x *intStatementConverter) convertForInRangeStatement(stmt ForInRangeStatem
 	panic("not implemented")
 }
 func (x *intStatementConverter) convertBreakStatement(stmt BreakStatement) {
-	panic("not implemented")
+	nextState := x.genNextState()
+	if x.breakToState == "" {
+		panic("Invalid break statement")
+	}
+	x.trans = append(x.trans, intTransition{
+		FromState: x.currentState,
+		NextState: x.breakToState,
+	})
+	x.currentState = nextState
 }
 func (x *intStatementConverter) convertGotoStatement(stmt GotoStatement) {
 	nextState := x.genNextState()
@@ -386,14 +410,16 @@ func (x *intStatementConverter) convertGotoStatement(stmt GotoStatement) {
 	if jumpState == "" {
 		panic("Invalid jump label")
 	}
-	x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
+	x.trans = append(x.trans, intTransition{
+		FromState: x.currentState,
 		NextState: jumpState,
 	})
 	x.currentState = nextState
 }
 func (x *intStatementConverter) convertSkipStatement(stmt SkipStatement) {
 	nextState := x.genNextState()
-	x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
+	x.trans = append(x.trans, intTransition{
+		FromState: x.currentState,
 		NextState: nextState,
 	})
 	x.currentState = nextState
@@ -404,12 +430,13 @@ func (x *intStatementConverter) convertExprStatement(stmt ExprStatement) {
 	if intExprObj.Steps() > 1 {
 		panic("Steps constraint violation")
 	}
-	x.trans[x.currentState] = append(x.trans[x.currentState], intExprObj.Transition(nextState, "")...)
+	x.trans = append(x.trans, intExprObj.Transition(x.currentState, nextState, "")...)
 	x.currentState = nextState
 }
 func (x *intStatementConverter) convertNullStatement(stmt NullStatement) {
 	nextState := x.genNextState()
-	x.trans[x.currentState] = append(x.trans[x.currentState], intTransition{
+	x.trans = append(x.trans, intTransition{
+		FromState: x.currentState,
 		NextState: nextState,
 	})
 	x.currentState = nextState

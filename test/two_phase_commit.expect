@@ -90,255 +90,400 @@ MODULE HandshakeChannel3Proxy(ch)
 MODULE __pid0_Arbiter(running_pid, pid, __elem0_chRecvs, __elem1_chRecvs, __elem0_chSends, __elem1_chSends)
   VAR
     all_ready : boolean;
-    next_state : {state0, state1, state10, state11, state12, state13, state14, state15, state16, state17, state18, state19, state2, state20, state21, state22, state23, state24, state25, state26, state27, state28, state29, state3, state30, state31, state32, state4, state5, state6, state7, state8, state9};
     resp : {Ready, NotReady, Commit, Abort};
     resp_2 : {Ready, NotReady, Commit, Abort};
     state : {state0, state1, state10, state11, state12, state13, state14, state15, state16, state17, state18, state19, state2, state20, state21, state22, state23, state24, state25, state26, state27, state28, state29, state3, state30, state31, state32, state4, state5, state6, state7, state8, state9};
-  TRANS state = state15 & next_state = state17 -> resp_2!=Ready;
-  TRANS state = state15 & next_state = state18 -> !(resp_2!=Ready);
-  TRANS state = state7 & next_state = state21 -> all_ready;
-  TRANS state = state7 & next_state = state22 -> !(all_ready);
-  TRANS state = state9 & next_state = state11 -> resp!=Ready;
-  TRANS state = state9 & next_state = state12 -> !(resp!=Ready);
+    transition : {notrans, trans0, trans1, trans10, trans11, trans12, trans13, trans14, trans15, trans16, trans17, trans18, trans19, trans2, trans20, trans21, trans22, trans23, trans24, trans25, trans26, trans27, trans28, trans29, trans3, trans30, trans31, trans32, trans33, trans34, trans4, trans5, trans6, trans7, trans8, trans9};
+  TRANS transition = trans0 -> (!(__elem0_chSends.filled));
+  TRANS transition = trans1 -> ((__elem0_chSends.filled) & (__elem0_chSends.received));
+  TRANS transition = trans10 -> (TRUE);
+  TRANS transition = trans11 -> (TRUE);
+  TRANS transition = trans12 -> (TRUE);
+  TRANS transition = trans13 -> (TRUE);
+  TRANS transition = trans14 -> (__elem1_chRecvs.filled & !__elem1_chRecvs.received);
+  TRANS transition = trans15 -> (resp_2!=Ready);
+  TRANS transition = trans16 -> (!(resp_2!=Ready));
+  TRANS transition = trans17 -> (TRUE);
+  TRANS transition = trans18 -> (TRUE);
+  TRANS transition = trans19 -> (TRUE);
+  TRANS transition = trans2 -> (!(__elem1_chSends.filled));
+  TRANS transition = trans20 -> (TRUE);
+  TRANS transition = trans21 -> (all_ready);
+  TRANS transition = trans22 -> (!(all_ready));
+  TRANS transition = trans23 -> (!(__elem0_chSends.filled));
+  TRANS transition = trans24 -> ((__elem0_chSends.filled) & (__elem0_chSends.received));
+  TRANS transition = trans25 -> (!(__elem1_chSends.filled));
+  TRANS transition = trans26 -> ((__elem1_chSends.filled) & (__elem1_chSends.received));
+  TRANS transition = trans27 -> (TRUE);
+  TRANS transition = trans28 -> (TRUE);
+  TRANS transition = trans29 -> (!(__elem0_chSends.filled));
+  TRANS transition = trans3 -> ((__elem1_chSends.filled) & (__elem1_chSends.received));
+  TRANS transition = trans30 -> ((__elem0_chSends.filled) & (__elem0_chSends.received));
+  TRANS transition = trans31 -> (!(__elem1_chSends.filled));
+  TRANS transition = trans32 -> ((__elem1_chSends.filled) & (__elem1_chSends.received));
+  TRANS transition = trans33 -> (TRUE);
+  TRANS transition = trans34 -> (TRUE);
+  TRANS transition = trans4 -> (TRUE);
+  TRANS transition = trans5 -> (TRUE);
+  TRANS transition = trans6 -> (TRUE);
+  TRANS transition = trans7 -> (__elem0_chRecvs.filled & !__elem0_chRecvs.received);
+  TRANS transition = trans8 -> (resp!=Ready);
+  TRANS transition = trans9 -> (!(resp!=Ready));
   ASSIGN
-    __elem0_chRecvs.next_filled := __elem0_chRecvs.filled;
+    __elem0_chRecvs.next_filled :=
+      case
+        TRUE : __elem0_chRecvs.filled;
+      esac;
     __elem0_chRecvs.next_received :=
       case
-        running_pid = pid & state = state8 & next_state = state9 : TRUE;
+        transition = trans7 : TRUE;
         TRUE : __elem0_chRecvs.received;
       esac;
-    __elem0_chRecvs.next_value_0 := __elem0_chRecvs.value_0;
+    __elem0_chRecvs.next_value_0 :=
+      case
+        TRUE : __elem0_chRecvs.value_0;
+      esac;
     __elem0_chSends.next_filled :=
       case
-        running_pid = pid & state = state0 & next_state = state2 : TRUE;
-        running_pid = pid & state = state2 & next_state = state3 : FALSE;
-        running_pid = pid & state = state21 & next_state = state24 : TRUE;
-        running_pid = pid & state = state22 & next_state = state29 : TRUE;
-        running_pid = pid & state = state24 & next_state = state25 : FALSE;
-        running_pid = pid & state = state29 & next_state = state30 : FALSE;
+        transition = trans0 : TRUE;
+        transition = trans1 : FALSE;
+        transition = trans23 : TRUE;
+        transition = trans24 : FALSE;
+        transition = trans29 : TRUE;
+        transition = trans30 : FALSE;
         TRUE : __elem0_chSends.filled;
       esac;
     __elem0_chSends.next_received :=
       case
-        running_pid = pid & state = state0 & next_state = state2 : FALSE;
-        running_pid = pid & state = state21 & next_state = state24 : FALSE;
-        running_pid = pid & state = state22 & next_state = state29 : FALSE;
+        transition = trans0 : FALSE;
+        transition = trans23 : FALSE;
+        transition = trans29 : FALSE;
         TRUE : __elem0_chSends.received;
       esac;
     __elem0_chSends.next_value_0 :=
       case
-        running_pid = pid & state = state0 & next_state = state2 : Ready;
-        running_pid = pid & state = state21 & next_state = state24 : Commit;
-        running_pid = pid & state = state22 & next_state = state29 : Abort;
+        transition = trans0 : Ready;
+        transition = trans23 : Commit;
+        transition = trans29 : Abort;
         TRUE : __elem0_chSends.value_0;
       esac;
-    __elem1_chRecvs.next_filled := __elem1_chRecvs.filled;
+    __elem1_chRecvs.next_filled :=
+      case
+        TRUE : __elem1_chRecvs.filled;
+      esac;
     __elem1_chRecvs.next_received :=
       case
-        running_pid = pid & state = state14 & next_state = state15 : TRUE;
+        transition = trans14 : TRUE;
         TRUE : __elem1_chRecvs.received;
       esac;
-    __elem1_chRecvs.next_value_0 := __elem1_chRecvs.value_0;
+    __elem1_chRecvs.next_value_0 :=
+      case
+        TRUE : __elem1_chRecvs.value_0;
+      esac;
     __elem1_chSends.next_filled :=
       case
-        running_pid = pid & state = state25 & next_state = state26 : TRUE;
-        running_pid = pid & state = state26 & next_state = state27 : FALSE;
-        running_pid = pid & state = state3 & next_state = state4 : TRUE;
-        running_pid = pid & state = state30 & next_state = state31 : TRUE;
-        running_pid = pid & state = state31 & next_state = state32 : FALSE;
-        running_pid = pid & state = state4 & next_state = state5 : FALSE;
+        transition = trans2 : TRUE;
+        transition = trans25 : TRUE;
+        transition = trans26 : FALSE;
+        transition = trans3 : FALSE;
+        transition = trans31 : TRUE;
+        transition = trans32 : FALSE;
         TRUE : __elem1_chSends.filled;
       esac;
     __elem1_chSends.next_received :=
       case
-        running_pid = pid & state = state25 & next_state = state26 : FALSE;
-        running_pid = pid & state = state3 & next_state = state4 : FALSE;
-        running_pid = pid & state = state30 & next_state = state31 : FALSE;
+        transition = trans2 : FALSE;
+        transition = trans25 : FALSE;
+        transition = trans31 : FALSE;
         TRUE : __elem1_chSends.received;
       esac;
     __elem1_chSends.next_value_0 :=
       case
-        running_pid = pid & state = state25 & next_state = state26 : Commit;
-        running_pid = pid & state = state3 & next_state = state4 : Ready;
-        running_pid = pid & state = state30 & next_state = state31 : Abort;
+        transition = trans2 : Ready;
+        transition = trans25 : Commit;
+        transition = trans31 : Abort;
         TRUE : __elem1_chSends.value_0;
       esac;
     init(state) := state0;
     next(all_ready) :=
       case
-        running_pid = pid & state = state1 & next_state = state6 : TRUE;
-        running_pid = pid & state = state11 & next_state = state13 : FALSE;
-        running_pid = pid & state = state17 & next_state = state19 : FALSE;
+        transition = trans10 : FALSE;
+        transition = trans17 : FALSE;
+        transition = trans5 : TRUE;
         TRUE : all_ready;
       esac;
     next(resp) :=
       case
-        running_pid = pid & state = state8 & next_state = state9 : __elem0_chRecvs.value_0;
+        transition = trans7 : __elem0_chRecvs.value_0;
         TRUE : resp;
       esac;
     next(resp_2) :=
       case
-        running_pid = pid & state = state14 & next_state = state15 : __elem1_chRecvs.value_0;
+        transition = trans14 : __elem1_chRecvs.value_0;
         TRUE : resp_2;
       esac;
-    next(state) := next_state;
-    next_state :=
+    next(state) :=
       case
-        running_pid = pid & state = state0 & ((!(__elem0_chSends.filled))) : {state2};
-        running_pid = pid & state = state1 & ((TRUE)) : {state6};
-        running_pid = pid & state = state10 & ((TRUE)) : {state14};
-        running_pid = pid & state = state11 & ((TRUE)) : {state13};
-        running_pid = pid & state = state12 & ((TRUE)) : {state10};
-        running_pid = pid & state = state13 & ((TRUE)) : {state10};
-        running_pid = pid & state = state14 & ((__elem1_chRecvs.filled & !__elem1_chRecvs.received)) : {state15};
-        running_pid = pid & state = state15 : {state17, state18};
-        running_pid = pid & state = state16 & ((TRUE)) : {state7};
-        running_pid = pid & state = state17 & ((TRUE)) : {state19};
-        running_pid = pid & state = state18 & ((TRUE)) : {state16};
-        running_pid = pid & state = state19 & ((TRUE)) : {state16};
-        running_pid = pid & state = state2 & (((__elem0_chSends.filled) & (__elem0_chSends.received))) : {state3};
-        running_pid = pid & state = state21 & ((!(__elem0_chSends.filled))) : {state24};
-        running_pid = pid & state = state22 & ((!(__elem0_chSends.filled))) : {state29};
-        running_pid = pid & state = state23 & ((TRUE)) : {state20};
-        running_pid = pid & state = state24 & (((__elem0_chSends.filled) & (__elem0_chSends.received))) : {state25};
-        running_pid = pid & state = state25 & ((!(__elem1_chSends.filled))) : {state26};
-        running_pid = pid & state = state26 & (((__elem1_chSends.filled) & (__elem1_chSends.received))) : {state27};
-        running_pid = pid & state = state27 & ((TRUE)) : {state23};
-        running_pid = pid & state = state28 & ((TRUE)) : {state20};
-        running_pid = pid & state = state29 & (((__elem0_chSends.filled) & (__elem0_chSends.received))) : {state30};
-        running_pid = pid & state = state3 & ((!(__elem1_chSends.filled))) : {state4};
-        running_pid = pid & state = state30 & ((!(__elem1_chSends.filled))) : {state31};
-        running_pid = pid & state = state31 & (((__elem1_chSends.filled) & (__elem1_chSends.received))) : {state32};
-        running_pid = pid & state = state32 & ((TRUE)) : {state28};
-        running_pid = pid & state = state4 & (((__elem1_chSends.filled) & (__elem1_chSends.received))) : {state5};
-        running_pid = pid & state = state5 & ((TRUE)) : {state1};
-        running_pid = pid & state = state6 & ((TRUE)) : {state8};
-        running_pid = pid & state = state7 : {state21, state22};
-        running_pid = pid & state = state8 & ((__elem0_chRecvs.filled & !__elem0_chRecvs.received)) : {state9};
-        running_pid = pid & state = state9 : {state11, state12};
+        transition = trans0 : state2;
+        transition = trans1 : state3;
+        transition = trans10 : state13;
+        transition = trans11 : state10;
+        transition = trans12 : state10;
+        transition = trans13 : state14;
+        transition = trans14 : state15;
+        transition = trans15 : state17;
+        transition = trans16 : state18;
+        transition = trans17 : state19;
+        transition = trans18 : state16;
+        transition = trans19 : state16;
+        transition = trans2 : state4;
+        transition = trans20 : state7;
+        transition = trans21 : state21;
+        transition = trans22 : state22;
+        transition = trans23 : state24;
+        transition = trans24 : state25;
+        transition = trans25 : state26;
+        transition = trans26 : state27;
+        transition = trans27 : state23;
+        transition = trans28 : state20;
+        transition = trans29 : state29;
+        transition = trans3 : state5;
+        transition = trans30 : state30;
+        transition = trans31 : state31;
+        transition = trans32 : state32;
+        transition = trans33 : state28;
+        transition = trans34 : state20;
+        transition = trans4 : state1;
+        transition = trans5 : state6;
+        transition = trans6 : state8;
+        transition = trans7 : state9;
+        transition = trans8 : state11;
+        transition = trans9 : state12;
         TRUE : state;
+      esac;
+    transition :=
+      case
+        running_pid = pid & state = state0 & ((!(__elem0_chSends.filled))) : {trans0};
+        running_pid = pid & state = state1 & ((TRUE)) : {trans5};
+        running_pid = pid & state = state10 & ((TRUE)) : {trans13};
+        running_pid = pid & state = state11 & ((TRUE)) : {trans10};
+        running_pid = pid & state = state12 & ((TRUE)) : {trans12};
+        running_pid = pid & state = state13 & ((TRUE)) : {trans11};
+        running_pid = pid & state = state14 & ((__elem1_chRecvs.filled & !__elem1_chRecvs.received)) : {trans14};
+        running_pid = pid & state = state15 & ((!(resp_2!=Ready)) | (resp_2!=Ready)) : {trans15, trans16};
+        running_pid = pid & state = state16 & ((TRUE)) : {trans20};
+        running_pid = pid & state = state17 & ((TRUE)) : {trans17};
+        running_pid = pid & state = state18 & ((TRUE)) : {trans19};
+        running_pid = pid & state = state19 & ((TRUE)) : {trans18};
+        running_pid = pid & state = state2 & (((__elem0_chSends.filled) & (__elem0_chSends.received))) : {trans1};
+        running_pid = pid & state = state21 & ((!(__elem0_chSends.filled))) : {trans23};
+        running_pid = pid & state = state22 & ((!(__elem0_chSends.filled))) : {trans29};
+        running_pid = pid & state = state23 & ((TRUE)) : {trans28};
+        running_pid = pid & state = state24 & (((__elem0_chSends.filled) & (__elem0_chSends.received))) : {trans24};
+        running_pid = pid & state = state25 & ((!(__elem1_chSends.filled))) : {trans25};
+        running_pid = pid & state = state26 & (((__elem1_chSends.filled) & (__elem1_chSends.received))) : {trans26};
+        running_pid = pid & state = state27 & ((TRUE)) : {trans27};
+        running_pid = pid & state = state28 & ((TRUE)) : {trans34};
+        running_pid = pid & state = state29 & (((__elem0_chSends.filled) & (__elem0_chSends.received))) : {trans30};
+        running_pid = pid & state = state3 & ((!(__elem1_chSends.filled))) : {trans2};
+        running_pid = pid & state = state30 & ((!(__elem1_chSends.filled))) : {trans31};
+        running_pid = pid & state = state31 & (((__elem1_chSends.filled) & (__elem1_chSends.received))) : {trans32};
+        running_pid = pid & state = state32 & ((TRUE)) : {trans33};
+        running_pid = pid & state = state4 & (((__elem1_chSends.filled) & (__elem1_chSends.received))) : {trans3};
+        running_pid = pid & state = state5 & ((TRUE)) : {trans4};
+        running_pid = pid & state = state6 & ((TRUE)) : {trans6};
+        running_pid = pid & state = state7 & ((!(all_ready)) | (all_ready)) : {trans21, trans22};
+        running_pid = pid & state = state8 & ((__elem0_chRecvs.filled & !__elem0_chRecvs.received)) : {trans7};
+        running_pid = pid & state = state9 & ((!(resp!=Ready)) | (resp!=Ready)) : {trans8, trans9};
+        TRUE : notrans;
       esac;
 
 MODULE __pid1_Worker(running_pid, pid, chRecv, chSend)
   VAR
-    next_state : {state0, state1, state10, state11, state12, state2, state3, state4, state5, state6, state7, state8, state9};
     resp : {Ready, NotReady, Commit, Abort};
     state : {state0, state1, state10, state11, state12, state2, state3, state4, state5, state6, state7, state8, state9};
-  TRANS state = state2 & next_state = state4 -> TRUE;
-  TRANS state = state2 & next_state = state8 -> TRUE;
+    transition : {notrans, trans0, trans1, trans10, trans11, trans12, trans2, trans3, trans4, trans5, trans6, trans7, trans8, trans9};
+  TRANS transition = trans0 -> (TRUE);
+  TRANS transition = trans1 -> (chRecv.filled & !chRecv.received);
+  TRANS transition = trans10 -> (TRUE);
+  TRANS transition = trans11 -> (TRUE);
+  TRANS transition = trans12 -> (chRecv.filled & !chRecv.received);
+  TRANS transition = trans2 -> (TRUE);
+  TRANS transition = trans3 -> (!(chSend.filled));
+  TRANS transition = trans4 -> ((chSend.filled) & (chSend.received));
+  TRANS transition = trans5 -> (TRUE);
+  TRANS transition = trans6 -> (TRUE);
+  TRANS transition = trans7 -> (TRUE);
+  TRANS transition = trans8 -> (!(chSend.filled));
+  TRANS transition = trans9 -> ((chSend.filled) & (chSend.received));
   ASSIGN
-    chRecv.next_filled := chRecv.filled;
+    chRecv.next_filled :=
+      case
+        TRUE : chRecv.filled;
+      esac;
     chRecv.next_received :=
       case
-        running_pid = pid & state = state1 & next_state = state2 : TRUE;
-        running_pid = pid & state = state3 & next_state = state12 : TRUE;
+        transition = trans1 : TRUE;
+        transition = trans12 : TRUE;
         TRUE : chRecv.received;
       esac;
-    chRecv.next_value_0 := chRecv.value_0;
+    chRecv.next_value_0 :=
+      case
+        TRUE : chRecv.value_0;
+      esac;
     chSend.next_filled :=
       case
-        running_pid = pid & state = state10 & next_state = state11 : FALSE;
-        running_pid = pid & state = state4 & next_state = state6 : TRUE;
-        running_pid = pid & state = state6 & next_state = state7 : FALSE;
-        running_pid = pid & state = state8 & next_state = state10 : TRUE;
+        transition = trans3 : TRUE;
+        transition = trans4 : FALSE;
+        transition = trans8 : TRUE;
+        transition = trans9 : FALSE;
         TRUE : chSend.filled;
       esac;
     chSend.next_received :=
       case
-        running_pid = pid & state = state4 & next_state = state6 : FALSE;
-        running_pid = pid & state = state8 & next_state = state10 : FALSE;
+        transition = trans3 : FALSE;
+        transition = trans8 : FALSE;
         TRUE : chSend.received;
       esac;
     chSend.next_value_0 :=
       case
-        running_pid = pid & state = state4 & next_state = state6 : NotReady;
-        running_pid = pid & state = state8 & next_state = state10 : Ready;
+        transition = trans3 : NotReady;
+        transition = trans8 : Ready;
         TRUE : chSend.value_0;
       esac;
     init(state) := state0;
     next(resp) :=
       case
-        running_pid = pid & state = state1 & next_state = state2 : chRecv.value_0;
-        running_pid = pid & state = state3 & next_state = state12 : chRecv.value_0;
+        transition = trans1 : chRecv.value_0;
+        transition = trans12 : chRecv.value_0;
         TRUE : resp;
       esac;
-    next(state) := next_state;
-    next_state :=
+    next(state) :=
       case
-        running_pid = pid & state = state0 & ((TRUE)) : {state1};
-        running_pid = pid & state = state1 & ((chRecv.filled & !chRecv.received)) : {state2};
-        running_pid = pid & state = state10 & (((chSend.filled) & (chSend.received))) : {state11};
-        running_pid = pid & state = state11 & ((TRUE)) : {state9};
-        running_pid = pid & state = state2 : {state4, state8};
-        running_pid = pid & state = state3 & ((chRecv.filled & !chRecv.received)) : {state12};
-        running_pid = pid & state = state4 & ((!(chSend.filled))) : {state6};
-        running_pid = pid & state = state5 & ((TRUE)) : {state3};
-        running_pid = pid & state = state6 & (((chSend.filled) & (chSend.received))) : {state7};
-        running_pid = pid & state = state7 & ((TRUE)) : {state5};
-        running_pid = pid & state = state8 & ((!(chSend.filled))) : {state10};
-        running_pid = pid & state = state9 & ((TRUE)) : {state3};
+        transition = trans0 : state1;
+        transition = trans1 : state2;
+        transition = trans10 : state9;
+        transition = trans11 : state3;
+        transition = trans12 : state12;
+        transition = trans2 : state4;
+        transition = trans3 : state6;
+        transition = trans4 : state7;
+        transition = trans5 : state5;
+        transition = trans6 : state3;
+        transition = trans7 : state8;
+        transition = trans8 : state10;
+        transition = trans9 : state11;
         TRUE : state;
+      esac;
+    transition :=
+      case
+        running_pid = pid & state = state0 & ((TRUE)) : {trans0};
+        running_pid = pid & state = state1 & ((chRecv.filled & !chRecv.received)) : {trans1};
+        running_pid = pid & state = state10 & (((chSend.filled) & (chSend.received))) : {trans9};
+        running_pid = pid & state = state11 & ((TRUE)) : {trans10};
+        running_pid = pid & state = state2 & ((TRUE)) : {trans2, trans7};
+        running_pid = pid & state = state3 & ((chRecv.filled & !chRecv.received)) : {trans12};
+        running_pid = pid & state = state4 & ((!(chSend.filled))) : {trans3};
+        running_pid = pid & state = state5 & ((TRUE)) : {trans6};
+        running_pid = pid & state = state6 & (((chSend.filled) & (chSend.received))) : {trans4};
+        running_pid = pid & state = state7 & ((TRUE)) : {trans5};
+        running_pid = pid & state = state8 & ((!(chSend.filled))) : {trans8};
+        running_pid = pid & state = state9 & ((TRUE)) : {trans11};
+        TRUE : notrans;
       esac;
 
 MODULE __pid2_Worker(running_pid, pid, chRecv, chSend)
   VAR
-    next_state : {state0, state1, state10, state11, state12, state2, state3, state4, state5, state6, state7, state8, state9};
     resp : {Ready, NotReady, Commit, Abort};
     state : {state0, state1, state10, state11, state12, state2, state3, state4, state5, state6, state7, state8, state9};
-  TRANS state = state2 & next_state = state4 -> TRUE;
-  TRANS state = state2 & next_state = state8 -> TRUE;
+    transition : {notrans, trans0, trans1, trans10, trans11, trans12, trans2, trans3, trans4, trans5, trans6, trans7, trans8, trans9};
+  TRANS transition = trans0 -> (TRUE);
+  TRANS transition = trans1 -> (chRecv.filled & !chRecv.received);
+  TRANS transition = trans10 -> (TRUE);
+  TRANS transition = trans11 -> (TRUE);
+  TRANS transition = trans12 -> (chRecv.filled & !chRecv.received);
+  TRANS transition = trans2 -> (TRUE);
+  TRANS transition = trans3 -> (!(chSend.filled));
+  TRANS transition = trans4 -> ((chSend.filled) & (chSend.received));
+  TRANS transition = trans5 -> (TRUE);
+  TRANS transition = trans6 -> (TRUE);
+  TRANS transition = trans7 -> (TRUE);
+  TRANS transition = trans8 -> (!(chSend.filled));
+  TRANS transition = trans9 -> ((chSend.filled) & (chSend.received));
   ASSIGN
-    chRecv.next_filled := chRecv.filled;
+    chRecv.next_filled :=
+      case
+        TRUE : chRecv.filled;
+      esac;
     chRecv.next_received :=
       case
-        running_pid = pid & state = state1 & next_state = state2 : TRUE;
-        running_pid = pid & state = state3 & next_state = state12 : TRUE;
+        transition = trans1 : TRUE;
+        transition = trans12 : TRUE;
         TRUE : chRecv.received;
       esac;
-    chRecv.next_value_0 := chRecv.value_0;
+    chRecv.next_value_0 :=
+      case
+        TRUE : chRecv.value_0;
+      esac;
     chSend.next_filled :=
       case
-        running_pid = pid & state = state10 & next_state = state11 : FALSE;
-        running_pid = pid & state = state4 & next_state = state6 : TRUE;
-        running_pid = pid & state = state6 & next_state = state7 : FALSE;
-        running_pid = pid & state = state8 & next_state = state10 : TRUE;
+        transition = trans3 : TRUE;
+        transition = trans4 : FALSE;
+        transition = trans8 : TRUE;
+        transition = trans9 : FALSE;
         TRUE : chSend.filled;
       esac;
     chSend.next_received :=
       case
-        running_pid = pid & state = state4 & next_state = state6 : FALSE;
-        running_pid = pid & state = state8 & next_state = state10 : FALSE;
+        transition = trans3 : FALSE;
+        transition = trans8 : FALSE;
         TRUE : chSend.received;
       esac;
     chSend.next_value_0 :=
       case
-        running_pid = pid & state = state4 & next_state = state6 : NotReady;
-        running_pid = pid & state = state8 & next_state = state10 : Ready;
+        transition = trans3 : NotReady;
+        transition = trans8 : Ready;
         TRUE : chSend.value_0;
       esac;
     init(state) := state0;
     next(resp) :=
       case
-        running_pid = pid & state = state1 & next_state = state2 : chRecv.value_0;
-        running_pid = pid & state = state3 & next_state = state12 : chRecv.value_0;
+        transition = trans1 : chRecv.value_0;
+        transition = trans12 : chRecv.value_0;
         TRUE : resp;
       esac;
-    next(state) := next_state;
-    next_state :=
+    next(state) :=
       case
-        running_pid = pid & state = state0 & ((TRUE)) : {state1};
-        running_pid = pid & state = state1 & ((chRecv.filled & !chRecv.received)) : {state2};
-        running_pid = pid & state = state10 & (((chSend.filled) & (chSend.received))) : {state11};
-        running_pid = pid & state = state11 & ((TRUE)) : {state9};
-        running_pid = pid & state = state2 : {state4, state8};
-        running_pid = pid & state = state3 & ((chRecv.filled & !chRecv.received)) : {state12};
-        running_pid = pid & state = state4 & ((!(chSend.filled))) : {state6};
-        running_pid = pid & state = state5 & ((TRUE)) : {state3};
-        running_pid = pid & state = state6 & (((chSend.filled) & (chSend.received))) : {state7};
-        running_pid = pid & state = state7 & ((TRUE)) : {state5};
-        running_pid = pid & state = state8 & ((!(chSend.filled))) : {state10};
-        running_pid = pid & state = state9 & ((TRUE)) : {state3};
+        transition = trans0 : state1;
+        transition = trans1 : state2;
+        transition = trans10 : state9;
+        transition = trans11 : state3;
+        transition = trans12 : state12;
+        transition = trans2 : state4;
+        transition = trans3 : state6;
+        transition = trans4 : state7;
+        transition = trans5 : state5;
+        transition = trans6 : state3;
+        transition = trans7 : state8;
+        transition = trans8 : state10;
+        transition = trans9 : state11;
         TRUE : state;
+      esac;
+    transition :=
+      case
+        running_pid = pid & state = state0 & ((TRUE)) : {trans0};
+        running_pid = pid & state = state1 & ((chRecv.filled & !chRecv.received)) : {trans1};
+        running_pid = pid & state = state10 & (((chSend.filled) & (chSend.received))) : {trans9};
+        running_pid = pid & state = state11 & ((TRUE)) : {trans10};
+        running_pid = pid & state = state2 & ((TRUE)) : {trans2, trans7};
+        running_pid = pid & state = state3 & ((chRecv.filled & !chRecv.received)) : {trans12};
+        running_pid = pid & state = state4 & ((!(chSend.filled))) : {trans3};
+        running_pid = pid & state = state5 & ((TRUE)) : {trans6};
+        running_pid = pid & state = state6 & (((chSend.filled) & (chSend.received))) : {trans4};
+        running_pid = pid & state = state7 & ((TRUE)) : {trans5};
+        running_pid = pid & state = state8 & ((!(chSend.filled))) : {trans8};
+        running_pid = pid & state = state9 & ((TRUE)) : {trans11};
+        TRUE : notrans;
       esac;
 
 MODULE main()
