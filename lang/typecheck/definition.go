@@ -34,6 +34,8 @@ func typeCheckDefinitions(defs []Definition, env *typeEnv) error {
 			env.add(def.Name, CallableType{Parameters: params})
 		case InitBlock:
 			// Do nothing
+		case LtlSpec:
+			// Do nothing
 		default:
 			panic("Unknown definition type")
 		}
@@ -59,6 +61,9 @@ func typeCheckDefinition(x Definition, env *typeEnv) error {
 		return typeCheckProcDefinition(x, env)
 	case InitBlock:
 		return typeCheckInitBlock(x, env)
+	case LtlSpec:
+		// TODO
+		return nil
 	}
 	panic("Unknown Definition")
 }

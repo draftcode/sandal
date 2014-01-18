@@ -34,6 +34,8 @@ func convertASTToIntModule(defs []Definition) (error, []intModule) {
 			})
 		case InitBlock:
 			// Do nothing
+		case LtlSpec:
+			converter.convertLtlSpec(def)
 		}
 	}
 	for _, def := range defs {
@@ -55,6 +57,7 @@ type intModConverter struct {
 	channels []intInternalObj
 	procs    []intInternalProcVar
 	modules  []intModule
+	ltls     []string
 	pid      int
 }
 
@@ -80,7 +83,7 @@ func (x *intModConverter) convertInitBlock(def InitBlock) error {
 		case InstanceVar:
 			// Do nothing
 		case ChannelVar:
-			err, chVar := x.buildChannelVar(initVar.Name, initVar.Type)
+			err, chVar := x.buildChannelVar(initVar.Name, initVar.Type, initVar.Tags)
 			if err != nil {
 				return err
 			}
@@ -100,6 +103,11 @@ func (x *intModConverter) convertInitBlock(def InitBlock) error {
 			// Do nothing
 		}
 	}
+	return nil
+}
+
+func (x *intModConverter) convertLtlSpec(def LtlSpec) error {
+	x.ltls = append(x.ltls, convertLtlExpression(def.Expr))
 	return nil
 }
 
@@ -158,6 +166,16 @@ func (x *intModConverter) buildMainModule() error {
 	// Assigns
 	module.Assigns = append(module.Assigns, intAssign{"running_pid", "{" + argJoin(pidStrs) + "}"})
 
+	// LtlSpecs
+	fairnessConstraints := []string{}
+	for _, pidStr := range pidStrs {
+		fairnessConstraints = append(fairnessConstraints, "(F running_pid = " + pidStr + ")")
+	}
+	fairness := "(G (" + strings.Join(fairnessConstraints, " & ") + "))"
+	for _, ltlStr := range x.ltls {
+		module.LtlSpecs = append(module.LtlSpecs, fairness + " -> (" + ltlStr + ")")
+	}
+
 	// Defs
 	for _, chVar := range x.channels {
 		switch chVar := chVar.(type) {
@@ -197,7 +215,7 @@ func (x *intModConverter) buildMainModule() error {
 	return nil
 }
 
-func (x *intModConverter) buildChannelVar(name string, ty Type) (error, intInternalObj) {
+func (x *intModConverter) buildChannelVar(name string, ty Type, tags []string) (error, intInternalObj) {
 	chNumber := len(x.channels)
 	var mod intModule
 	var chVar intInternalObj
@@ -216,6 +234,7 @@ func (x *intModConverter) buildChannelVar(name string, ty Type) (error, intInter
 			ModuleName: moduleName,
 			RealName:   name,
 			Type:       ty,
+			Tags:       tags,
 			Pids:       make(map[int]bool),
 		}
 	case BufferedChannelType:
@@ -233,6 +252,7 @@ func (x *intModConverter) buildChannelVar(name string, ty Type) (error, intInter
 			ModuleName: moduleName,
 			RealName:   name,
 			Type:       ty,
+			Tags:       tags,
 			Pids:       make(map[int]bool),
 		}
 	default:
@@ -306,12 +326,12 @@ func (x *intModConverter) instantiateProcDef(def intInternalProcDef, moduleName 
 		case intInternalHandshakeChannelProxyVar:
 			params = append(params, param.Name)
 			addHandshakeChannelDefaults(param.Name, len(arg.ChannelVar.Type.Elems), defaults)
-			x.env.add(param.Name, intInternalPrimitiveVar{param.Name, param.Type})
+			x.env.add(param.Name, intInternalPrimitiveVar{param.Name, param.Type, arg})
 		case intInternalBufferedChannelProxyVar:
 			panic("not implemented")
 		case intInternalLiteral, intInternalNot, intInternalUnarySub, intInternalParen, intInternalBinOp:
 			params = append(params, param.Name)
-			x.env.add(param.Name, intInternalPrimitiveVar{param.Name, param.Type})
+			x.env.add(param.Name, intInternalPrimitiveVar{param.Name, param.Type, nil})
 		default:
 			panic("unexpected")
 		}
@@ -359,4 +379,19 @@ func (x *intModConverter) calculateConstExpression(expr Expression) int {
 
 func argJoin(args []string) string {
 	return strings.Join(args, ", ")
+}
+
+func convertLtlExpression(expr LtlExpression) string {
+	switch expr := expr.(type) {
+	case LtlAtomExpression:
+		return strings.Join(expr.Names, ".")
+	case ParenLtlExpression:
+		return "(" + convertLtlExpression(expr.SubExpr) + ")"
+	case UnOpLtlExpression:
+		return expr.Operator + convertLtlExpression(expr.SubExpr)
+	case BinOpLtlExpression:
+		return convertLtlExpression(expr.LHS) + expr.Operator + convertLtlExpression(expr.RHS)
+	default:
+		panic("unknown ltl expression")
+	}
 }

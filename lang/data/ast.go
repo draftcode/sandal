@@ -34,6 +34,10 @@ type (
 		ArgExprs() []Expression
 		String() string
 	}
+
+	LtlExpression interface {
+		ltlexpression()
+	}
 )
 
 func (x Pos) String() string {
@@ -76,6 +80,10 @@ type (
 		Pos  Pos
 		Vars []InitVar
 	}
+
+	LtlSpec struct {
+		Expr LtlExpression
+	}
 )
 
 func (x DataDefinition) definition()     {}
@@ -84,12 +92,14 @@ func (x ConstantDefinition) definition() {}
 func (x ConstantDefinition) statement()  {}
 func (x ProcDefinition) definition()     {}
 func (x InitBlock) definition()          {}
+func (x LtlSpec) definition()            {}
 
 func (x DataDefinition) Position() Pos     { return x.Pos }
 func (x ModuleDefinition) Position() Pos   { return x.Pos }
 func (x ConstantDefinition) Position() Pos { return x.Pos }
 func (x ProcDefinition) Position() Pos     { return x.Pos }
 func (x InitBlock) Position() Pos          { return x.Pos }
+func (x LtlSpec) Position() Pos            { panic("not implemented") }
 
 // ========================================
 // Statements
@@ -487,3 +497,32 @@ func (x BufferedChannelType) Equal(ty Type) bool {
 		return false
 	}
 }
+
+// ========================================
+// LtlExpr
+
+type (
+	LtlAtomExpression struct {
+		Names []string
+	}
+
+	ParenLtlExpression struct {
+		SubExpr LtlExpression
+	}
+
+	UnOpLtlExpression struct {
+		Operator string
+		SubExpr  LtlExpression
+	}
+
+	BinOpLtlExpression struct {
+		LHS      LtlExpression
+		Operator string
+		RHS      LtlExpression
+	}
+)
+
+func (x LtlAtomExpression) ltlexpression()  {}
+func (x ParenLtlExpression) ltlexpression() {}
+func (x UnOpLtlExpression) ltlexpression()  {}
+func (x BinOpLtlExpression) ltlexpression() {}

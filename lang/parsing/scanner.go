@@ -37,6 +37,18 @@ var keywords = map[string]int{
 	"skip":          SKIP,
 	"true":          TRUE,
 	"false":         FALSE,
+	"ltl":           LTL,
+	"U":             'U',
+	"V":             'V',
+	"S":             'S',
+	"T":             'T',
+	"X":             'X',
+	"G":             'G',
+	"F":             'F',
+	"Y":             'Y',
+	"Z":             'Z',
+	"H":             'H',
+	"O":             'O',
 }
 
 type Mode uint
@@ -95,9 +107,9 @@ func (s *Scanner) Scan() (tok int, lit string, pos Pos) {
 		case -1:
 			tok = EOF
 		case '}', ')', ']':
-			nextInsertSemis = true;
+			nextInsertSemis = true
 			fallthrough
-		case '{', '(', '[', ',', ':', ';', '@':
+		case '{', '(', '[', ',', ':', ';', '@', '.':
 			tok = int(ch)
 			lit = string(ch)
 		case '+':
@@ -116,6 +128,10 @@ func (s *Scanner) Scan() (tok int, lit string, pos Pos) {
 				s.next()
 				tok = SUB_ASSIGN
 				lit = "-="
+			case '>':
+				s.next()
+				tok = THEN
+				lit = "->"
 			default:
 				tok = SUB
 				lit = "-"

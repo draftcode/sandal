@@ -46,10 +46,11 @@ func convertMainModuleToTemplate(mod intMainModule) (error, []tmplModule) {
 	}
 	return nil, []tmplModule{
 		{
-			Name:    "main",
-			Vars:    vars,
-			Assigns: assigns,
-			Defs:    defs,
+			Name:     "main",
+			Vars:     vars,
+			Assigns:  assigns,
+			Defs:     defs,
+			LtlSpecs: mod.LtlSpecs,
 		},
 	}
 }
@@ -206,7 +207,7 @@ func buildTransitionAssignment(trans map[string]intTransition) (ret []caseTmplCa
 			if trans[transName].Condition == "" {
 				conds = append(conds, "(TRUE)")
 			} else {
-				conds = append(conds, "(" + trans[transName].Condition + ")")
+				conds = append(conds, "("+trans[transName].Condition+")")
 			}
 		}
 		cond := fmt.Sprintf("running_pid = pid & state = %s & (%s)",

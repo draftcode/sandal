@@ -6,9 +6,10 @@ type intModule interface {
 
 type (
 	intMainModule struct {
-		Vars    []intVar
-		Assigns []intAssign
-		Defs    []intAssign
+		Vars     []intVar
+		Assigns  []intAssign
+		Defs     []intAssign
+		LtlSpecs []string
 	}
 
 	intHandshakeChannel struct {
@@ -47,10 +48,10 @@ type (
 	}
 
 	intTransition struct {
-		FromState  intState
-		NextState  intState
-		Condition  string
-		Actions    []intAssign
+		FromState intState
+		NextState intState
+		Condition string
+		Actions   []intAssign
 	}
 
 	intAssign struct {

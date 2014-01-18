@@ -31,13 +31,15 @@ type token struct {
 	blocks      []data.BlockStatement
 	initvars    []data.InitVar
 	initvar     data.InitVar
+	ltlexpr     data.LtlExpression
+	ltlatom     data.LtlAtomExpression
 
 	tok         token
 }
 
 %type<definitions> spec
 %type<definition> toplevel_body
-%type<definition> data_def module_def const_def proc_def init_block
+%type<definition> data_def module_def const_def proc_def init_block ltl_spec
 %type<definitions> module_body_zero
 %type<definition> module_body
 %type<initvars> initvars_zero initvars_one
@@ -55,6 +57,8 @@ type token struct {
 %type<tags> tags_zero tags_one
 %type<tag> tag
 %type<blocks> blocks_one
+%type<ltlexpr> ltl_expr
+%type<ltlatom> ltl_atom
 
 %token<tok> IDENTIFIER
 %token<tok> NUMBER
@@ -123,6 +127,9 @@ type token struct {
 %token<tok> SKIP
 %token<tok> TRUE
 %token<tok> FALSE
+%token<tok> LTL
+%token<tok> THEN
+%token<tok> IFF
 %token<tok> '{' '}' '(' ')' '[' ']' ',' ':' ';'
 
 %left LOR
@@ -130,6 +137,7 @@ type token struct {
 %left EQL NEQ LSS LEQ GTR GEQ
 %left ADD SUB OR XOR
 %left MUL QUO REM SHL SHR AND
+%left THEN 'U' 'V' 'S' 'T'
 %right UNARY
 
 %%
@@ -155,6 +163,7 @@ toplevel_body
 	| const_def
 	| proc_def
 	| init_block
+	| ltl_spec
 
 data_def
 	: DATA IDENTIFIER '{' idents_one '}' ';'
@@ -199,6 +208,16 @@ init_block
 	: INIT '{' initvars_zero '}' ';'
 	{
 		$$ = data.InitBlock{Pos: $1.pos, Vars: $3}
+	}
+
+ltl_spec
+	: LTL '{' ltl_expr ';' '}' ';'
+	{
+		$$ = data.LtlSpec{Expr: $3}
+	}
+	| LTL '{' ltl_expr '}' ';'
+	{
+		$$ = data.LtlSpec{Expr: $3}
 	}
 
 initvars_zero
@@ -485,6 +504,94 @@ expr	: IDENTIFIER
 	| '[' arguments_one ']'
 	{
 		$$ = data.ArrayExpression{Pos: $1.pos, Elems: $2}
+	}
+
+/* ======================================== */
+
+ltl_expr: ltl_atom
+	{
+		$$ = $1
+	}
+	| '(' ltl_expr ')'
+	{
+		$$ = data.ParenLtlExpression{SubExpr: $2}
+	}
+	| ltl_expr LAND ltl_expr
+	{
+		$$ = data.BinOpLtlExpression{Operator: "&", LHS: $1, RHS: $3}
+	}
+	| ltl_expr LOR ltl_expr
+	{
+		$$ = data.BinOpLtlExpression{Operator: "|", LHS: $1, RHS: $3}
+	}
+	| ltl_expr XOR ltl_expr
+	{
+		$$ = data.BinOpLtlExpression{Operator: "^", LHS: $1, RHS: $3}
+	}
+	| ltl_expr THEN ltl_expr
+	{
+		$$ = data.BinOpLtlExpression{Operator: "->", LHS: $1, RHS: $3}
+	}
+	| ltl_expr EQL ltl_expr
+	{
+		$$ = data.BinOpLtlExpression{Operator: "=", LHS: $1, RHS: $3}
+	}
+	| ltl_expr 'U' ltl_expr
+	{
+		$$ = data.BinOpLtlExpression{Operator: "U", LHS: $1, RHS: $3}
+	}
+	| ltl_expr 'V' ltl_expr
+	{
+		$$ = data.BinOpLtlExpression{Operator: "V", LHS: $1, RHS: $3}
+	}
+	| ltl_expr 'S' ltl_expr
+	{
+		$$ = data.BinOpLtlExpression{Operator: "S", LHS: $1, RHS: $3}
+	}
+	| ltl_expr 'T' ltl_expr
+	{
+		$$ = data.BinOpLtlExpression{Operator: "T", LHS: $1, RHS: $3}
+	}
+	| NOT ltl_expr      %prec UNARY
+	{
+		$$ = data.UnOpLtlExpression{Operator: "!", SubExpr: $2}
+	}
+	| 'X' ltl_expr      %prec UNARY
+	{
+		$$ = data.UnOpLtlExpression{Operator: "X", SubExpr: $2}
+	}
+	| 'G' ltl_expr      %prec UNARY
+	{
+		$$ = data.UnOpLtlExpression{Operator: "G", SubExpr: $2}
+	}
+	| 'F' ltl_expr      %prec UNARY
+	{
+		$$ = data.UnOpLtlExpression{Operator: "F", SubExpr: $2}
+	}
+	| 'Y' ltl_expr      %prec UNARY
+	{
+		$$ = data.UnOpLtlExpression{Operator: "Y", SubExpr: $2}
+	}
+	| 'Z' ltl_expr      %prec UNARY
+	{
+		$$ = data.UnOpLtlExpression{Operator: "Z", SubExpr: $2}
+	}
+	| 'H' ltl_expr      %prec UNARY
+	{
+		$$ = data.UnOpLtlExpression{Operator: "H", SubExpr: $2}
+	}
+	| 'O' ltl_expr      %prec UNARY
+	{
+		$$ = data.UnOpLtlExpression{Operator: "O", SubExpr: $2}
+	}
+
+ltl_atom: IDENTIFIER
+	{
+		$$ = data.LtlAtomExpression{Names: []string{$1.lit}}
+	}
+	| IDENTIFIER '.' ltl_atom
+	{
+		$$ = data.LtlAtomExpression{Names: append([]string{$1.lit}, $3.Names...)}
 	}
 
 /* ======================================== */

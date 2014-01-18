@@ -41,11 +41,11 @@ func newIntStatementConverter(upper *varEnv, defaults map[string]string, tags []
 	x.labelToState = make(map[string]intState)
 	x.tags = tags
 
-	if x.hasTag("unstable") || x.hasTag("reboot") {
+	if hasTag(x.tags, "unstable") || hasTag(x.tags, "reboot") {
 		x.unstable = true
 		x.unstableState = x.genNextState()
 
-		if x.hasTag("reboot") {
+		if hasTag(x.tags, "reboot") {
 			x.trans = append(x.trans, intTransition{
 				FromState: x.unstableState,
 				NextState: "state0",
@@ -56,8 +56,8 @@ func newIntStatementConverter(upper *varEnv, defaults map[string]string, tags []
 	return x
 }
 
-func (x *intStatementConverter) hasTag(tag string) bool {
-	for _, t := range x.tags {
+func hasTag(tags []string, tag string) bool {
+	for _, t := range tags {
 		if t == tag {
 			return true
 		}
@@ -175,7 +175,7 @@ func (x *intStatementConverter) convertVarDeclStatement(stmt VarDeclStatement) {
 		})
 	}
 	x.vars = append(x.vars, intVar{realName, convertTypeToString(stmt.Type, x.env)})
-	x.env.add(stmt.Name, intInternalPrimitiveVar{realName, stmt.Type})
+	x.env.add(stmt.Name, intInternalPrimitiveVar{realName, stmt.Type, nil})
 	x.defaults[nextRealName] = realName
 	x.currentState = nextState
 }
@@ -302,14 +302,18 @@ func (x *intStatementConverter) convertPeekStatement(stmt PeekStatement) {
 	panic("not implemented")
 }
 func (x *intStatementConverter) convertSendStatement(stmt SendStatement) {
-	nextState := x.genNextState()
-
 	ch, args := convertChannelExpr(stmt, x.env)
 	chType := ch.GetType()
 
 	actions := []intAssign{}
 	switch chType.(type) {
 	case HandshakeChannelType:
+		chVar := resolveRealObj(ch).(intInternalHandshakeChannelProxyVar)
+		firstState := x.currentState
+		secondState := x.genNextState()
+		lastState := x.genNextState()
+
+		// Generate the first state transition
 		actions = append(actions, intAssign{
 			LHS: fmt.Sprintf("%s.next_filled", ch),
 			RHS: "TRUE",
@@ -325,27 +329,36 @@ func (x *intStatementConverter) convertSendStatement(stmt SendStatement) {
 			})
 		}
 		x.trans = append(x.trans, intTransition{
-			FromState: x.currentState,
-			NextState: nextState,
+			FromState: firstState,
+			NextState: secondState,
 			Condition: fmt.Sprintf("!(%s.filled)", ch),
 			Actions:   actions,
 		})
-		x.currentState = nextState
-		nextState = x.genNextState()
+
+		// Generate the second state transition
 		x.trans = append(x.trans, intTransition{
-			FromState: x.currentState,
-			NextState: nextState,
+			FromState: secondState,
+			NextState: lastState,
 			Condition: fmt.Sprintf("(%s.filled) & (%s.received)", ch, ch),
 			Actions: []intAssign{
 				{LHS: fmt.Sprintf("%s.next_filled", ch), RHS: "FALSE"},
 			},
 		})
+
+		// Inject drop fault
+		if hasTag(chVar.ChannelVar.Tags, "drop") {
+			x.trans = append(x.trans, intTransition{
+				FromState: firstState,
+				NextState: lastState,
+			})
+		}
+
+		x.currentState = lastState
 	case BufferedChannelType:
 		panic("Not Implemented")
 	default:
 		panic("unknown channel type")
 	}
-	x.currentState = nextState
 }
 func (x *intStatementConverter) convertForStatement(stmt ForStatement) {
 	savedCurrentState := x.currentState
@@ -373,6 +386,7 @@ func (x *intStatementConverter) convertForInStatement(stmt ForInStatement) {
 			x.env.add(stmt.Variable, intInternalPrimitiveVar{
 				fmt.Sprintf("__elem%d_%s", i, container.RealName),
 				elem.GetType(),
+				elem,
 			})
 			for _, stmt := range stmt.Statements {
 				x.convertStatement(stmt)

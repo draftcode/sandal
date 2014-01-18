@@ -9,12 +9,13 @@ import (
 
 type (
 	tmplModule struct {
-		Name    string
-		Args    []string
-		Vars    []tmplVar
-		Trans   []string
-		Assigns []tmplAssign
-		Defs    []tmplAssign
+		Name     string
+		Args     []string
+		Vars     []tmplVar
+		Trans    []string
+		Assigns  []tmplAssign
+		Defs     []tmplAssign
+		LtlSpecs []string
 	}
 
 	tmplVar struct {
@@ -31,12 +32,12 @@ type (
 	tmplAssigns []tmplAssign
 )
 
-func (l tmplVars) Len() int { return len(l) }
-func (l tmplVars) Less(i, j int) bool { return l[i].Name < l[j].Name }
-func (l tmplVars) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
-func (l tmplAssigns) Len() int { return len(l) }
+func (l tmplVars) Len() int              { return len(l) }
+func (l tmplVars) Less(i, j int) bool    { return l[i].Name < l[j].Name }
+func (l tmplVars) Swap(i, j int)         { l[i], l[j] = l[j], l[i] }
+func (l tmplAssigns) Len() int           { return len(l) }
 func (l tmplAssigns) Less(i, j int) bool { return l[i].LHS < l[j].LHS }
-func (l tmplAssigns) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
+func (l tmplAssigns) Swap(i, j int)      { l[i], l[j] = l[j], l[i] }
 
 const moduleTemplate = `
 MODULE {{.Name}}({{args .Args}}){{if .Vars}}
@@ -46,7 +47,9 @@ MODULE {{.Name}}({{args .Args}}){{if .Vars}}
   ASSIGN{{range .Assigns}}
     {{.LHS}} :={{rhsFormat .RHS}};{{end}}{{end}}{{if .Defs}}
   DEFINE{{range .Defs}}
-    {{.LHS}} :={{rhsFormat .RHS}};{{end}}{{end}}
+    {{.LHS}} :={{rhsFormat .RHS}};{{end}}{{end}}{{if .LtlSpecs}}
+  LTLSPEC{{range .LtlSpecs}}
+    {{.}}{{end}}{{end}}
 `
 
 func rhsFormat(rhs string) string {

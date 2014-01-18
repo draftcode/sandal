@@ -6,10 +6,10 @@ data Response {
 }
 
 proc Arbiter(chRecvs []channel { Response }, chSends []channel { Response }) {
-  var all_ready bool = true
   for ch in chSends {
     send(ch, Ready)
   }
+  var all_ready bool = true
   for ch in chRecvs {
     var resp Response
     var recved bool = timeout_recv(ch, resp)
@@ -47,4 +47,8 @@ init {
   arbiter : Arbiter([chWorker1Send, chWorker2Send], [chWorker1Recv, chWorker2Recv]),
   worker1 : Worker(chWorker1Recv, chWorker1Send),
   worker2 : Worker(chWorker2Recv, chWorker2Send),
+}
+
+ltl {
+  F (arbiter.all_ready && worker1.resp == Commit || !arbiter.all_ready)
 }

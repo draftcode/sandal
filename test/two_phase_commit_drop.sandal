@@ -40,10 +40,10 @@ proc Worker(chRecv channel { Response }, chSend channel { Response }) {
 }
 
 init {
-  chWorker1Send : channel { Response },
-  chWorker1Recv : channel { Response },
-  chWorker2Send : channel { Response },
-  chWorker2Recv : channel { Response },
+  chWorker1Send : channel { Response } @drop,
+  chWorker1Recv : channel { Response } @drop,
+  chWorker2Send : channel { Response } @drop,
+  chWorker2Recv : channel { Response } @drop,
   arbiter : Arbiter([chWorker1Send, chWorker2Send], [chWorker1Recv, chWorker2Recv]),
   worker1 : Worker(chWorker1Recv, chWorker1Send),
   worker2 : Worker(chWorker2Recv, chWorker2Send),

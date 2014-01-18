@@ -57,6 +57,7 @@ type (
 	intInternalPrimitiveVar struct {
 		RealName string
 		Type     Type
+		RealObj  intInternalExpressionObj
 	}
 
 	intInternalHandshakeChannelProxyVar struct {
@@ -125,6 +126,7 @@ type (
 		ModuleName string
 		RealName   string
 		Type       HandshakeChannelType
+		Tags       []string
 		Pids       map[int]bool
 	}
 
@@ -132,6 +134,7 @@ type (
 		ModuleName string
 		RealName   string
 		Type       BufferedChannelType
+		Tags       []string
 		Pids       map[int]bool
 	}
 )
@@ -503,3 +506,32 @@ func changeToProxy(intExprObj intInternalExpressionObj, pid int) intInternalExpr
 		panic("unexpected")
 	}
 }
+
+// ========================================
+
+func resolveRealObj(obj intInternalExpressionObj) intInternalExpressionObj {
+	for {
+		if primVarObj, isPrimVarObj := obj.(intInternalPrimitiveVar); isPrimVarObj {
+			if primVarObj.RealObj != nil {
+				obj = primVarObj.RealObj
+			} else {
+				return obj
+			}
+		} else {
+			return obj
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
