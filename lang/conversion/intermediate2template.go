@@ -122,8 +122,104 @@ func convertHandshakeChannelToTemplate(mod intHandshakeChannel) (error, []tmplMo
 		},
 	}
 }
-func convertBufferedChannelToTemplate(mod intModule) (error, []tmplModule) {
-	panic("Not implemented")
+func convertBufferedChannelToTemplate(mod intBufferedChannel) (error, []tmplModule) {
+	// Fields for the channel module.
+	args := []string{"running_pid", "filleds", "receiveds"}
+	for i, _ := range mod.ValueType {
+		args = append(args, fmt.Sprintf("values_%d", i))
+	}
+	vars := []tmplVar{
+		{"filled", fmt.Sprintf("array 0..%d of boolean", mod.Length-1)},
+		{"next_idx", fmt.Sprintf("0..%d", mod.Length)},
+	}
+	for i, elem := range mod.ValueType {
+		vars = append(vars, tmplVar{
+			fmt.Sprintf("value_%d", i),
+			fmt.Sprintf("array 0..%d of %s", mod.Length-1, elem),
+		})
+	}
+	assigns := []tmplAssign{
+		{"init(next_idx)", "0"},
+		{"next(next_idx)", strings.Join([]string{
+			"case",
+			fmt.Sprintf("  filleds[running_pid] : (next_idx + 1) mod %d;", mod.Length+1),
+			"  TRUE : next_idx;",
+			"esac",
+		}, "\n")},
+	}
+	for i, _ := range mod.ValueType {
+		for bufIdx := 0; bufIdx < mod.Length; bufIdx++ {
+			assigns = append(assigns, tmplAssign{
+				fmt.Sprintf("init(filled[%d])", bufIdx),
+				"FALSE",
+			})
+			assigns = append(assigns, tmplAssign{
+				fmt.Sprintf("next(filled[%d])", bufIdx),
+				createFilledCase(bufIdx, mod.Length),
+			})
+			assigns = append(assigns, tmplAssign{
+				fmt.Sprintf("next(value_%d[%d])", i, bufIdx),
+				createValueCase(i, bufIdx, mod.Length),
+			})
+		}
+	}
+	// Fields for the channel proxy module
+	proxyVars := []tmplVar{
+		{"filled", "boolean"},
+		{"received", "boolean"},
+	}
+	for i, elem := range mod.ValueType {
+		proxyVars = append(proxyVars, tmplVar{
+			fmt.Sprintf("next_value_%d", i),
+			elem,
+		})
+	}
+	proxyDefs := []tmplAssign{
+		{"full", fmt.Sprintf("ch.next_idx = %d", mod.Length)},
+		{"ready", "ch.filled[0]"},
+	}
+	for i, _ := range mod.ValueType {
+		proxyDefs = append(proxyDefs, tmplAssign{
+			fmt.Sprintf("value_%d", i),
+			fmt.Sprintf("ch.value_%d[0]", i),
+		})
+	}
+	return nil, []tmplModule{
+		{
+			Name:    mod.Name,
+			Args:    args,
+			Vars:    vars,
+			Assigns: assigns,
+		},
+		{
+			Name: mod.Name + "Proxy",
+			Args: []string{"ch"},
+			Vars: proxyVars,
+			Defs: proxyDefs,
+		},
+	}
+}
+func createFilledCase(bufIdx, length int) string {
+	buf := []string{"case"}
+	buf = append(buf, fmt.Sprintf("  filleds[running_pid] & next_idx = %d : TRUE;", bufIdx))
+	if bufIdx+1 < length {
+		buf = append(buf, fmt.Sprintf("  receiveds[running_pid] : filled[%d];", bufIdx+1))
+	} else {
+		buf = append(buf, "  receiveds[running_pid] : FALSE;")
+	}
+	buf = append(buf, fmt.Sprintf("  TRUE : filled[%d];", bufIdx))
+	buf = append(buf, "esac")
+	return strings.Join(buf, "\n")
+}
+func createValueCase(elemIdx, bufIdx, length int) string {
+	buf := []string{"case"}
+	buf = append(buf, fmt.Sprintf("  filleds[running_pid] & next_idx = %d : values_%d[running_pid];", bufIdx, elemIdx))
+	if bufIdx+1 < length {
+		buf = append(buf, fmt.Sprintf("  receiveds[running_pid] : value_%d[%d];", elemIdx, bufIdx+1))
+	}
+	buf = append(buf, fmt.Sprintf("  TRUE : value_%d[%d];", elemIdx, bufIdx))
+	buf = append(buf, "esac")
+	return strings.Join(buf, "\n")
 }
 func convertProcModuleToTemplate(mod intProcModule) (error, []tmplModule) {
 	transitions := nameTransitions(mod.Trans)

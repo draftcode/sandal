@@ -1,0 +1,28 @@
+data Message { Ping, Pong }
+
+proc PingProc(ch_send channel [] { Message }, ch_recv channel [] { Message }) {
+  for {
+    var msg Message
+    send(ch_send, Ping)
+    recv(ch_recv, msg)
+  }
+}
+
+proc PongProc(ch_send channel [] { Message }, ch_recv channel [] { Message }) {
+  for {
+    var msg Message
+    recv(ch_recv, msg)
+    send(ch_send, Pong)
+  }
+}
+
+init {
+  P0_0: PingProc(ping_to_pong_0, pong_to_ping_0),
+  P1_0: PongProc(pong_to_ping_0, ping_to_pong_0),
+  ping_to_pong_0: channel [1] { Message },
+  pong_to_ping_0: channel [1] { Message },
+}
+
+ltl {
+  F(P0_0.msg == Pong)
+}

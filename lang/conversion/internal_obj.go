@@ -337,7 +337,17 @@ func (x intInternalTimeoutRecv) Transition(fromState, nextState intState, varNam
 			})
 		}
 	case BufferedChannelType:
-		panic("Not Implemented")
+		recvedTrans.Condition = fmt.Sprintf("%s.ready", x.Channel)
+		recvedTrans.Actions = append(recvedTrans.Actions, intAssign{
+			LHS: fmt.Sprintf("%s.received", x.Channel),
+			RHS: "TRUE",
+		})
+		for i, arg := range x.Args {
+			recvedTrans.Actions = append(recvedTrans.Actions, intAssign{
+				LHS: fmt.Sprintf("next(%s)", arg),
+				RHS: fmt.Sprintf("%s.value_%d", x.Channel, i),
+			})
+		}
 	default:
 		panic("unknown channel type")
 	}
@@ -374,7 +384,18 @@ func (x intInternalNonblockRecv) Transition(fromState, nextState intState, varNa
 		}
 		notRecvedTrans.Condition = fmt.Sprintf("!(%s.filled & !%s.received)", x.Channel, x.Channel)
 	case BufferedChannelType:
-		panic("Not Implemented")
+		recvedTrans.Condition = fmt.Sprintf("%s.ready", x.Channel)
+		recvedTrans.Actions = append(recvedTrans.Actions, intAssign{
+			LHS: fmt.Sprintf("%s.received", x.Channel),
+			RHS: "TRUE",
+		})
+		for i, arg := range x.Args {
+			recvedTrans.Actions = append(recvedTrans.Actions, intAssign{
+				LHS: fmt.Sprintf("next(%s)", arg),
+				RHS: fmt.Sprintf("%s.value_%d", x.Channel, i),
+			})
+		}
+		notRecvedTrans.Condition = fmt.Sprintf("!(%s.ready)", x.Channel)
 	default:
 		panic("unknown channel type")
 	}

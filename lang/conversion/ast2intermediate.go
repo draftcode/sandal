@@ -142,7 +142,20 @@ func (x *intModConverter) buildMainModule() error {
 				})
 			}
 		case intInternalBufferedChannelVar:
-			// TODO
+			args := []string{"running_pid", chVar.RealName + "_filled", chVar.RealName + "_received"}
+			for i := 0; i < len(chVar.Type.Elems); i++ {
+				args = append(args, fmt.Sprintf("%s_value_%d", chVar.RealName, i))
+			}
+			module.Vars = append(module.Vars, intVar{
+				Name: chVar.RealName,
+				Type: fmt.Sprintf("%s(%s)", chVar.ModuleName, argJoin(args)),
+			})
+			for pid, _ := range chVar.Pids {
+				module.Vars = append(module.Vars, intVar{
+					Name: fmt.Sprintf("__pid%d_%s", pid, chVar.RealName),
+					Type: fmt.Sprintf("%sProxy(%s)", chVar.ModuleName, chVar.RealName),
+				})
+			}
 		default:
 			panic("Unknown channel value")
 		}
@@ -207,7 +220,32 @@ func (x *intModConverter) buildMainModule() error {
 				})
 			}
 		case intInternalBufferedChannelVar:
-			// TODO
+			filled := []string{}
+			received := []string{}
+			values := make([][]string, len(chVar.Type.Elems))
+			for _, pid := range pids {
+				if chVar.Pids[pid] {
+					filled = append(filled, fmt.Sprintf("__pid%d_%s.filled", pid, chVar.RealName))
+					received = append(received, fmt.Sprintf("__pid%d_%s.received", pid, chVar.RealName))
+					for i := 0; i < len(chVar.Type.Elems); i++ {
+						values[i] = append(values[i], fmt.Sprintf("__pid%d_%s.next_value_%d", pid, chVar.RealName, i))
+					}
+				} else {
+					filled = append(filled, "FALSE")
+					received = append(received, "FALSE")
+					for i := 0; i < len(chVar.Type.Elems); i++ {
+						values[i] = append(values[i], fmt.Sprintf("%s.value_%d[0]", chVar.RealName, i))
+					}
+				}
+			}
+			module.Defs = append(module.Defs, intAssign{chVar.RealName + "_filled", "[" + argJoin(filled) + "]"})
+			module.Defs = append(module.Defs, intAssign{chVar.RealName + "_received", "[" + argJoin(received) + "]"})
+			for i := 0; i < len(chVar.Type.Elems); i++ {
+				module.Defs = append(module.Defs, intAssign{
+					LHS: fmt.Sprintf("%s_value_%d", chVar.RealName, i),
+					RHS: "[" + argJoin(values[i]) + "]",
+				})
+			}
 		}
 	}
 
@@ -305,6 +343,13 @@ func (x *intModConverter) instantiateProcDef(def intInternalProcDef, moduleName 
 			defaults[fmt.Sprintf("%s.next_value_%d", paramName, i)] = fmt.Sprintf("%s.value_%d", paramName, i)
 		}
 	}
+	addBufferedChannelDefaults := func(paramName string, numElems int, defaults map[string]string) {
+		defaults[paramName+".filled"] = "FALSE"
+		defaults[paramName+".received"] = "FALSE"
+		for i := 0; i < numElems; i++ {
+			defaults[fmt.Sprintf("%s.next_value_%d", paramName, i)] = fmt.Sprintf("%s.value_%d", paramName, i)
+		}
+	}
 
 	params := []string{"running_pid", "pid"}
 	defaults := make(map[string]string)
@@ -319,7 +364,7 @@ func (x *intModConverter) instantiateProcDef(def intInternalProcDef, moduleName 
 				case intInternalHandshakeChannelProxyVar:
 					addHandshakeChannelDefaults(paramName, len(elem.ChannelVar.Type.Elems), defaults)
 				case intInternalBufferedChannelProxyVar:
-					panic("not implemented")
+					addBufferedChannelDefaults(paramName, len(elem.ChannelVar.Type.Elems), defaults)
 				}
 			}
 			x.env.add(param.Name, intInternalArrayVar{param.Name, arg})
@@ -328,7 +373,9 @@ func (x *intModConverter) instantiateProcDef(def intInternalProcDef, moduleName 
 			addHandshakeChannelDefaults(param.Name, len(arg.ChannelVar.Type.Elems), defaults)
 			x.env.add(param.Name, intInternalPrimitiveVar{param.Name, param.Type, arg})
 		case intInternalBufferedChannelProxyVar:
-			panic("not implemented")
+			params = append(params, param.Name)
+			addBufferedChannelDefaults(param.Name, len(arg.ChannelVar.Type.Elems), defaults)
+			x.env.add(param.Name, intInternalPrimitiveVar{param.Name, param.Type, arg})
 		case intInternalLiteral, intInternalNot, intInternalUnarySub, intInternalParen, intInternalBinOp:
 			params = append(params, param.Name)
 			x.env.add(param.Name, intInternalPrimitiveVar{param.Name, param.Type, nil})
@@ -371,7 +418,16 @@ func convertTypeToString(ty Type, env *varEnv) string {
 }
 
 func (x *intModConverter) calculateConstExpression(expr Expression) int {
-	// TODO
+	switch expr := expr.(type) {
+	case NumberExpression:
+		i, err := strconv.Atoi(expr.Lit)
+		if err != nil {
+			panic("Expect " + expr.Lit + " to be converted to integer")
+		}
+		return i
+	default:
+		panic("not implemented")
+	}
 	return 0
 }
 

@@ -292,7 +292,22 @@ func (x *intStatementConverter) convertRecvStatement(stmt RecvStatement) {
 			Actions:   actions,
 		})
 	case BufferedChannelType:
-		panic("Not Implemented")
+		actions = append(actions, intAssign{
+			LHS: fmt.Sprintf("%s.received", ch),
+			RHS: "TRUE",
+		})
+		for i, arg := range args {
+			actions = append(actions, intAssign{
+				LHS: fmt.Sprintf("next(%s)", arg),
+				RHS: fmt.Sprintf("%s.value_%d", ch, i),
+			})
+		}
+		x.trans = append(x.trans, intTransition{
+			FromState: x.currentState,
+			NextState: nextState,
+			Condition: fmt.Sprintf("%s.ready", ch),
+			Actions:   actions,
+		})
 	default:
 		panic("unknown channel type")
 	}
@@ -355,7 +370,34 @@ func (x *intStatementConverter) convertSendStatement(stmt SendStatement) {
 
 		x.currentState = lastState
 	case BufferedChannelType:
-		panic("Not Implemented")
+		chVar := resolveRealObj(ch).(intInternalBufferedChannelProxyVar)
+		nextState := x.genNextState()
+
+		actions = append(actions, intAssign{
+			LHS: fmt.Sprintf("%s.filled", ch),
+			RHS: "TRUE",
+		})
+		for i, arg := range args {
+			actions = append(actions, intAssign{
+				LHS: fmt.Sprintf("%s.next_value_%d", ch, i),
+				RHS: arg.String(),
+			})
+		}
+		x.trans = append(x.trans, intTransition{
+			FromState: x.currentState,
+			NextState: nextState,
+			Condition: fmt.Sprintf("!(%s.full)", ch),
+			Actions:   actions,
+		})
+
+		// Inject drop fault
+		if hasTag(chVar.ChannelVar.Tags, "drop") {
+			x.trans = append(x.trans, intTransition{
+				FromState: x.currentState,
+				NextState: nextState,
+			})
+		}
+		x.currentState = nextState
 	default:
 		panic("unknown channel type")
 	}
