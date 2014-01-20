@@ -1,0 +1,169 @@
+% time sandal two_phase_commit_shutdown.sandal | nusmv                [master]-[~/src/go/src/github.com/draftcode/sandal/test]
+*** This is NuSMV 2.5.4 (compiled on Sat Dec 14 12:51:03 UTC 2013)
+*** Enabled addons are: compass
+*** For more information on NuSMV see <http://nusmv.fbk.eu>
+*** or email to <nusmv-users@list.fbk.eu>.
+*** Please report bugs to <nusmv-users@fbk.eu>
+
+*** Copyright (c) 2010, Fondazione Bruno Kessler
+
+*** This version of NuSMV is linked to the CUDD library version 2.4.1
+*** Copyright (c) 1995-2004, Regents of the University of Colorado
+
+*** This version of NuSMV is linked to the MiniSat SAT solver.
+*** See http://www.cs.chalmers.se/Cs/Research/FormalMethods/MiniSat
+*** Copyright (c) 2003-2005, Niklas Een, Niklas Sorensson
+
+-- specification ( G (( F running_pid = 0 &  F running_pid = 1) &  F running_pid = 2) ->  F ((arbiter.all_ready & worker1.resp = Commit) | !arbiter.all_ready))  is false
+-- as demonstrated by the following execution sequence
+Trace Description: LTL Counterexample
+Trace Type: Counterexample
+-> State: 1.1 <-
+  __pid0_chWorker1Recv.next_filled = TRUE
+  __pid0_chWorker1Recv.next_received = FALSE
+  __pid0_chWorker1Recv.next_value_0 = Ready
+  __pid0_chWorker1Send.next_filled = FALSE
+  __pid0_chWorker1Send.next_received = FALSE
+  __pid0_chWorker1Send.next_value_0 = Abort
+  __pid0_chWorker2Recv.next_filled = FALSE
+  __pid0_chWorker2Recv.next_received = FALSE
+  __pid0_chWorker2Recv.next_value_0 = Abort
+  __pid0_chWorker2Send.next_filled = FALSE
+  __pid0_chWorker2Send.next_received = FALSE
+  __pid0_chWorker2Send.next_value_0 = Abort
+  __pid1_chWorker1Recv.next_filled = FALSE
+  __pid1_chWorker1Recv.next_received = FALSE
+  __pid1_chWorker1Recv.next_value_0 = Abort
+  __pid1_chWorker1Send.next_filled = FALSE
+  __pid1_chWorker1Send.next_received = FALSE
+  __pid1_chWorker1Send.next_value_0 = Abort
+  __pid2_chWorker2Recv.next_filled = FALSE
+  __pid2_chWorker2Recv.next_received = FALSE
+  __pid2_chWorker2Recv.next_value_0 = Abort
+  __pid2_chWorker2Send.next_filled = FALSE
+  __pid2_chWorker2Send.next_received = FALSE
+  __pid2_chWorker2Send.next_value_0 = Abort
+  arbiter.all_ready = TRUE
+  arbiter.resp = Ready
+  arbiter.resp_2 = Ready
+  arbiter.state = state0
+  arbiter.transition = trans0
+  chWorker1Recv.filled = FALSE
+  chWorker1Recv.received = FALSE
+  chWorker1Recv.value_0 = Abort
+  chWorker1Send.filled = FALSE
+  chWorker1Send.received = FALSE
+  chWorker1Send.value_0 = Abort
+  chWorker2Recv.filled = FALSE
+  chWorker2Recv.received = FALSE
+  chWorker2Recv.value_0 = Abort
+  chWorker2Send.filled = FALSE
+  chWorker2Send.received = FALSE
+  chWorker2Send.value_0 = Abort
+  running_pid = 0
+  worker1.resp = NotReady
+  worker1.state = state0
+  worker1.transition = notrans
+  worker2.resp = Ready
+  worker2.state = state0
+  worker2.transition = notrans
+  chWorker2Send_value_0[0] = Abort
+  chWorker2Send_value_0[1] = Abort
+  chWorker2Send_value_0[2] = Abort
+  chWorker2Send_received[0] = FALSE
+  chWorker2Send_received[1] = FALSE
+  chWorker2Send_received[2] = FALSE
+  chWorker2Send_filled[0] = FALSE
+  chWorker2Send_filled[1] = FALSE
+  chWorker2Send_filled[2] = FALSE
+  chWorker2Recv_value_0[0] = Abort
+  chWorker2Recv_value_0[1] = Abort
+  chWorker2Recv_value_0[2] = Abort
+  chWorker2Recv_received[0] = FALSE
+  chWorker2Recv_received[1] = FALSE
+  chWorker2Recv_received[2] = FALSE
+  chWorker2Recv_filled[0] = FALSE
+  chWorker2Recv_filled[1] = FALSE
+  chWorker2Recv_filled[2] = FALSE
+  chWorker1Send_value_0[0] = Abort
+  chWorker1Send_value_0[1] = Abort
+  chWorker1Send_value_0[2] = Abort
+  chWorker1Send_received[0] = FALSE
+  chWorker1Send_received[1] = FALSE
+  chWorker1Send_received[2] = FALSE
+  chWorker1Send_filled[0] = FALSE
+  chWorker1Send_filled[1] = FALSE
+  chWorker1Send_filled[2] = FALSE
+  chWorker1Recv_value_0[0] = Ready
+  chWorker1Recv_value_0[1] = Abort
+  chWorker1Recv_value_0[2] = Abort
+  chWorker1Recv_received[0] = FALSE
+  chWorker1Recv_received[1] = FALSE
+  chWorker1Recv_received[2] = FALSE
+  chWorker1Recv_filled[0] = TRUE
+  chWorker1Recv_filled[1] = FALSE
+  chWorker1Recv_filled[2] = FALSE
+  __pid0_chWorker1Recv.value_0 = Abort
+  __pid0_chWorker1Recv.received = FALSE
+  __pid0_chWorker1Recv.filled = FALSE
+  __pid0_chWorker1Send.value_0 = Abort
+  __pid0_chWorker1Send.received = FALSE
+  __pid0_chWorker1Send.filled = FALSE
+  __pid0_chWorker2Recv.value_0 = Abort
+  __pid0_chWorker2Recv.received = FALSE
+  __pid0_chWorker2Recv.filled = FALSE
+  __pid0_chWorker2Send.value_0 = Abort
+  __pid0_chWorker2Send.received = FALSE
+  __pid0_chWorker2Send.filled = FALSE
+  __pid1_chWorker1Recv.value_0 = Abort
+  __pid1_chWorker1Recv.received = FALSE
+  __pid1_chWorker1Recv.filled = FALSE
+  __pid1_chWorker1Send.value_0 = Abort
+  __pid1_chWorker1Send.received = FALSE
+  __pid1_chWorker1Send.filled = FALSE
+  __pid2_chWorker2Recv.value_0 = Abort
+  __pid2_chWorker2Recv.received = FALSE
+  __pid2_chWorker2Recv.filled = FALSE
+  __pid2_chWorker2Send.value_0 = Abort
+  __pid2_chWorker2Send.received = FALSE
+  __pid2_chWorker2Send.filled = FALSE
+-> State: 1.2 <-
+  __pid1_chWorker1Recv.next_filled = TRUE
+  __pid1_chWorker1Recv.next_value_0 = Ready
+  arbiter.state = state2
+  arbiter.transition = notrans
+  chWorker1Recv.filled = TRUE
+  chWorker1Recv.value_0 = Ready
+  running_pid = 2
+  worker2.transition = trans0
+  chWorker1Recv_value_0[1] = Ready
+  chWorker1Recv_value_0[2] = Ready
+  chWorker1Recv_filled[1] = TRUE
+  chWorker1Recv_filled[2] = TRUE
+  __pid0_chWorker1Recv.value_0 = Ready
+  __pid0_chWorker1Recv.filled = TRUE
+  __pid1_chWorker1Recv.value_0 = Ready
+  __pid1_chWorker1Recv.filled = TRUE
+-> State: 1.3 <-
+  running_pid = 0
+  worker2.state = state1
+  worker2.transition = notrans
+-> State: 1.4 <-
+  running_pid = 1
+  worker1.transition = trans0
+-- Loop starts here
+-> State: 1.5 <-
+  running_pid = 0
+  worker1.state = state1
+  worker1.transition = notrans
+-> State: 1.6 <-
+  running_pid = 2
+-- Loop starts here
+-> State: 1.7 <-
+  running_pid = 0
+-> State: 1.8 <-
+  running_pid = 1
+-> State: 1.9 <-
+  running_pid = 0
+sandal two_phase_commit_shutdown.sandal  0.01s user 0.00s system 98% cpu 0.007 total
+nusmv  784.30s user 0.06s system 99% cpu 13:04.97 total

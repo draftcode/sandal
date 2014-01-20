@@ -1,0 +1,22 @@
+% time sandal two_phase_commit_fault.sandal| nusmv
+*** This is NuSMV 2.5.4 (compiled on Sat Dec 14 12:51:03 UTC 2013)
+*** Enabled addons are: compass
+*** For more information on NuSMV see <http://nusmv.fbk.eu>
+*** or email to <nusmv-users@list.fbk.eu>.
+*** Please report bugs to <nusmv-users@fbk.eu>
+
+*** Copyright (c) 2010, Fondazione Bruno Kessler
+
+*** This version of NuSMV is linked to the CUDD library version 2.4.1
+*** Copyright (c) 1995-2004, Regents of the University of Colorado
+
+*** This version of NuSMV is linked to the MiniSat SAT solver.
+*** See http://www.cs.chalmers.se/Cs/Research/FormalMethods/MiniSat
+*** Copyright (c) 2003-2005, Niklas Een, Niklas Sorensson
+
+-- specification ( G (( F running_pid = 0 &  F running_pid = 1) &  F
+running_pid = 2) ->  F ((arbiter.all_ready & worker1.resp = Commit) |
+!arbiter.all_ready))  is true
+sandal two_phase_commit_fault.sandal  0.01s user 0.00s system 39% cpu 0.026
+total
+nusmv  451.10s user 0.06s system 99% cpu 7:31.52 total

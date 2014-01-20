@@ -48,3 +48,7 @@ init {
   worker1 : Worker(chWorker1Recv, chWorker1Send) @unstable,
   worker2 : Worker(chWorker2Recv, chWorker2Send) @unstable,
 }
+
+ltl {
+  F (arbiter.all_ready && worker1.resp == Commit || !arbiter.all_ready)
+}
