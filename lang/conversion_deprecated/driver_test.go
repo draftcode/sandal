@@ -1,12 +1,13 @@
-package conversion
+package conversion_deprecated
 
 import (
 	. "github.com/draftcode/sandal/lang/data"
+	"github.com/kylelemons/godebug/diff"
 	"testing"
 )
 
 const expectedResult1 = `
-MODULE HandshakeChannel0(running_pid, filleds, receiveds, values_0)
+MODULE HandshakeChannel0()
   VAR
     filled : boolean;
     received : boolean;
@@ -15,41 +16,64 @@ MODULE HandshakeChannel0(running_pid, filleds, receiveds, values_0)
     init(filled) := FALSE;
     init(received) := FALSE;
     init(value_0) := FALSE;
-    next(filled) := filleds[running_pid];
-    next(received) := receiveds[running_pid];
-    next(value_0) := values_0[running_pid];
 
 MODULE HandshakeChannel0Proxy(ch)
   VAR
-    next_filled : boolean;
-    next_received : boolean;
-    next_value_0 : boolean;
+    recv_received : boolean;
+    send_filled : boolean;
+    send_leaving : boolean;
+    send_value_0 : boolean;
+  ASSIGN
+    next(ch.filled) :=
+      case
+        send_filled : TRUE;
+        send_leaving : FALSE;
+        TRUE : ch.filled;
+      esac;
+    next(ch.received) :=
+      case
+        send_filled : FALSE;
+        send_leaving : FALSE;
+        recv_received : TRUE;
+        TRUE : ch.received;
+      esac;
+    next(ch.value_0) :=
+      case
+        send_filled : send_value_0;
+        TRUE : ch.value_0;
+      esac;
   DEFINE
-    filled := ch.filled;
+    ready := ch.filled;
     received := ch.received;
     value_0 := ch.value_0;
 
-MODULE __pid0_ProcA(running_pid, pid, ch0)
+MODULE __pid0_ProcA(__orig_ch0)
+  JUSTICE
+    running
   VAR
     b : 0..8;
+    ch0 : HandshakeChannel0Proxy(__orig_ch0);
     state : {state0, state1, state2, state3};
     transition : {notrans, trans0, trans1, trans2};
   TRANS transition = trans0 -> (TRUE);
-  TRANS transition = trans1 -> (!(ch0.filled));
-  TRANS transition = trans2 -> ((ch0.filled) & (ch0.received));
+  TRANS transition = trans1 -> (!(ch0.ready));
+  TRANS transition = trans2 -> ((ch0.ready) & (ch0.received));
   ASSIGN
-    ch0.next_filled :=
+    ch0.recv_received :=
+      case
+        TRUE : FALSE;
+      esac;
+    ch0.send_filled :=
       case
         transition = trans1 : TRUE;
-        transition = trans2 : FALSE;
-        TRUE : ch0.filled;
+        TRUE : FALSE;
       esac;
-    ch0.next_received :=
+    ch0.send_leaving :=
       case
-        transition = trans1 : FALSE;
-        TRUE : ch0.received;
+        transition = trans2 : TRUE;
+        TRUE : FALSE;
       esac;
-    ch0.next_value_0 :=
+    ch0.send_value_0 :=
       case
         transition = trans1 : TRUE;
         TRUE : ch0.value_0;
@@ -68,24 +92,16 @@ MODULE __pid0_ProcA(running_pid, pid, ch0)
       esac;
     transition :=
       case
-        running_pid = pid & state = state0 & ((TRUE)) : {trans0};
-        running_pid = pid & state = state1 & ((!(ch0.filled))) : {trans1};
-        running_pid = pid & state = state2 & (((ch0.filled) & (ch0.received))) : {trans2};
+        state = state0 & ((TRUE)) : {trans0};
+        state = state1 & ((!(ch0.ready))) : {trans1};
+        state = state2 & (((ch0.ready) & (ch0.received))) : {trans2};
         TRUE : notrans;
       esac;
 
 MODULE main()
   VAR
-    __pid0_ch : HandshakeChannel0Proxy(ch);
-    ch : HandshakeChannel0(running_pid, ch_filled, ch_received, ch_value_0);
-    proc1 : __pid0_ProcA(running_pid, 0, __pid0_ch);
-    running_pid : {0};
-  ASSIGN
-    running_pid := {0};
-  DEFINE
-    ch_filled := [__pid0_ch.next_filled];
-    ch_received := [__pid0_ch.next_received];
-    ch_value_0 := [__pid0_ch.next_value_0];
+    ch : HandshakeChannel0;
+    proc1 : process __pid0_ProcA(ch);
 `
 
 func TestConvertASTToNuSMV1(t *testing.T) {
@@ -136,12 +152,12 @@ func TestConvertASTToNuSMV1(t *testing.T) {
 		t.Fatalf("Unexpected error: %s", err)
 	}
 	if mod != expectedResult1 {
-		t.Errorf("Unmatched\nExpected %s\nGot      %s", expectedResult1, mod)
+		t.Errorf("Unmatched\n%s\n", diff.Diff(expectedResult1, mod))
 	}
 }
 
 const expectedResult2 = `
-MODULE BufferedChannel0(running_pid, filleds, receiveds, values_0)
+MODULE BufferedChannel0()
   VAR
     filled : array 0..2 of boolean;
     next_idx : 0..3;
@@ -154,79 +170,83 @@ MODULE BufferedChannel0(running_pid, filleds, receiveds, values_0)
     init(value_0[0]) := FALSE;
     init(value_0[1]) := FALSE;
     init(value_0[2]) := FALSE;
-    next(filled[0]) :=
-      case
-        filleds[running_pid] & next_idx = 0 : TRUE;
-        receiveds[running_pid] : filled[1];
-        TRUE : filled[0];
-      esac;
-    next(filled[1]) :=
-      case
-        filleds[running_pid] & next_idx = 1 : TRUE;
-        receiveds[running_pid] : filled[2];
-        TRUE : filled[1];
-      esac;
-    next(filled[2]) :=
-      case
-        filleds[running_pid] & next_idx = 2 : TRUE;
-        receiveds[running_pid] : FALSE;
-        TRUE : filled[2];
-      esac;
-    next(next_idx) :=
-      case
-        filleds[running_pid] & next_idx < 3 : next_idx + 1;
-        receiveds[running_pid] & next_idx > 0 : next_idx - 1;
-        TRUE : next_idx;
-      esac;
-    next(value_0[0]) :=
-      case
-        filleds[running_pid] & next_idx = 0 : values_0[running_pid];
-        receiveds[running_pid] : value_0[1];
-        TRUE : value_0[0];
-      esac;
-    next(value_0[1]) :=
-      case
-        filleds[running_pid] & next_idx = 1 : values_0[running_pid];
-        receiveds[running_pid] : value_0[2];
-        TRUE : value_0[1];
-      esac;
-    next(value_0[2]) :=
-      case
-        filleds[running_pid] & next_idx = 2 : values_0[running_pid];
-        TRUE : value_0[2];
-      esac;
 
 MODULE BufferedChannel0Proxy(ch)
   VAR
-    filled : boolean;
-    next_value_0 : boolean;
-    received : boolean;
+    recv_received : boolean;
+    send_filled : boolean;
+    send_value_0 : boolean;
+  ASSIGN
+    next(ch.filled[0]) :=
+      case
+        send_filled & ch.next_idx = 0 : TRUE;
+        recv_received : ch.filled[1];
+        TRUE : ch.filled[0];
+      esac;
+    next(ch.filled[1]) :=
+      case
+        send_filled & ch.next_idx = 1 : TRUE;
+        recv_received : ch.filled[2];
+        TRUE : ch.filled[1];
+      esac;
+    next(ch.filled[2]) :=
+      case
+        send_filled & ch.next_idx = 2 : TRUE;
+        recv_received : FALSE;
+        TRUE : ch.filled[2];
+      esac;
+    next(ch.next_idx) :=
+      case
+        send_filled & ch.next_idx < 3 : ch.next_idx + 1;
+        recv_received & ch.next_idx > 0 : ch.next_idx - 1;
+        TRUE : ch.next_idx;
+      esac;
+    next(ch.value_0[0]) :=
+      case
+        send_filled & ch.next_idx = 0 : send_value_0;
+        recv_received : ch.value_0[1];
+        TRUE : ch.value_0[0];
+      esac;
+    next(ch.value_0[1]) :=
+      case
+        send_filled & ch.next_idx = 1 : send_value_0;
+        recv_received : ch.value_0[2];
+        TRUE : ch.value_0[1];
+      esac;
+    next(ch.value_0[2]) :=
+      case
+        send_filled & ch.next_idx = 2 : send_value_0;
+        TRUE : ch.value_0[2];
+      esac;
   DEFINE
     full := ch.next_idx = 3;
     ready := ch.filled[0];
     value_0 := ch.value_0[0];
 
-MODULE __pid0_ProcA(running_pid, pid, ch0)
+MODULE __pid0_ProcA(__orig_ch0)
+  JUSTICE
+    running
   VAR
     b : 0..8;
+    ch0 : BufferedChannel0Proxy(__orig_ch0);
     state : {state0, state1, state2};
     transition : {notrans, trans0, trans1};
   TRANS transition = trans0 -> (TRUE);
   TRANS transition = trans1 -> (!(ch0.full));
   ASSIGN
-    ch0.filled :=
+    ch0.recv_received :=
+      case
+        TRUE : FALSE;
+      esac;
+    ch0.send_filled :=
       case
         transition = trans1 : TRUE;
         TRUE : FALSE;
       esac;
-    ch0.next_value_0 :=
+    ch0.send_value_0 :=
       case
         transition = trans1 : TRUE;
         TRUE : ch0.value_0;
-      esac;
-    ch0.received :=
-      case
-        TRUE : FALSE;
       esac;
     init(state) := state0;
     next(b) :=
@@ -241,23 +261,15 @@ MODULE __pid0_ProcA(running_pid, pid, ch0)
       esac;
     transition :=
       case
-        running_pid = pid & state = state0 & ((TRUE)) : {trans0};
-        running_pid = pid & state = state1 & ((!(ch0.full))) : {trans1};
+        state = state0 & ((TRUE)) : {trans0};
+        state = state1 & ((!(ch0.full))) : {trans1};
         TRUE : notrans;
       esac;
 
 MODULE main()
   VAR
-    __pid0_ch : BufferedChannel0Proxy(ch);
-    ch : BufferedChannel0(running_pid, ch_filled, ch_received, ch_value_0);
-    proc1 : __pid0_ProcA(running_pid, 0, __pid0_ch);
-    running_pid : {0};
-  ASSIGN
-    running_pid := {0};
-  DEFINE
-    ch_filled := [__pid0_ch.filled];
-    ch_received := [__pid0_ch.received];
-    ch_value_0 := [__pid0_ch.next_value_0];
+    ch : BufferedChannel0;
+    proc1 : process __pid0_ProcA(ch);
 `
 
 func TestConvertASTToNuSMV2(t *testing.T) {
@@ -310,6 +322,6 @@ func TestConvertASTToNuSMV2(t *testing.T) {
 		t.Fatalf("Unexpected error: %s", err)
 	}
 	if mod != expectedResult2 {
-		t.Errorf("Unmatched\nExpected %s\nGot      %s", expectedResult2, mod)
+		t.Errorf("Unmatched\n%s\n", diff.Diff(expectedResult2, mod))
 	}
 }

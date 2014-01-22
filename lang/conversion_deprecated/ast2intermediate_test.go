@@ -1,8 +1,9 @@
-package conversion
+package conversion_deprecated
 
 import (
 	"github.com/cookieo9/go-misc/pp"
 	. "github.com/draftcode/sandal/lang/data"
+	"github.com/kylelemons/godebug/diff"
 	"testing"
 )
 
@@ -14,7 +15,7 @@ func TestConvertASTToIntModule(t *testing.T) {
 				{
 					Name: "ch0",
 					Type: HandshakeChannelType{
-						Elems:      []Type{NamedType{"bool"}},
+						Elems: []Type{NamedType{"bool"}},
 					},
 				},
 			},
@@ -36,7 +37,7 @@ func TestConvertASTToIntModule(t *testing.T) {
 				ChannelVar{
 					Name: "ch",
 					Type: HandshakeChannelType{
-						Elems:      []Type{NamedType{"bool"}},
+						Elems: []Type{NamedType{"bool"}},
 					},
 				},
 				InstanceVar{
@@ -57,8 +58,9 @@ func TestConvertASTToIntModule(t *testing.T) {
 		},
 		intProcModule{
 			Name: "__pid0_ProcA",
-			Args: []string{"running_pid", "pid", "ch0"},
+			Args: []string{"__orig_ch0"},
 			Vars: []intVar{
+				{"ch0", "HandshakeChannel0Proxy(__orig_ch0)"},
 				{"b", "0..8"},
 			},
 			InitState: intState("state0"),
@@ -71,44 +73,34 @@ func TestConvertASTToIntModule(t *testing.T) {
 				{
 					FromState: "state1",
 					NextState: "state2",
-					Condition: "!(ch0.filled)",
+					Condition: "!(ch0.ready)",
 					Actions: []intAssign{
-						{"ch0.next_filled", "TRUE"},
-						{"ch0.next_received", "FALSE"},
-						{"ch0.next_value_0", "TRUE"},
+						{"ch0.send_filled", "TRUE"},
+						{"ch0.send_value_0", "TRUE"},
 					},
 				},
 				{
 					FromState: "state2",
 					NextState: "state3",
-					Condition: "(ch0.filled) & (ch0.received)",
+					Condition: "(ch0.ready) & (ch0.received)",
 					Actions: []intAssign{
-						{"ch0.next_filled", "FALSE"},
+						{"ch0.send_leaving", "TRUE"},
 					},
 				},
 			},
 			Defaults: map[string]string{
-				"ch0.next_filled":   "ch0.filled",
-				"ch0.next_received": "ch0.received",
-				"ch0.next_value_0":  "ch0.value_0",
+				"ch0.send_leaving":  "FALSE",
+				"ch0.send_filled":   "FALSE",
+				"ch0.recv_received": "FALSE",
+				"ch0.send_value_0":  "ch0.value_0",
 				"next(b)":           "b",
 			},
 			Defs: []intAssign{},
 		},
 		intMainModule{
 			Vars: []intVar{
-				{"ch", "HandshakeChannel0(running_pid, ch_filled, ch_received, ch_value_0)"},
-				{"__pid0_ch", "HandshakeChannel0Proxy(ch)"},
-				{"proc1", "__pid0_ProcA(running_pid, 0, __pid0_ch)"},
-				{"running_pid", "{0}"},
-			},
-			Assigns: []intAssign{
-				{"running_pid", "{0}"},
-			},
-			Defs: []intAssign{
-				{"ch_filled", "[__pid0_ch.next_filled]"},
-				{"ch_received", "[__pid0_ch.next_received]"},
-				{"ch_value_0", "[__pid0_ch.next_value_0]"},
+				{"ch", "HandshakeChannel0"},
+				{"proc1", "process __pid0_ProcA(ch)"},
 			},
 		},
 	}
@@ -119,6 +111,6 @@ func TestConvertASTToIntModule(t *testing.T) {
 	expectPP := pp.PP(expected)
 	actualPP := pp.PP(intMods)
 	if expectPP != actualPP {
-		t.Errorf("Unmatched\nExpected %s\nGot      %s", expectPP, actualPP)
+		t.Errorf("Unmatched\n%s\n", diff.Diff(expectPP, actualPP))
 	}
 }

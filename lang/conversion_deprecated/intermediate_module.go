@@ -1,4 +1,4 @@
-package conversion
+package conversion_deprecated
 
 type intModule interface {
 	intmodule()
@@ -7,8 +7,6 @@ type intModule interface {
 type (
 	intMainModule struct {
 		Vars     []intVar
-		Assigns  []intAssign
-		Defs     []intAssign
 		LtlSpecs []string
 	}
 
