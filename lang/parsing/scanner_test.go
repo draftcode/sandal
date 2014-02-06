@@ -68,6 +68,7 @@ func TestScanSymbols(t *testing.T) {
 	testScanner(t, "!=", NEQ, "!=")
 	testScanner(t, "<=", LEQ, "<=")
 	testScanner(t, ">=", GEQ, ">=")
+	testScanner(t, "->", THEN, "->")
 }
 
 func TestScanIdentifier(t *testing.T) {

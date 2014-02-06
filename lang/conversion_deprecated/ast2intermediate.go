@@ -379,7 +379,7 @@ func convertLtlExpression(expr LtlExpression) string {
 	case UnOpLtlExpression:
 		return expr.Operator + convertLtlExpression(expr.SubExpr)
 	case BinOpLtlExpression:
-		return convertLtlExpression(expr.LHS) + expr.Operator + convertLtlExpression(expr.RHS)
+		return convertLtlExpression(expr.LHS) + " " + expr.Operator + " " + convertLtlExpression(expr.RHS)
 	default:
 		panic("unknown ltl expression")
 	}
