@@ -15,6 +15,6 @@ In addition to Sandal compiler, you need to install NuSMV to model-check a conve
 Usage
 -----
 
-Sandal compiler converts a model written in Sandal into a NuSMV module, and write it to STDOUT. For example the following command will convert your Sandal model to a NuSMV module and execute NuSMV:
+Sandal compiler converts a model written in Sandal into a NuSMV module, and write it to STDOUT. For example, the following command will convert your Sandal model to a NuSMV module and execute NuSMV:
 
     $ sandal your_model.sandal | nusmv
