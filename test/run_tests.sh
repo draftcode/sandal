@@ -1,12 +1,12 @@
 #!/bin/bash
 
-TESTSDIR=$(dirname $(realpath $0))
+TESTSDIR=$(cd $(dirname $0); pwd)
 REPODIR=$(dirname $TESTSDIR)
 cd $REPODIR
 go build
 cd $TESTSDIR
 
-tempfile=`mktemp`
+tempfile=`mktemp /tmp/tmp.XXXXXXXXXX`
 trap "rm $tempfile" 0
 
 for filename in `ls`; do
